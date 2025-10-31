@@ -15,6 +15,9 @@ import java.util.stream.Collectors;
 @Service
 @Transactional
 public class NotificationService {
+
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(NotificationService.class);
+
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
     private final WebPushService webPushService;
@@ -114,6 +117,4 @@ public class NotificationService {
                 .orElse(""));
         return dto;
     }
-
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(NotificationService.class);
 }

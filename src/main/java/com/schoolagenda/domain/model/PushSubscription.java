@@ -5,62 +5,88 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+// src/main/java/com/schoolagenda/api/entity/PushSubscription.java
 @Entity
 @Table(name = "push_subscriptions")
 public class PushSubscription {
-
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    @Column(name = "user_id", nullable = false)
-    private UUID userId;
-
-    @Column(columnDefinition = "TEXT", nullable = false)
+    @Column(nullable = false, unique = true)
     private String endpoint;
 
-    @Column(name = "p256dh", columnDefinition = "TEXT", nullable = false)
+    @Column(name = "p256dh", nullable = false, length = 500)
     private String p256dh;
 
-    @Column(columnDefinition = "TEXT", nullable = false)
+    @Column(name = "auth", nullable = false, length = 100)
     private String auth;
 
-    @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "is_active")
-    private Boolean isActive = true;
+    public PushSubscription() {
+        this.createdAt = LocalDateTime.now();
+    }
 
-    // Construtores
-    public PushSubscription() {}
-
-    public PushSubscription(UUID userId, String endpoint, String p256dh, String auth) {
-        this.userId = userId;
+    public PushSubscription(Long id, String endpoint, String p256dh, String auth, User user, LocalDateTime createdAt) {
+        this.id = id;
         this.endpoint = endpoint;
         this.p256dh = p256dh;
         this.auth = auth;
+        this.user = user;
+        this.createdAt = createdAt;
     }
 
-    // Getters e Setters
-    public UUID getId() { return id; }
-    public void setId(UUID id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public UUID getUserId() { return userId; }
-    public void setUserId(UUID userId) { this.userId = userId; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public String getEndpoint() { return endpoint; }
-    public void setEndpoint(String endpoint) { this.endpoint = endpoint; }
+    public String getEndpoint() {
+        return endpoint;
+    }
 
-    public String getP256dh() { return p256dh; }
-    public void setP256dh(String p256dh) { this.p256dh = p256dh; }
+    public void setEndpoint(String endpoint) {
+        this.endpoint = endpoint;
+    }
 
-    public String getAuth() { return auth; }
-    public void setAuth(String auth) { this.auth = auth; }
+    public String getP256dh() {
+        return p256dh;
+    }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public void setP256dh(String p256dh) {
+        this.p256dh = p256dh;
+    }
 
-    public Boolean getIsActive() { return isActive; }
-    public void setIsActive(Boolean isActive) { this.isActive = isActive; }
+    public String getAuth() {
+        return auth;
+    }
+
+    public void setAuth(String auth) {
+        this.auth = auth;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
 }

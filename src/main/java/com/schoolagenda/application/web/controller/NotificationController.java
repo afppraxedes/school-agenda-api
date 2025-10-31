@@ -64,15 +64,18 @@ public class NotificationController {
 
     @PostMapping("/subscribe")
     public ResponseEntity<Void> subscribeToPush(@RequestBody PushSubscriptionDTO subscription) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getName();
+        // TODO: este era o método que estava salvando as "PUSH_SUBSCRIPTIONS"!
+//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//        String username = authentication.getName();
+//
+//        return userService.findByUsername(username)
+//                .map(user -> {
+//                    userService.savePushSubscription(user.getId(), subscription.getSubscription());
+//                    return ResponseEntity.ok().<Void>build();
+//                })
+//                .orElse(ResponseEntity.notFound().build());
 
-        return userService.findByUsername(username)
-                .map(user -> {
-                    userService.savePushSubscription(user.getId(), subscription.getSubscription());
-                    return ResponseEntity.ok().<Void>build();
-                })
-                .orElse(ResponseEntity.notFound().build());
+        return null;
     }
 
     @PostMapping("/send")
