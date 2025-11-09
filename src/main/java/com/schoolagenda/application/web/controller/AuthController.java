@@ -1,9 +1,8 @@
 package com.schoolagenda.application.web.controller;
 
-import com.schoolagenda.application.web.dto.AuthResponse;
-import com.schoolagenda.application.web.dto.LoginRequest;
-import com.schoolagenda.application.web.dto.UserDTO;
-import com.schoolagenda.domain.service.UserService;
+import com.schoolagenda.application.web.dto.response.AuthResponse;
+import com.schoolagenda.application.web.dto.request.LoginRequest;
+import com.schoolagenda.domain.service.impl.UserServiceImpl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,16 +12,16 @@ import java.util.Base64;
 @RequestMapping("/api/auth")
 @CrossOrigin(origins = "http://localhost:4200")
 public class AuthController {
-    private final UserService userService;
+    private final UserServiceImpl userServiceImpl;
 
-    public AuthController(UserService userService) {
-        this.userService = userService;
+    public AuthController(UserServiceImpl userServiceImpl) {
+        this.userServiceImpl = userServiceImpl;
     }
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest loginRequest) {
-        if (userService.validateCredentials(loginRequest.getUsername(), loginRequest.getPassword())) {
-            return userService.findByUsername(loginRequest.getUsername())
+        if (userServiceImpl.validateCredentials(loginRequest.getUsername(), loginRequest.getPassword())) {
+            return userServiceImpl.findByUsername(loginRequest.getUsername())
                     .map(user -> {
                         // Create basic auth token
                         String credentials = loginRequest.getUsername() + ":" + loginRequest.getPassword();

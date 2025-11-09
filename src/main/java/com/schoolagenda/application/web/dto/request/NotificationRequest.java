@@ -1,9 +1,9 @@
-package com.schoolagenda.application.web.dto;
+package com.schoolagenda.application.web.dto.request;
 
 import com.schoolagenda.domain.model.NotificationType;
 import java.time.LocalDateTime;
 
-public class NotificationDTO {
+public class NotificationRequest {
     private Long id;
     private String title;
     private String message;
@@ -14,7 +14,7 @@ public class NotificationDTO {
     private NotificationType type;
     private String userRole;
 
-    public NotificationDTO() {}
+    public NotificationRequest() {}
 
     // Getters and Setters
     public Long getId() { return id; }

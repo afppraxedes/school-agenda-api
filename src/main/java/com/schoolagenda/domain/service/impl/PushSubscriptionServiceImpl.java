@@ -1,36 +1,35 @@
-package com.schoolagenda.domain.service;
+package com.schoolagenda.domain.service.impl;
 
-import com.schoolagenda.application.web.dto.PushSubscriptionDTO;
+import com.schoolagenda.application.web.dto.request.PushSubscriptionRequest;
 import com.schoolagenda.domain.model.PushSubscription;
 import com.schoolagenda.domain.model.User;
 import com.schoolagenda.domain.repository.PushSubscriptionRepository;
 import com.schoolagenda.domain.repository.UserRepository;
+import com.schoolagenda.domain.service.PushSubscriptionService;
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
 
-// src/main/java/com/schoolagenda/api/service/PushNotificationService.java
-// src/main/java/com/schoolagenda/api/service/PushNotificationService.java
 @Service
 //@Slf4j
 @Transactional
-public class PushNotificationService {
+public class PushSubscriptionServiceImpl implements PushSubscriptionService {
 
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(NotificationService.class);
+    // TODO: Colocar o "@Slf4j2", conforme o "FBE"!
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(NotificationServiceImpl.class);
 
     private final PushSubscriptionRepository pushSubscriptionRepository;
     private final UserRepository userRepository;
 
-    public PushNotificationService(PushSubscriptionRepository pushSubscriptionRepository, UserRepository userRepository) {
+    public PushSubscriptionServiceImpl(PushSubscriptionRepository pushSubscriptionRepository, UserRepository userRepository) {
         this.pushSubscriptionRepository = pushSubscriptionRepository;
         this.userRepository = userRepository;
     }
 
-    public void subscribe(User user, PushSubscriptionDTO subscriptionDTO) {
+    @Override
+    public void subscribe(User user, PushSubscriptionRequest subscriptionDTO) {
         try {
 //            log.info("Subscribing user {} to push notifications", user.getEmail());
 
@@ -77,6 +76,7 @@ public class PushNotificationService {
     /**
      * Remove a inscrição de push notifications para um usuário e endpoint específicos
      */
+    @Override
     public void unsubscribe(User user, String endpoint) {
         try {
 //            log.info("Unsubscribing user {} from push notifications for endpoint: {}",
@@ -116,6 +116,7 @@ public class PushNotificationService {
     /**
      * Remove todas as inscrições de push notifications de um usuário
      */
+    @Override
     public void unsubscribeAll(User user) {
         try {
 //            logger.info("Unsubscribing user {} from all push notifications", user.getEmail());
@@ -142,6 +143,7 @@ public class PushNotificationService {
     /**
      * Remove subscription por endpoint (sem verificar usuário - para admin)
      */
+    @Override
     public void unsubscribeByEndpoint(String endpoint) {
         try {
             logger.info("Unsubscribing from push notifications for endpoint: {}", endpoint);

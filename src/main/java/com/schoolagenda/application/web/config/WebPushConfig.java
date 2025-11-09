@@ -1,7 +1,7 @@
 package com.schoolagenda.application.web.config;
 
 import com.schoolagenda.domain.service.WebPushService;
-import com.schoolagenda.application.infrastructure.webpush.WebPushServiceImpl;
+import infrastructure.external.webpush.WebPushServiceImpl;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

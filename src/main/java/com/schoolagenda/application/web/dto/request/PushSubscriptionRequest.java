@@ -1,4 +1,4 @@
-package com.schoolagenda.application.web.dto;
+package com.schoolagenda.application.web.dto.request;
 
 //public class PushSubscriptionDTO {
 //    private String subscription;
@@ -13,7 +13,7 @@ package com.schoolagenda.application.web.dto;
 //    public void setSubscription(String subscription) { this.subscription = subscription; }
 //}
 
-public class PushSubscriptionDTO {
+public class PushSubscriptionRequest {
     private String endpoint;
     private KeysDTO keys;
 

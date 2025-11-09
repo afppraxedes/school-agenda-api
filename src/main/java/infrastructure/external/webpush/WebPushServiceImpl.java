@@ -1,4 +1,4 @@
-package com.schoolagenda.application.infrastructure.webpush;
+package infrastructure.external.webpush;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.schoolagenda.domain.service.WebPushService;
@@ -11,9 +11,6 @@ import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
 import java.security.*;
-import java.security.spec.PKCS8EncodedKeySpec;
-import java.security.spec.X509EncodedKeySpec;
-import java.util.Base64;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;

@@ -1,18 +1,21 @@
-package com.schoolagenda.application.web.dto;
+package com.schoolagenda.application.web.dto.request;
 
 import com.schoolagenda.domain.model.UserRole;
 
 import java.util.Set;
 
-public class UserDTO {
+public class UserRequest {
     private Long id;
     private String username;
     private String name;
     private Set<UserRole> roles;
+    // TODO: incluir os seguintes atributos:
+    // -> email
+    // -> profile
 
-    public UserDTO() {}
+    public UserRequest() {}
 
-    public UserDTO(Long id, String username, String name, Set<UserRole> roles) {
+    public UserRequest(Long id, String username, String name, Set<UserRole> roles) {
         this.id = id;
         this.username = username;
         this.name = name;

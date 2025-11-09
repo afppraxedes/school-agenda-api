@@ -1,4 +1,4 @@
-package com.schoolagenda.application.web.dto;
+package com.schoolagenda.application.web.dto.request;
 
 public class LoginRequest {
     private String username;

@@ -1,44 +1,40 @@
 package com.schoolagenda.application.web.controller;
 
-import com.schoolagenda.application.web.dto.PushSubscriptionDTO;
-import com.schoolagenda.domain.model.PushSubscription;
+import com.schoolagenda.application.web.dto.request.PushSubscriptionRequest;
 import com.schoolagenda.domain.model.User;
 import com.schoolagenda.domain.repository.PushSubscriptionRepository;
 import com.schoolagenda.domain.repository.UserRepository;
-import com.schoolagenda.domain.service.NotificationService;
-import com.schoolagenda.domain.service.PushNotificationService;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.schoolagenda.domain.service.impl.NotificationServiceImpl;
+import com.schoolagenda.domain.service.impl.PushSubscriptionServiceImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/push")
 //@Slf4j
 public class PushNotificationController {
 
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(NotificationService.class);
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(NotificationServiceImpl.class);
 
-    private final PushNotificationService pushNotificationService;
+    private final PushSubscriptionServiceImpl pushNotificationServiceImpl;
 
     private final UserRepository userRepository;
 
     private final PushSubscriptionRepository pushSubscriptionRepository;
 
-    public PushNotificationController(PushNotificationService pushNotificationService, UserRepository userRepository, PushSubscriptionRepository pushSubscriptionRepository) {
-        this.pushNotificationService = pushNotificationService;
+    public PushNotificationController(PushSubscriptionServiceImpl pushNotificationServiceImpl, UserRepository userRepository, PushSubscriptionRepository pushSubscriptionRepository) {
+        this.pushNotificationServiceImpl = pushNotificationServiceImpl;
         this.userRepository = userRepository;
         this.pushSubscriptionRepository = pushSubscriptionRepository;
     }
 
     @PostMapping("/subscribe")
-    public ResponseEntity<?> subscribe(@RequestBody PushSubscriptionDTO subscriptionDTO,
+    public ResponseEntity<?> subscribe(@RequestBody PushSubscriptionRequest subscriptionDTO,
                                        Authentication authentication) {
         try {
             logger.info("Received push subscription request for endpoint: {}", subscriptionDTO.getEndpoint());
@@ -76,7 +72,7 @@ public class PushNotificationController {
             }
 
             // Processar subscription
-            pushNotificationService.subscribe(user, subscriptionDTO);
+            pushNotificationServiceImpl.subscribe(user, subscriptionDTO);
 
             return ResponseEntity.ok().body(Map.of(
                     "message", "Successfully subscribed to push notifications",
@@ -117,7 +113,7 @@ public class PushNotificationController {
                     .orElseThrow(() -> new RuntimeException("User not found with email: " + username));
 
             // Processar unsubscribe
-            pushNotificationService.unsubscribe(user, endpoint);
+            pushNotificationServiceImpl.unsubscribe(user, endpoint);
 
             return ResponseEntity.ok().body(Map.of(
                     "message", "Successfully unsubscribed from push notifications",
@@ -156,7 +152,7 @@ public class PushNotificationController {
                     .orElseThrow(() -> new RuntimeException("User not found with email: " + username));
 
             // Processar unsubscribe all
-            pushNotificationService.unsubscribeAll(user);
+            pushNotificationServiceImpl.unsubscribeAll(user);
 
             return ResponseEntity.ok().body(Map.of(
                     "message", "Successfully unsubscribed from all push notifications",

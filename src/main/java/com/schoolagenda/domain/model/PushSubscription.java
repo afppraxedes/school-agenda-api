@@ -7,6 +7,7 @@ import java.util.UUID;
 
 // src/main/java/com/schoolagenda/api/entity/PushSubscription.java
 @Entity
+// TODO: COLOCAR O NOME DAS TABELAS NO SINGULAR QUANDO FOR UTILIZAR O "MYSQL" (push_subscription)
 @Table(name = "push_subscriptions")
 public class PushSubscription {
     @Id

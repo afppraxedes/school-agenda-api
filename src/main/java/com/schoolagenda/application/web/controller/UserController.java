@@ -1,9 +1,8 @@
 package com.schoolagenda.application.web.controller;
 
-import com.schoolagenda.application.web.dto.UserDTO;
+import com.schoolagenda.application.web.dto.request.UserRequest;
 import com.schoolagenda.domain.model.User;
-import com.schoolagenda.domain.repository.UserRepository;
-import com.schoolagenda.domain.service.UserService;
+import com.schoolagenda.domain.service.impl.UserServiceImpl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -15,31 +14,31 @@ import java.util.List;
 @RequestMapping("/api/users")
 @CrossOrigin(origins = "http://localhost:4200")
 public class UserController {
-    private final UserService userService;
+    private final UserServiceImpl userServiceImpl;
 
-    public UserController(UserService userService) {
-        this.userService = userService;
+    public UserController(UserServiceImpl userServiceImpl) {
+        this.userServiceImpl = userServiceImpl;
     }
 
     // TODO: tem que ter como parâmetro um "UserDTO". Criar o "ModelMapper" ou o outro utilizado no curso de "FBE"!
     @GetMapping
     public List<User> findAll() {
-        return this.userService.findAll();
+        return this.userServiceImpl.findAll();
     }
 
     @GetMapping("/me")
-    public ResponseEntity<UserDTO> getCurrentUser() {
+    public ResponseEntity<UserRequest> getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
 
-        return userService.findByUsername(username)
+        return userServiceImpl.findByUsername(username)
                 .map(user -> {
-                    UserDTO userDTO = new UserDTO();
-                    userDTO.setId(user.getId());
-                    userDTO.setUsername(user.getUsername());
-                    userDTO.setName(user.getName());
-                    userDTO.setRoles(user.getRoles());
-                    return ResponseEntity.ok(userDTO);
+                    UserRequest userRequest = new UserRequest();
+                    userRequest.setId(user.getId());
+                    userRequest.setUsername(user.getUsername());
+                    userRequest.setName(user.getName());
+                    userRequest.setRoles(user.getRoles());
+                    return ResponseEntity.ok(userRequest);
                 })
                 .orElse(ResponseEntity.notFound().build());
     }

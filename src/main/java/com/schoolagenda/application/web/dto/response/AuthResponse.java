@@ -1,4 +1,4 @@
-package com.schoolagenda.application.web.dto;
+package com.schoolagenda.application.web.dto.response;
 
 import com.schoolagenda.domain.model.UserRole;
 

@@ -1,26 +1,21 @@
-package com.schoolagenda.application.web.dto;
+package com.schoolagenda.application.web.dto.request;
 
 import com.schoolagenda.domain.model.NotificationType;
 
-public class CreateNotificationRequest {
-    private String username;
+public class BroadcastNotificationRequest {
     private String title;
     private String message;
-    private NotificationType type = NotificationType.MESSAGE;
+    private NotificationType type = NotificationType.ANNOUNCEMENT;
 
-    public CreateNotificationRequest() {}
+    public BroadcastNotificationRequest() {}
 
-    public CreateNotificationRequest(String username, String title, String message, NotificationType type) {
-        this.username = username;
+    public BroadcastNotificationRequest(String title, String message, NotificationType type) {
         this.title = title;
         this.message = message;
         this.type = type;
     }
 
     // Getters and Setters
-    public String getUsername() { return username; }
-    public void setUsername(String username) { this.username = username; }
-
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
 

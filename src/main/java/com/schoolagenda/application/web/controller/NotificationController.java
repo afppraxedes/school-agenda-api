@@ -1,13 +1,14 @@
 package com.schoolagenda.application.web.controller;
 
-import com.schoolagenda.application.web.dto.NotificationDTO;
-import com.schoolagenda.application.web.dto.PushSubscriptionDTO;
+import com.schoolagenda.application.web.dto.request.NotificationRequest;
+import com.schoolagenda.application.web.dto.request.PushSubscriptionRequest;
 import com.schoolagenda.domain.model.NotificationType;
 import com.schoolagenda.domain.model.User;
 import com.schoolagenda.domain.repository.UserRepository;
-import com.schoolagenda.domain.service.NotificationService;
-import com.schoolagenda.domain.service.UserService;
+import com.schoolagenda.domain.service.impl.NotificationServiceImpl;
+import com.schoolagenda.domain.service.impl.UserServiceImpl;
 import com.schoolagenda.domain.service.WebPushService;
+import infrastructure.external.webpush.WebPushServiceImpl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -21,17 +22,17 @@ import java.util.Map;
 @RequestMapping("/api/notifications")
 @CrossOrigin(origins = "http://localhost:4200/**")
 public class NotificationController {
-    private final NotificationService notificationService;
-    private final UserService userService;
+    private final NotificationServiceImpl notificationServiceImpl;
+    private final UserServiceImpl userServiceImpl;
     private final UserRepository userRepository;
     private final WebPushService webPushService;
 
-    public NotificationController(NotificationService notificationService,
-                                  UserService userService,
+    public NotificationController(NotificationServiceImpl notificationServiceImpl,
+                                  UserServiceImpl userServiceImpl,
                                   UserRepository userRepository,
                                   WebPushService webPushService) {
-        this.notificationService = notificationService;
-        this.userService = userService;
+        this.notificationServiceImpl = notificationServiceImpl;
+        this.userServiceImpl = userServiceImpl;
         this.userRepository = userRepository;
         this.webPushService = webPushService;
     }
@@ -50,20 +51,20 @@ public class NotificationController {
     }
 
     @GetMapping
-    public ResponseEntity<List<NotificationDTO>> getUserNotifications() {
+    public ResponseEntity<List<NotificationRequest>> getUserNotifications() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
 
-        return userService.findByUsername(username)
+        return userServiceImpl.findByUsername(username)
                 .map(user -> {
-                    List<NotificationDTO> notifications = notificationService.getUserNotifications(user.getId());
+                    List<NotificationRequest> notifications = notificationServiceImpl.getUserNotifications(user.getId());
                     return ResponseEntity.ok(notifications);
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping("/subscribe")
-    public ResponseEntity<Void> subscribeToPush(@RequestBody PushSubscriptionDTO subscription) {
+    public ResponseEntity<Void> subscribeToPush(@RequestBody PushSubscriptionRequest subscription) {
         // TODO: este era o método que estava salvando as "PUSH_SUBSCRIPTIONS"!
 //        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 //        String username = authentication.getName();
@@ -79,34 +80,34 @@ public class NotificationController {
     }
 
     @PostMapping("/send")
-    public ResponseEntity<NotificationDTO> sendNotification(@RequestBody NotificationDTO notificationDTO) {
-        NotificationDTO sentNotification = notificationService.sendNotification(notificationDTO);
+    public ResponseEntity<NotificationRequest> sendNotification(@RequestBody NotificationRequest notificationRequest) {
+        NotificationRequest sentNotification = notificationServiceImpl.sendNotification(notificationRequest);
         return ResponseEntity.ok(sentNotification);
     }
 
     @PostMapping("/broadcast")
-    public ResponseEntity<Void> broadcastNotification(@RequestBody NotificationDTO notificationDTO) {
-        notificationService.broadcastNotification(
-                notificationDTO.getTitle(),
-                notificationDTO.getMessage(),
-                notificationDTO.getType()
+    public ResponseEntity<Void> broadcastNotification(@RequestBody NotificationRequest notificationRequest) {
+        notificationServiceImpl.broadcastNotification(
+                notificationRequest.getTitle(),
+                notificationRequest.getMessage(),
+                notificationRequest.getType()
         );
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/create")
-    public ResponseEntity<NotificationDTO> createNotification(@RequestBody CreateNotificationRequest request) {
+    public ResponseEntity<NotificationRequest> createNotification(@RequestBody CreateNotificationRequest request) {
         try {
             User user = userRepository.findByUsername(request.getUsername())
                     .orElseThrow(() -> new RuntimeException("User not found: " + request.getUsername()));
 
-            NotificationDTO notificationDTO = new NotificationDTO();
-            notificationDTO.setTitle(request.getTitle());
-            notificationDTO.setMessage(request.getMessage());
-            notificationDTO.setUserId(user.getId());
-            notificationDTO.setType(request.getType());
+            NotificationRequest notificationRequest = new NotificationRequest();
+            notificationRequest.setTitle(request.getTitle());
+            notificationRequest.setMessage(request.getMessage());
+            notificationRequest.setUserId(user.getId());
+            notificationRequest.setType(request.getType());
 
-            NotificationDTO sentNotification = notificationService.sendNotification(notificationDTO);
+            NotificationRequest sentNotification = notificationServiceImpl.sendNotification(notificationRequest);
             return ResponseEntity.ok(sentNotification);
 
         } catch (Exception e) {
@@ -117,7 +118,7 @@ public class NotificationController {
     @PostMapping("/broadcast-to-all")
     public ResponseEntity<Void> broadcastToAll(@RequestBody BroadcastNotificationRequest request) {
         try {
-            notificationService.broadcastNotification(
+            notificationServiceImpl.broadcastNotification(
                     request.getTitle(),
                     request.getMessage(),
                     request.getType()
@@ -130,7 +131,7 @@ public class NotificationController {
 
     @PutMapping("/{id}/read")
     public ResponseEntity<Void> markAsRead(@PathVariable Long id) {
-        notificationService.markAsRead(id);
+        notificationServiceImpl.markAsRead(id);
         return ResponseEntity.ok().build();
     }
 
@@ -139,9 +140,9 @@ public class NotificationController {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
 
-        return userService.findByUsername(username)
+        return userServiceImpl.findByUsername(username)
                 .map(user -> {
-                    Long count = notificationService.getUnreadCount(user.getId());
+                    Long count = notificationServiceImpl.getUnreadCount(user.getId());
                     return ResponseEntity.ok(count);
                 })
                 .orElse(ResponseEntity.ok(0L));
@@ -154,9 +155,9 @@ public class NotificationController {
             Map<String, Object> status = new HashMap<>();
 
             // Verificar se o WebPushService é a implementação real
-            if (webPushService instanceof com.schoolagenda.application.infrastructure.webpush.WebPushServiceImpl) {
-                com.schoolagenda.application.infrastructure.webpush.WebPushServiceImpl impl =
-                        (com.schoolagenda.application.infrastructure.webpush.WebPushServiceImpl) webPushService;
+            if (webPushService instanceof WebPushServiceImpl) {
+                WebPushServiceImpl impl =
+                        (WebPushServiceImpl) webPushService;
                 status.put("pushEnabled", impl.isPushEnabled());
             } else {
                 status.put("pushEnabled", false);
