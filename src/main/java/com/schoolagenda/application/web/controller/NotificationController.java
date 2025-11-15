@@ -2,6 +2,7 @@ package com.schoolagenda.application.web.controller;
 
 import com.schoolagenda.application.web.dto.request.NotificationRequest;
 import com.schoolagenda.application.web.dto.request.PushSubscriptionRequest;
+import com.schoolagenda.application.web.dto.response.UserResponse;
 import com.schoolagenda.domain.model.NotificationType;
 import com.schoolagenda.domain.model.User;
 import com.schoolagenda.domain.repository.UserRepository;
@@ -9,9 +10,11 @@ import com.schoolagenda.domain.service.impl.NotificationServiceImpl;
 import com.schoolagenda.domain.service.impl.UserServiceImpl;
 import com.schoolagenda.domain.service.WebPushService;
 import infrastructure.external.webpush.WebPushServiceImpl;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -50,17 +53,35 @@ public class NotificationController {
         }
     }
 
+    // TODO: método anterior que que utilizava o "findUserByUsername"
+//    @GetMapping
+//    public ResponseEntity<List<NotificationRequest>> getUserNotifications() {
+//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//        String username = authentication.getName();
+//
+//        return userServiceImpl.getUserByUsername(username)
+//                .map(user -> {
+//                    List<NotificationRequest> notifications = notificationServiceImpl.getUserNotifications(user.getId());
+//                    return ResponseEntity.ok(notifications);
+//                })
+//                .orElse(ResponseEntity.notFound().build());
+//    }
+
+    // Notification
     @GetMapping
     public ResponseEntity<List<NotificationRequest>> getUserNotifications() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
 
-        return userServiceImpl.findByUsername(username)
-                .map(user -> {
-                    List<NotificationRequest> notifications = notificationServiceImpl.getUserNotifications(user.getId());
-                    return ResponseEntity.ok(notifications);
-                })
-                .orElse(ResponseEntity.notFound().build());
+        try {
+            UserResponse user = userServiceImpl.getUserByUsername(username);
+            List<NotificationRequest> notifications = notificationServiceImpl.getUserNotifications(user.getId());
+            return ResponseEntity.ok(notifications);
+        } catch (UsernameNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
     @PostMapping("/subscribe")
@@ -79,12 +100,14 @@ public class NotificationController {
         return null;
     }
 
+    // Notification
     @PostMapping("/send")
     public ResponseEntity<NotificationRequest> sendNotification(@RequestBody NotificationRequest notificationRequest) {
         NotificationRequest sentNotification = notificationServiceImpl.sendNotification(notificationRequest);
         return ResponseEntity.ok(sentNotification);
     }
 
+    // Notification
     @PostMapping("/broadcast")
     public ResponseEntity<Void> broadcastNotification(@RequestBody NotificationRequest notificationRequest) {
         notificationServiceImpl.broadcastNotification(
@@ -95,6 +118,7 @@ public class NotificationController {
         return ResponseEntity.ok().build();
     }
 
+    // Notification
     @PostMapping("/create")
     public ResponseEntity<NotificationRequest> createNotification(@RequestBody CreateNotificationRequest request) {
         try {
@@ -115,6 +139,7 @@ public class NotificationController {
         }
     }
 
+    // Notification
     @PostMapping("/broadcast-to-all")
     public ResponseEntity<Void> broadcastToAll(@RequestBody BroadcastNotificationRequest request) {
         try {
@@ -129,23 +154,41 @@ public class NotificationController {
         }
     }
 
+    // Notification
     @PutMapping("/{id}/read")
     public ResponseEntity<Void> markAsRead(@PathVariable Long id) {
         notificationServiceImpl.markAsRead(id);
         return ResponseEntity.ok().build();
     }
 
+//    @GetMapping("/unread-count")
+//    public ResponseEntity<Long> getUnreadCount() {
+//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//        String username = authentication.getName();
+//
+//        return userServiceImpl.getUserByUsername(username)
+//                .map(user -> {
+//                    Long count = notificationServiceImpl.getUnreadCount(user.getId());
+//                    return ResponseEntity.ok(count);
+//                })
+//                .orElse(ResponseEntity.ok(0L));
+//    }
+
+    // Notification
     @GetMapping("/unread-count")
     public ResponseEntity<Long> getUnreadCount() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
 
-        return userServiceImpl.findByUsername(username)
-                .map(user -> {
-                    Long count = notificationServiceImpl.getUnreadCount(user.getId());
-                    return ResponseEntity.ok(count);
-                })
-                .orElse(ResponseEntity.ok(0L));
+        try {
+            UserResponse user = userServiceImpl.getUserByUsername(username);
+            Long count = notificationServiceImpl.getUnreadCount(user.getId());
+            return ResponseEntity.ok(count);
+        } catch (UsernameNotFoundException e) {
+            return ResponseEntity.ok(0L);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(0L);
+        }
     }
 
     // Adicionar este método ao NotificationController

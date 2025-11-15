@@ -1,7 +1,10 @@
 package com.schoolagenda.domain.repository;
 
 import com.schoolagenda.domain.model.User;
+import com.schoolagenda.domain.model.UserRole;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -9,6 +12,48 @@ import java.util.Optional;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
+
+    // Find by email
+    Optional<User> findByEmail(String email);
+
+    // Find by username
     Optional<User> findByUsername(String username);
+
+    // Find by email or username
+    Optional<User> findByEmailOrUsername(String email, String username);
+
+    // Check if email exists
+    boolean existsByEmail(String email);
+
+    // Check if username exists
     boolean existsByUsername(String username);
+
+    // Check if email exists excluding a specific user
+    boolean existsByEmailAndIdNot(String email, Long id);
+
+    // Check if username exists excluding a specific user
+    boolean existsByUsernameAndIdNot(String username, Long id);
+
+    // Find users by role
+    @Query("SELECT u FROM User u JOIN u.roles r WHERE r = :role")
+    List<User> findByRole(@Param("role") UserRole role);
+
+    // Find users by multiple roles
+    @Query("SELECT DISTINCT u FROM User u JOIN u.roles r WHERE r IN :roles")
+    List<User> findByRolesIn(@Param("roles") List<UserRole> roles);
+
+    // Find users by name containing (search)
+    List<User> findByNameContainingIgnoreCase(String name);
+
+    // Find all users with roles eager loaded
+    @Query("SELECT DISTINCT u FROM User u LEFT JOIN FETCH u.roles")
+    List<User> findAllWithRoles();
+
+    // Find user by ID with roles eager loaded
+    @Query("SELECT u FROM User u LEFT JOIN FETCH u.roles WHERE u.id = :id")
+    Optional<User> findByIdWithRoles(@Param("id") Long id);
+
+    // Count users by role
+    @Query("SELECT COUNT(u) FROM User u JOIN u.roles r WHERE r = :role")
+    long countByRole(@Param("role") UserRole role);
 }

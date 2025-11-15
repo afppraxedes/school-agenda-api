@@ -1,7 +1,7 @@
 // src/main/java/com/schoolagenda/domain/service/TeacherClassService.java
 package com.schoolagenda.domain.service;
 
-import com.schoolagenda.application.web.dto.request.TeacherClassRequest;
+import com.schoolagenda.application.web.dto.request.CreateTeacherClassRequest;
 import com.schoolagenda.application.web.dto.response.TeacherClassResponse;
 
 import java.util.List;
@@ -9,7 +9,7 @@ import java.util.List;
 public interface TeacherClassService {
 
     // Create a new teacher-class relationship
-    TeacherClassResponse createTeacherClass(TeacherClassRequest request);
+    TeacherClassResponse createTeacherClass(CreateTeacherClassRequest request);
 
     // Get teacher-class by ID
     TeacherClassResponse getTeacherClassById(Long id);
@@ -27,7 +27,7 @@ public interface TeacherClassService {
     boolean teacherClassExists(Long teacherId, String className);
 
     // Update teacher-class relationship
-    TeacherClassResponse updateTeacherClass(Long id, TeacherClassRequest request);
+    TeacherClassResponse updateTeacherClass(Long id, CreateTeacherClassRequest request);
 
     // Delete teacher-class by ID
     void deleteTeacherClass(Long id);

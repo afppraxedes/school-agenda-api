@@ -1,44 +1,52 @@
 package com.schoolagenda.application.web.controller;
 
-import com.schoolagenda.application.web.dto.response.AuthResponse;
-import com.schoolagenda.application.web.dto.request.LoginRequest;
-import com.schoolagenda.domain.service.impl.UserServiceImpl;
+import com.schoolagenda.application.web.dto.request.AuthenticateRequest;
+import com.schoolagenda.application.web.dto.request.RefreshTokenRequest;
+import com.schoolagenda.application.web.dto.response.AuthenticationResponse;
+import com.schoolagenda.application.web.dto.response.RefreshTokenResponse;
+import com.schoolagenda.domain.exception.StandardError;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+
+import jakarta.validation.Valid;
+
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 
-import java.util.Base64;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
-@RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "http://localhost:4200")
-public class AuthController {
-    private final UserServiceImpl userServiceImpl;
+public interface AuthController {
 
-    public AuthController(UserServiceImpl userServiceImpl) {
-        this.userServiceImpl = userServiceImpl;
-    }
-
+    @Operation(summary = "Authenticate user")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "User authenticated", content = @Content(mediaType = APPLICATION_JSON_VALUE, schema = @Schema(implementation = AuthenticationResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Bad request", content = @Content(mediaType = APPLICATION_JSON_VALUE, schema = @Schema(implementation = StandardError.class))),
+            @ApiResponse(responseCode = "401", description = "Bad credentials", content = @Content(mediaType = APPLICATION_JSON_VALUE, schema = @Schema(implementation = StandardError.class))),
+            @ApiResponse(responseCode = "404", description = "Username not found", content = @Content(mediaType = APPLICATION_JSON_VALUE, schema = @Schema(implementation = StandardError.class))),
+            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = APPLICATION_JSON_VALUE, schema = @Schema(implementation = StandardError.class)))
+    })
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest loginRequest) {
-        if (userServiceImpl.validateCredentials(loginRequest.getUsername(), loginRequest.getPassword())) {
-            return userServiceImpl.findByUsername(loginRequest.getUsername())
-                    .map(user -> {
-                        // Create basic auth token
-                        String credentials = loginRequest.getUsername() + ":" + loginRequest.getPassword();
-                        String token = "Basic " + Base64.getEncoder().encodeToString(credentials.getBytes());
+    ResponseEntity<AuthenticationResponse> authenticate(@Valid @RequestBody AuthenticateRequest request) throws Exception;
 
-                        AuthResponse response = new AuthResponse();
-                        response.setToken(token);
-                        response.setId(user.getId());
-                        response.setUsername(user.getUsername());
-                        response.setName(user.getName());
-                        response.setRoles(user.getRoles());
+    // Endpoint (contrato) para o "Refresh Token"
+    @Operation(summary = "Refresh Token")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Token refreshed", content = @Content(mediaType = APPLICATION_JSON_VALUE, schema = @Schema(implementation = RefreshTokenResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Bad request", content = @Content(mediaType = APPLICATION_JSON_VALUE, schema = @Schema(implementation = StandardError.class))),
+            @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(mediaType = APPLICATION_JSON_VALUE, schema = @Schema(implementation = StandardError.class))),
+            @ApiResponse(responseCode = "404", description = "Username not found", content = @Content(mediaType = APPLICATION_JSON_VALUE, schema = @Schema(implementation = StandardError.class))),
+            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = APPLICATION_JSON_VALUE, schema = @Schema(implementation = StandardError.class)))
+    })
+    @RequestMapping("/refresh-token")
+    ResponseEntity<RefreshTokenResponse> refreshToken(@Valid @RequestBody final RefreshTokenRequest request);
 
-                        return ResponseEntity.ok(response);
-                    })
-                    .orElse(ResponseEntity.status(401).build());
-        }
 
-        return ResponseEntity.status(401).build();
-    }
 }

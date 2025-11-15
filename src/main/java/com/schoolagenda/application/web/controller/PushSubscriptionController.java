@@ -17,7 +17,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/push")
 //@Slf4j
-public class PushNotificationController {
+public class PushSubscriptionController {
 
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(NotificationServiceImpl.class);
 
@@ -27,7 +27,7 @@ public class PushNotificationController {
 
     private final PushSubscriptionRepository pushSubscriptionRepository;
 
-    public PushNotificationController(PushSubscriptionServiceImpl pushNotificationServiceImpl, UserRepository userRepository, PushSubscriptionRepository pushSubscriptionRepository) {
+    public PushSubscriptionController(PushSubscriptionServiceImpl pushNotificationServiceImpl, UserRepository userRepository, PushSubscriptionRepository pushSubscriptionRepository) {
         this.pushNotificationServiceImpl = pushNotificationServiceImpl;
         this.userRepository = userRepository;
         this.pushSubscriptionRepository = pushSubscriptionRepository;

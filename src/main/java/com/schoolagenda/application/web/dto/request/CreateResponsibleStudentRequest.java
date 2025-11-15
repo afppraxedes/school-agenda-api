@@ -3,7 +3,7 @@ package com.schoolagenda.application.web.dto.request;
 
 import jakarta.validation.constraints.NotNull;
 
-public class ResponsibleStudentRequest {
+public class CreateResponsibleStudentRequest {
 
     @NotNull(message = "Responsible ID is required")
     private Long responsibleId;
@@ -12,9 +12,9 @@ public class ResponsibleStudentRequest {
     private Long studentId;
 
     // Constructors
-    public ResponsibleStudentRequest() {}
+    public CreateResponsibleStudentRequest() {}
 
-    public ResponsibleStudentRequest(Long responsibleId, Long studentId) {
+    public CreateResponsibleStudentRequest(Long responsibleId, Long studentId) {
         this.responsibleId = responsibleId;
         this.studentId = studentId;
     }

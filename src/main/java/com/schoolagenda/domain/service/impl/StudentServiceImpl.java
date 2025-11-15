@@ -1,12 +1,11 @@
 // src/main/java/com/schoolagenda/domain/service/StudentServiceImpl.java
 package com.schoolagenda.domain.service.impl;
 
-import com.schoolagenda.application.web.dto.request.StudentRequest;
+import com.schoolagenda.application.web.dto.request.CreateStudentRequest;
 import com.schoolagenda.application.web.dto.response.StudentResponse;
 import com.schoolagenda.domain.model.Student;
 import com.schoolagenda.domain.repository.StudentRepository;
 import com.schoolagenda.domain.service.StudentService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -17,8 +16,11 @@ import java.util.stream.Collectors;
 @Service
 public class StudentServiceImpl implements StudentService {
 
-    @Autowired
-    private StudentRepository studentRepository;
+    private final StudentRepository studentRepository;
+
+    public StudentServiceImpl(StudentRepository studentRepository) {
+        this.studentRepository = studentRepository;
+    }
 
     @Override
     public List<StudentResponse> findAll() {
@@ -35,14 +37,14 @@ public class StudentServiceImpl implements StudentService {
     }
 
     @Override
-    public StudentResponse create(StudentRequest studentRequest) {
+    public StudentResponse create(CreateStudentRequest studentRequest) {
         Student student = convertToEntity(studentRequest);
         Student savedStudent = studentRepository.save(student);
         return convertToResponse(savedStudent);
     }
 
     @Override
-    public StudentResponse update(Long id, StudentRequest studentRequest) {
+    public StudentResponse update(Long id, CreateStudentRequest studentRequest) {
         return studentRepository.findById(id)
                 .map(existingStudent -> {
                     existingStudent.setFullName(studentRequest.getFullName());
@@ -118,7 +120,7 @@ public class StudentServiceImpl implements StudentService {
     }
 
     @Override
-    public Student convertToEntity(StudentRequest studentRequest) {
+    public Student convertToEntity(CreateStudentRequest studentRequest) {
         Student student = new Student();
         student.setFullName(studentRequest.getFullName());
         student.setBirthDate(studentRequest.getBirthDate());

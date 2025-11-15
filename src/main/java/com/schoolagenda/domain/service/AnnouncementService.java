@@ -1,7 +1,7 @@
 // src/main/java/com/schoolagenda/domain/service/AnnouncementService.java
 package com.schoolagenda.domain.service;
 
-import com.schoolagenda.application.web.dto.request.AnnouncementRequest;
+import com.schoolagenda.application.web.dto.request.CreateAnnouncementRequest;
 import com.schoolagenda.application.web.dto.response.AnnouncementResponse;
 import com.schoolagenda.domain.model.Announcement.AnnouncementType;
 
@@ -10,7 +10,7 @@ import java.util.List;
 public interface AnnouncementService {
 
     // Create a new announcement
-    AnnouncementResponse createAnnouncement(AnnouncementRequest request);
+    AnnouncementResponse createAnnouncement(CreateAnnouncementRequest request);
 
     // Get announcement by ID
     AnnouncementResponse getAnnouncementById(Long id);
@@ -31,7 +31,7 @@ public interface AnnouncementService {
     List<AnnouncementResponse> searchAnnouncementsByTitle(String title);
 
     // Update announcement
-    AnnouncementResponse updateAnnouncement(Long id, AnnouncementRequest request);
+    AnnouncementResponse updateAnnouncement(Long id, CreateAnnouncementRequest request);
 
     // Toggle announcement active status
     AnnouncementResponse toggleAnnouncementStatus(Long id);

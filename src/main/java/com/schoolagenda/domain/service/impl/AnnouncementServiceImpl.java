@@ -1,7 +1,7 @@
 // src/main/java/com/schoolagenda/domain/service/AnnouncementServiceImpl.java
 package com.schoolagenda.domain.service.impl;
 
-import com.schoolagenda.application.web.dto.request.AnnouncementRequest;
+import com.schoolagenda.application.web.dto.request.CreateAnnouncementRequest;
 import com.schoolagenda.application.web.dto.response.AnnouncementResponse;
 import com.schoolagenda.domain.model.Announcement;
 import com.schoolagenda.domain.model.Announcement.AnnouncementType;
@@ -22,7 +22,7 @@ public class AnnouncementServiceImpl implements AnnouncementService {
 
     @Override
     @Transactional
-    public AnnouncementResponse createAnnouncement(AnnouncementRequest request) {
+    public AnnouncementResponse createAnnouncement(CreateAnnouncementRequest request) {
         // Check if title already exists
         if (announcementRepository.existsByTitle(request.getTitle())) {
             throw new RuntimeException("Announcement with title '" + request.getTitle() + "' already exists");
@@ -109,7 +109,7 @@ public class AnnouncementServiceImpl implements AnnouncementService {
 
     @Override
     @Transactional
-    public AnnouncementResponse updateAnnouncement(Long id, AnnouncementRequest request) {
+    public AnnouncementResponse updateAnnouncement(Long id, CreateAnnouncementRequest request) {
         Announcement announcement = announcementRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Announcement not found with id: " + id));
 

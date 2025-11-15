@@ -32,8 +32,9 @@ public class User {
     @Column(length = 2000)
     private String pushSubscription;
 
-//    @Column(nullable = false)
-//    private String profile;
+      // TODO: verificar apenas se terei que deixar o atributo abaixo (ACHO QUE NÃO!)!
+      // @Column(nullable = false)
+      // private String profileType; // "responsible", "teacher", "director"
 
     public User() {}
 

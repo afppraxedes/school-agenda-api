@@ -4,7 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-public class ConversationRequest {
+public class CreateConversationRequest {
 
     @NotNull(message = "Sender ID is required")
     private Long senderId;
@@ -27,10 +27,10 @@ public class ConversationRequest {
     private String attachmentPath;
 
     // Constructors
-    public ConversationRequest() {}
+    public CreateConversationRequest() {}
 
-    public ConversationRequest(Long senderId, Long recipientId, Long studentId,
-                               String subject, String content, String attachmentPath) {
+    public CreateConversationRequest(Long senderId, Long recipientId, Long studentId,
+                                     String subject, String content, String attachmentPath) {
         this.senderId = senderId;
         this.recipientId = recipientId;
         this.studentId = studentId;

@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-public class AnnouncementRequest {
+public class CreateAnnouncementRequest {
 
     @NotBlank(message = "Title is required")
     @Size(max = 255, message = "Title must not exceed 255 characters")
@@ -28,10 +28,10 @@ public class AnnouncementRequest {
     private Boolean isActive = true;
 
     // Constructors
-    public AnnouncementRequest() {}
+    public CreateAnnouncementRequest() {}
 
-    public AnnouncementRequest(String title, String description, String imagePath,
-                               AnnouncementType type, Integer orderPosition, Boolean isActive) {
+    public CreateAnnouncementRequest(String title, String description, String imagePath,
+                                     AnnouncementType type, Integer orderPosition, Boolean isActive) {
         this.title = title;
         this.description = description;
         this.imagePath = imagePath;

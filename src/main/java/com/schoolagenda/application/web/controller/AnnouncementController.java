@@ -1,7 +1,7 @@
 // src/main/java/com/schoolagenda/application/web/controller/AnnouncementController.java
 package com.schoolagenda.application.web.controller;
 
-import com.schoolagenda.application.web.dto.request.AnnouncementRequest;
+import com.schoolagenda.application.web.dto.request.CreateAnnouncementRequest;
 import com.schoolagenda.application.web.dto.response.AnnouncementResponse;
 import com.schoolagenda.domain.model.Announcement.AnnouncementType;
 import com.schoolagenda.domain.service.AnnouncementService;
@@ -21,7 +21,7 @@ public class AnnouncementController {
 
     @PostMapping
     public ResponseEntity<AnnouncementResponse> createAnnouncement(
-            @Valid @RequestBody AnnouncementRequest request) {
+            @Valid @RequestBody CreateAnnouncementRequest request) {
         AnnouncementResponse response = announcementService.createAnnouncement(request);
         return ResponseEntity.ok(response);
     }
@@ -79,7 +79,7 @@ public class AnnouncementController {
 
     @PutMapping("/{id}")
     public ResponseEntity<AnnouncementResponse> updateAnnouncement(
-            @PathVariable Long id, @Valid @RequestBody AnnouncementRequest request) {
+            @PathVariable Long id, @Valid @RequestBody CreateAnnouncementRequest request) {
         AnnouncementResponse response = announcementService.updateAnnouncement(id, request);
         return ResponseEntity.ok(response);
     }

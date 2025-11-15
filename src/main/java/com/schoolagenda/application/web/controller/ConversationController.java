@@ -1,6 +1,6 @@
 package com.schoolagenda.application.web.controller;
 
-import com.schoolagenda.application.web.dto.request.ConversationRequest;
+import com.schoolagenda.application.web.dto.request.CreateConversationRequest;
 import com.schoolagenda.application.web.dto.response.ConversationResponse;
 import com.schoolagenda.domain.service.ConversationService;
 import jakarta.validation.Valid;
@@ -19,7 +19,7 @@ public class ConversationController {
 
     @PostMapping
     public ResponseEntity<ConversationResponse> createConversation(
-            @Valid @RequestBody ConversationRequest request) {
+            @Valid @RequestBody CreateConversationRequest request) {
         ConversationResponse response = conversationService.createConversation(request);
         return ResponseEntity.ok(response);
     }
@@ -104,7 +104,7 @@ public class ConversationController {
 
     @PutMapping("/{id}")
     public ResponseEntity<ConversationResponse> updateConversation(
-            @PathVariable Long id, @Valid @RequestBody ConversationRequest request) {
+            @PathVariable Long id, @Valid @RequestBody CreateConversationRequest request) {
         ConversationResponse response = conversationService.updateConversation(id, request);
         return ResponseEntity.ok(response);
     }

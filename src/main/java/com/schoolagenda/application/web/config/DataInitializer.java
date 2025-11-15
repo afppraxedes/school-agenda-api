@@ -37,7 +37,7 @@ public class DataInitializer implements CommandLineRunner {
             teacher1.setEmail("teacher1.mail@mail.com");
             teacher1.setUsername("teacher1");
             teacher1.setPassword(passwordEncoder.encode("password"));
-            teacher1.setName("Maria Professor");
+            teacher1.setName("Maria Professor 1");
             teacher1.setRoles(Set.of(UserRole.TEACHER));
             userRepository.save(teacher1);
 
@@ -45,7 +45,7 @@ public class DataInitializer implements CommandLineRunner {
             teacher2.setEmail("teacher2.mail@mail.com");
             teacher2.setUsername("teacher2");
             teacher2.setPassword(passwordEncoder.encode("password"));
-            teacher2.setName("Maria Professor");
+            teacher2.setName("Maria Professor 2");
             teacher2.setRoles(Set.of(UserRole.TEACHER));
             userRepository.save(teacher2);
 
@@ -53,7 +53,7 @@ public class DataInitializer implements CommandLineRunner {
             teacher3.setEmail("teacher3.mail@mail.com");
             teacher3.setUsername("teacher3");
             teacher3.setPassword(passwordEncoder.encode("password"));
-            teacher3.setName("Maria Professor");
+            teacher3.setName("Maria Professor 3");
             teacher3.setRoles(Set.of(UserRole.TEACHER));
             userRepository.save(teacher3);
         }
@@ -63,7 +63,7 @@ public class DataInitializer implements CommandLineRunner {
             responsible1.setEmail("responsible1.mail@mail.com");
             responsible1.setUsername("responsible1");
             responsible1.setPassword(passwordEncoder.encode("password"));
-            responsible1.setName("Carlos Responsável");
+            responsible1.setName("Carlos Responsável 1");
             responsible1.setRoles(Set.of(UserRole.RESPONSIBLE));
             userRepository.save(responsible1);
 
@@ -71,7 +71,7 @@ public class DataInitializer implements CommandLineRunner {
             responsible2.setEmail("responsible2.mail@mail.com");
             responsible2.setUsername("responsible2");
             responsible2.setPassword(passwordEncoder.encode("password"));
-            responsible2.setName("Mariana Responsável");
+            responsible2.setName("Mariana Responsável 2");
             responsible2.setRoles(Set.of(UserRole.RESPONSIBLE));
             userRepository.save(responsible2);
 
@@ -79,7 +79,7 @@ public class DataInitializer implements CommandLineRunner {
             responsible3.setEmail("responsible3.mail@mail.com");
             responsible3.setUsername("responsible3");
             responsible3.setPassword(passwordEncoder.encode("password"));
-            responsible3.setName("Alexandre Responsável");
+            responsible3.setName("Alexandre Responsável 3");
             responsible3.setRoles(Set.of(UserRole.RESPONSIBLE));
             userRepository.save(responsible3);
         }

@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-public class TeacherClassRequest {
+public class CreateTeacherClassRequest {
 
     @NotNull(message = "Teacher ID is required")
     private Long teacherId;
@@ -15,9 +15,9 @@ public class TeacherClassRequest {
     private String className;
 
     // Constructors
-    public TeacherClassRequest() {}
+    public CreateTeacherClassRequest() {}
 
-    public TeacherClassRequest(Long teacherId, String className) {
+    public CreateTeacherClassRequest(Long teacherId, String className) {
         this.teacherId = teacherId;
         this.className = className;
     }

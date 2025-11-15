@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Past;
 import java.time.LocalDate;
 
-public class StudentRequest {
+public class CreateStudentRequest {
 
     @NotBlank(message = "Full name is required")
     private String fullName;
@@ -21,9 +21,9 @@ public class StudentRequest {
     private String profilePhoto;
 
     // Constructors
-    public StudentRequest() {}
+    public CreateStudentRequest() {}
 
-    public StudentRequest(String fullName, LocalDate birthDate, String className, String profilePhoto) {
+    public CreateStudentRequest(String fullName, LocalDate birthDate, String className, String profilePhoto) {
         this.fullName = fullName;
         this.birthDate = birthDate;
         this.className = className;

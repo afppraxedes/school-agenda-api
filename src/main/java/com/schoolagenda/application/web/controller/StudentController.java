@@ -1,7 +1,7 @@
 // src/main/java/com/schoolagenda/application/web/controller/StudentController.java
 package com.schoolagenda.application.web.controller;
 
-import com.schoolagenda.application.web.dto.request.StudentRequest;
+import com.schoolagenda.application.web.dto.request.CreateStudentRequest;
 import com.schoolagenda.application.web.dto.response.StudentResponse;
 import com.schoolagenda.domain.service.StudentService;
 import jakarta.validation.Valid;
@@ -36,7 +36,7 @@ public class StudentController {
 
     @PostMapping
     @PreAuthorize("hasRole('DIRECTOR')")
-    public ResponseEntity<StudentResponse> createStudent(@Valid @RequestBody StudentRequest studentRequest) {
+    public ResponseEntity<StudentResponse> createStudent(@Valid @RequestBody CreateStudentRequest studentRequest) {
         StudentResponse createdStudent = studentService.create(studentRequest);
         return ResponseEntity.ok(createdStudent);
     }
@@ -45,7 +45,7 @@ public class StudentController {
     @PreAuthorize("hasRole('DIRECTOR')")
     public ResponseEntity<StudentResponse> updateStudent(
             @PathVariable Long id,
-            @Valid @RequestBody StudentRequest studentRequest) {
+            @Valid @RequestBody CreateStudentRequest studentRequest) {
         try {
             StudentResponse updatedStudent = studentService.update(id, studentRequest);
             return ResponseEntity.ok(updatedStudent);

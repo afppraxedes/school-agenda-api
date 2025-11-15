@@ -1,6 +1,6 @@
 package com.schoolagenda.domain.service;
 
-import com.schoolagenda.application.web.dto.request.ConversationRequest;
+import com.schoolagenda.application.web.dto.request.CreateConversationRequest;
 import com.schoolagenda.application.web.dto.response.ConversationResponse;
 
 import java.util.List;
@@ -8,7 +8,7 @@ import java.util.List;
 public interface ConversationService {
 
     // Create a new conversation
-    ConversationResponse createConversation(ConversationRequest request);
+    ConversationResponse createConversation(CreateConversationRequest request);
 
     // Get conversation by ID
     ConversationResponse getConversationById(Long id);
@@ -38,7 +38,7 @@ public interface ConversationService {
     void markMultipleAsRead(List<Long> conversationIds);
 
     // Update conversation
-    ConversationResponse updateConversation(Long id, ConversationRequest request);
+    ConversationResponse updateConversation(Long id, CreateConversationRequest request);
 
     // Delete conversation
     void deleteConversation(Long id);

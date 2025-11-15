@@ -1,18 +1,27 @@
 package com.schoolagenda.domain.service.impl;
 
+import com.schoolagenda.application.web.dto.request.CreateUserRequest;
+import com.schoolagenda.application.web.dto.request.UpdateUserRequest;
+import com.schoolagenda.application.web.dto.response.UserResponse;
 import com.schoolagenda.domain.model.User;
+import com.schoolagenda.domain.model.UserRole;
 import com.schoolagenda.domain.repository.UserRepository;
 import com.schoolagenda.domain.service.UserService;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
 public class UserServiceImpl implements UserService {
+
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
@@ -22,29 +31,198 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<User> findAll() {
-        return this.userRepository.findAll();
+    @Transactional
+    public UserResponse createUser(CreateUserRequest request) {
+        // Validate unique constraints
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new RuntimeException("Email already exists: " + request.getEmail());
+        }
+
+        if (userRepository.existsByUsername(request.getUsername())) {
+            throw new RuntimeException("Username already exists: " + request.getUsername());
+        }
+
+        // Create new user
+        User user = new User(
+                request.getEmail(),
+                request.getUsername(),
+                passwordEncoder.encode(request.getPassword()),
+                request.getName(),
+                request.getRoles() != null ? request.getRoles() : new HashSet<>()
+        );
+
+        user.setPushSubscription(request.getPushSubscription());
+
+        User savedUser = userRepository.save(user);
+        return convertToResponse(savedUser);
     }
 
     @Override
-    public Optional<User> findByUsername(String username) {
-        return userRepository.findByUsername(username);
+    @Transactional(readOnly = true)
+    public UserResponse getUserById(Long id) {
+        User user = userRepository.findByIdWithRoles(id)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+
+        return convertToResponse(user);
     }
 
     @Override
-    public User save(User user) {
-        // A codificação da senha agora é feita no DataInitializer
-        // Este método é mantido para consistência, mas a senha deve vir codificada
-        return userRepository.save(user);
+    @Transactional(readOnly = true)
+    public List<UserResponse> getAllUsers() {
+        List<User> users = userRepository.findAllWithRoles();
+
+        return users.stream()
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
     }
 
     @Override
-    // TODO: implemenar no "controller"!
-    public void savePushSubscription(Long userId, String subscription) {
+    @Transactional
+    public UserResponse updateUser(Long id, UpdateUserRequest request) {
+        User user = userRepository.findByIdWithRoles(id)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+
+        // Validate unique constraints for updates
+        if (request.getEmail() != null && !request.getEmail().equals(user.getEmail())) {
+            if (userRepository.existsByEmailAndIdNot(request.getEmail(), id)) {
+                throw new RuntimeException("Email already exists: " + request.getEmail());
+            }
+            user.setEmail(request.getEmail());
+        }
+
+        if (request.getUsername() != null && !request.getUsername().equals(user.getUsername())) {
+            if (userRepository.existsByUsernameAndIdNot(request.getUsername(), id)) {
+                throw new RuntimeException("Username already exists: " + request.getUsername());
+            }
+            user.setUsername(request.getUsername());
+        }
+
+        if (request.getName() != null) {
+            user.setName(request.getName());
+        }
+
+        if (request.getPassword() != null && !request.getPassword().isEmpty()) {
+            user.setPassword(passwordEncoder.encode(request.getPassword()));
+        }
+
+        if (request.getRoles() != null) {
+            user.setRoles(request.getRoles());
+        }
+
+        if (request.getPushSubscription() != null) {
+            user.setPushSubscription(request.getPushSubscription());
+        }
+
+        User updatedUser = userRepository.save(user);
+        return convertToResponse(updatedUser);
+    }
+
+    @Override
+    @Transactional
+    public void deleteUser(Long id) {
+        if (!userRepository.existsById(id)) {
+            throw new RuntimeException("User not found with id: " + id);
+        }
+        userRepository.deleteById(id);
+    }
+
+    @Override
+    public List<UserResponse> getUserAll() {
+        return userRepository.findAll()
+                .stream()
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public UserResponse getUserByEmail(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+
+        return convertToResponse(user);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public UserResponse getUserByUsername(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found with username: " + username));
+
+        return convertToResponse(user);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<UserResponse> getUsersByRole(UserRole role) {
+        List<User> users = userRepository.findByRole(role);
+
+        return users.stream()
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<UserResponse> getUsersByRoles(List<UserRole> roles) {
+        List<User> users = userRepository.findByRolesIn(roles);
+
+        return users.stream()
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<UserResponse> searchUsersByName(String name) {
+        List<User> users = userRepository.findByNameContainingIgnoreCase(name);
+
+        return users.stream()
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    @Override
+    public boolean validateUserCredentials(String username, String rawPassword) {
+        try {
+            User user = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+
+            return passwordEncoder.matches(rawPassword, user.getPassword());
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    @Override
+    @Transactional
+    public UserResponse updatePushSubscription(Long userId, String pushSubscription) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        user.setPushSubscription(subscription);
-        userRepository.save(user);
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+
+        user.setPushSubscription(pushSubscription);
+        User updatedUser = userRepository.save(user);
+
+        return convertToResponse(updatedUser);
+    }
+
+    @Override
+    @Transactional
+    public UserResponse removePushSubscription(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+
+        user.setPushSubscription(null);
+        User updatedUser = userRepository.save(user);
+
+        return convertToResponse(updatedUser);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean emailExists(String email) {
+        return userRepository.existsByEmail(email);
     }
 
     @Override
@@ -53,5 +231,121 @@ public class UserServiceImpl implements UserService {
         return userRepository.findByUsername(username)
                 .map(user -> passwordEncoder.matches(password, user.getPassword()))
                 .orElse(false);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean usernameExists(String username) {
+        return userRepository.existsByUsername(username);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean emailExistsForOtherUser(String email, Long userId) {
+        return userRepository.existsByEmailAndIdNot(email, userId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean usernameExistsForOtherUser(String username, Long userId) {
+        return userRepository.existsByUsernameAndIdNot(username, userId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countUsersByRole(UserRole role) {
+        return userRepository.countByRole(role);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long getTotalUsersCount() {
+        return userRepository.count();
+    }
+
+    @Override
+    @Transactional
+    public UserResponse addRoleToUser(Long userId, UserRole role) {
+        User user = userRepository.findByIdWithRoles(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+
+        user.getRoles().add(role);
+        User updatedUser = userRepository.save(user);
+
+        return convertToResponse(updatedUser);
+    }
+
+    @Override
+    @Transactional
+    public UserResponse removeRoleFromUser(Long userId, UserRole role) {
+        User user = userRepository.findByIdWithRoles(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+
+        user.getRoles().remove(role);
+        User updatedUser = userRepository.save(user);
+
+        return convertToResponse(updatedUser);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public UserResponse getCurrentUserProfile() {
+        String username = getCurrentUsername();
+        return getUserByUsername(username);
+    }
+
+    @Override
+    @Transactional
+    public UserResponse updateCurrentUserProfile(UpdateUserRequest request) {
+        String username = getCurrentUsername();
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found with username: " + username));
+
+        return updateUser(user.getId(), request);
+    }
+
+    /**
+     * Get current authenticated username
+     */
+    private String getCurrentUsername() {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        if (principal instanceof UserDetails) {
+            return ((UserDetails) principal).getUsername();
+        } else {
+            return principal.toString();
+        }
+    }
+
+    /**
+     * Converts User entity to Response DTO
+     */
+    private UserResponse convertToResponse(User user) {
+        String profileType = determineProfileType(user.getRoles());
+
+        return new UserResponse(
+                user.getId(),
+                user.getEmail(),
+                user.getUsername(),
+                user.getName(),
+                user.getRoles(),
+                user.getPushSubscription(),
+                profileType
+        );
+    }
+
+    /**
+     * Determines profile type based on roles
+     */
+    private String determineProfileType(Set<UserRole> roles) {
+        if (roles.contains(UserRole.DIRECTOR)) {
+            return "director";
+        } else if (roles.contains(UserRole.TEACHER)) {
+            return "teacher";
+        } else if (roles.contains(UserRole.RESPONSIBLE)) {
+            return "responsible";
+        } else {
+            return "user";
+        }
     }
 }

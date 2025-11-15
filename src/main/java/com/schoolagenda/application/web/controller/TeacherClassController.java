@@ -1,7 +1,7 @@
 // src/main/java/com/schoolagenda/application/web/controller/TeacherClassController.java
 package com.schoolagenda.application.web.controller;
 
-import com.schoolagenda.application.web.dto.request.TeacherClassRequest;
+import com.schoolagenda.application.web.dto.request.CreateTeacherClassRequest;
 import com.schoolagenda.application.web.dto.response.TeacherClassResponse;
 import com.schoolagenda.domain.service.TeacherClassService;
 import jakarta.validation.Valid;
@@ -20,7 +20,7 @@ public class TeacherClassController {
 
     @PostMapping
     public ResponseEntity<TeacherClassResponse> createTeacherClass(
-            @Valid @RequestBody TeacherClassRequest request) {
+            @Valid @RequestBody CreateTeacherClassRequest request) {
         TeacherClassResponse response = teacherClassService.createTeacherClass(request);
         return ResponseEntity.ok(response);
     }
@@ -73,7 +73,7 @@ public class TeacherClassController {
 
     @PutMapping("/{id}")
     public ResponseEntity<TeacherClassResponse> updateTeacherClass(
-            @PathVariable Long id, @Valid @RequestBody TeacherClassRequest request) {
+            @PathVariable Long id, @Valid @RequestBody CreateTeacherClassRequest request) {
         TeacherClassResponse response = teacherClassService.updateTeacherClass(id, request);
         return ResponseEntity.ok(response);
     }

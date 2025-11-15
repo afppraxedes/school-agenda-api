@@ -6,7 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 import java.util.Optional;
 
-// src/main/java/com/schoolagenda/api/repository/PushSubscriptionRepository.java
 public interface PushSubscriptionRepository extends JpaRepository<PushSubscription, Long> {
 
     Optional<PushSubscription> findByEndpoint(String endpoint);

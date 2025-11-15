@@ -1,7 +1,7 @@
 // src/main/java/com/schoolagenda/domain/service/ResponsibleStudentService.java
 package com.schoolagenda.domain.service;
 
-import com.schoolagenda.application.web.dto.request.ResponsibleStudentRequest;
+import com.schoolagenda.application.web.dto.request.CreateResponsibleStudentRequest;
 import com.schoolagenda.application.web.dto.response.ResponsibleStudentResponse;
 
 import java.util.List;
@@ -9,7 +9,7 @@ import java.util.List;
 public interface ResponsibleStudentService {
 
     // Create a new responsible-student relationship
-    ResponsibleStudentResponse createRelationship(ResponsibleStudentRequest request);
+    ResponsibleStudentResponse createRelationship(CreateResponsibleStudentRequest request);
 
     // Get relationship by ID
     ResponsibleStudentResponse getRelationshipById(Long id);

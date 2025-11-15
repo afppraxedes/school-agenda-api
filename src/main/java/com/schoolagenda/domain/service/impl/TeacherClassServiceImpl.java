@@ -1,7 +1,7 @@
 // src/main/java/com/schoolagenda/domain/service/TeacherClassServiceImpl.java
 package com.schoolagenda.domain.service.impl;
 
-import com.schoolagenda.application.web.dto.request.TeacherClassRequest;
+import com.schoolagenda.application.web.dto.request.CreateTeacherClassRequest;
 import com.schoolagenda.application.web.dto.response.TeacherClassResponse;
 import com.schoolagenda.domain.model.TeacherClass;
 import com.schoolagenda.domain.model.User;
@@ -26,7 +26,7 @@ public class TeacherClassServiceImpl implements TeacherClassService {
 
     @Override
     @Transactional
-    public TeacherClassResponse createTeacherClass(TeacherClassRequest request) {
+    public TeacherClassResponse createTeacherClass(CreateTeacherClassRequest request) {
         // Check if relationship already exists
         if (teacherClassRepository.existsByTeacherIdAndClassName(
                 request.getTeacherId(), request.getClassName())) {
@@ -97,7 +97,7 @@ public class TeacherClassServiceImpl implements TeacherClassService {
 
     @Override
     @Transactional
-    public TeacherClassResponse updateTeacherClass(Long id, TeacherClassRequest request) {
+    public TeacherClassResponse updateTeacherClass(Long id, CreateTeacherClassRequest request) {
         TeacherClass teacherClass = teacherClassRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Teacher class not found with id: " + id));
 

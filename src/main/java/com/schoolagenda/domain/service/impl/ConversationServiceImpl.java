@@ -1,6 +1,6 @@
 package com.schoolagenda.domain.service.impl;
 
-import com.schoolagenda.application.web.dto.request.ConversationRequest;
+import com.schoolagenda.application.web.dto.request.CreateConversationRequest;
 import com.schoolagenda.application.web.dto.response.ConversationResponse;
 import com.schoolagenda.domain.model.Conversation;
 import com.schoolagenda.domain.model.Conversation.ReadStatus;
@@ -31,7 +31,7 @@ public class ConversationServiceImpl implements ConversationService {
 
     @Override
     @Transactional
-    public ConversationResponse createConversation(ConversationRequest request) {
+    public ConversationResponse createConversation(CreateConversationRequest request) {
         // Find sender
         User sender = userRepository.findById(request.getSenderId())
                 .orElseThrow(() -> new RuntimeException("Sender not found with id: " + request.getSenderId()));
@@ -171,7 +171,7 @@ public class ConversationServiceImpl implements ConversationService {
 
     @Override
     @Transactional
-    public ConversationResponse updateConversation(Long id, ConversationRequest request) {
+    public ConversationResponse updateConversation(Long id, CreateConversationRequest request) {
         Conversation conversation = conversationRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Conversation not found with id: " + id));
 

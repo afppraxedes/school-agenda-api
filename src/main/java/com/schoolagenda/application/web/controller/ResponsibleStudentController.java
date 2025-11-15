@@ -1,7 +1,7 @@
 // src/main/java/com/schoolagenda/application/web/controller/ResponsibleStudentController.java
 package com.schoolagenda.application.web.controller;
 
-import com.schoolagenda.application.web.dto.request.ResponsibleStudentRequest;
+import com.schoolagenda.application.web.dto.request.CreateResponsibleStudentRequest;
 import com.schoolagenda.application.web.dto.response.ResponsibleStudentResponse;
 import com.schoolagenda.domain.service.ResponsibleStudentService;
 import jakarta.validation.Valid;
@@ -20,7 +20,7 @@ public class ResponsibleStudentController {
 
     @PostMapping
     public ResponseEntity<ResponsibleStudentResponse> createRelationship(
-            @Valid @RequestBody ResponsibleStudentRequest request) {
+            @Valid @RequestBody CreateResponsibleStudentRequest request) {
         ResponsibleStudentResponse response = responsibleStudentService.createRelationship(request);
         return ResponseEntity.ok(response);
     }

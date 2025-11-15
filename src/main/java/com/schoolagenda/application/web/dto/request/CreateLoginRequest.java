@@ -1,12 +1,12 @@
 package com.schoolagenda.application.web.dto.request;
 
-public class LoginRequest {
+public class CreateLoginRequest {
     private String username;
     private String password;
 
-    public LoginRequest() {}
+    public CreateLoginRequest() {}
 
-    public LoginRequest(String username, String password) {
+    public CreateLoginRequest(String username, String password) {
         this.username = username;
         this.password = password;
     }

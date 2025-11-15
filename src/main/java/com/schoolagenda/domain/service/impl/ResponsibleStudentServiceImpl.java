@@ -1,8 +1,7 @@
 package com.schoolagenda.domain.service.impl;
 
-import com.schoolagenda.application.web.dto.request.ResponsibleStudentRequest;
+import com.schoolagenda.application.web.dto.request.CreateResponsibleStudentRequest;
 import com.schoolagenda.application.web.dto.response.ResponsibleStudentResponse;
-import com.schoolagenda.application.web.dto.response.StudentResponse;
 import com.schoolagenda.domain.model.ResponsibleStudent;
 import com.schoolagenda.domain.model.Student;
 import com.schoolagenda.domain.model.User;
@@ -31,7 +30,7 @@ public class ResponsibleStudentServiceImpl implements ResponsibleStudentService 
 
     @Override
     @Transactional
-    public ResponsibleStudentResponse createRelationship(ResponsibleStudentRequest request) {
+    public ResponsibleStudentResponse createRelationship(CreateResponsibleStudentRequest request) {
         // Check if relationship already exists
         if (responsibleStudentRepository.existsByResponsibleIdAndStudentId(
                 request.getResponsibleId(), request.getStudentId())) {
