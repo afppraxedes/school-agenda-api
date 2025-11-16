@@ -24,16 +24,25 @@ import java.util.Arrays;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    public static final String[] SWAGGER_WHITELIST = {"/swagger-ui/index.html", "/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**", "/swagger-resources/**", "/webjars/**"};
+    public static final String[] SWAGGER_WHITELIST = {"/swagger-ui/index.html", "/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**", "/swagger-resources/**", "/webjars/**", "/h2-console/**"};
 
     // Responsáel por "setar" um filtro
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
         return httpSecurity
                 // "/api/auth/login/**" --> utilizar para os testes caso dê algum problema!
+                // TODO: FORMA DE HABILITAR O "H2 CONSOLE" APÓS IMPLEMENTAR A SEGURANÇA NO SISTEMA
+////                // INÍCIO
+//                .csrf(csrf -> csrf.ignoringRequestMatchers("/h2-console/**"))
+                .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
+////                // FIM
+//                .csrf(csrf -> csrf.disable())
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(http -> http
                         .requestMatchers("/api/auth/**").permitAll() // TODO: remover após os testes!
+//                        .requestMatchers("/api/director/**").hasAuthority("DIRECTOR")
+//                        .requestMatchers("/api/teacher/**").hasAnyAuthority("TEACHER", "DIRECTOR")
+//                        .requestMatchers("/api/responsible/**").hasAnyAuthority("RESPONSIBLE", "DIRECTOR")
                         .requestMatchers(SWAGGER_WHITELIST).permitAll()
                         .anyRequest().authenticated()
                 )

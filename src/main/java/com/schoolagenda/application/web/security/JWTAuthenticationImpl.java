@@ -10,6 +10,7 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 // Nosso Filtro de Autenticação
 @Log4j2
@@ -23,10 +24,14 @@ public class JWTAuthenticationImpl {
 
     // Retornando o "payload de resposta" com as informações do token
     public AuthenticationResponse authenticate(final AuthenticateRequest request) {
-        log.info("Authenticating user: {}", request.email());
+        log.info("Authenticating user - email: {}", request.email());
+        log.info("Authenticating user: - password {}", request.password());
+
+        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+
         try {
             final var authResult = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(request.email(), request.password())
+                    new UsernamePasswordAuthenticationToken(request.email(), encoder.encode(request.password()))
             );
             // retornando usuário logado
             return buildAuthenticationResponse((UserDetailsDTO) authResult.getPrincipal());

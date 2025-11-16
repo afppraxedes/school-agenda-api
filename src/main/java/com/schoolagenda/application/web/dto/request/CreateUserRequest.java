@@ -6,66 +6,45 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.With;
+
 import java.util.Set;
 
-public class CreateUserRequest {
+//@With
+//public record CreateUserRequest(
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class CreateUserRequest{
+        @Schema(description = "User name", example = "Alexander Praxedes")
+        @NotBlank(message = "Name cannot be empty")
+        @Size(min = 3, max = 50, message = "Name must contain between 3 and 50 characters")
+        private String name;
 
-    @Schema(description = "User email", example = "alex@mail.com")
-    @NotBlank(message = "Email is required")
-    @Email(message = "Email should be valid")
-    private String email;
+        @Schema(description = "User username", example = "Alexander Praxedes")
+        @NotBlank(message = "Username is required")
+        @Size(min = 3, max = 50, message = "Username must be between 3 and 50 characters")
+        private String username;
 
-    @Schema(description = "User username", example = "Alexander Praxedes")
-    @NotBlank(message = "Username is required")
-    @Size(min = 3, max = 50, message = "Username must be between 3 and 50 characters")
-    private String username;
+        @Schema(description = "User email", example = "alex@mail.com")
+        @Email(message = "Invalid email")
+        @NotBlank(message = "Email cannot be empty")
+        @Size(min = 6, max = 50, message = "Email must contain between 6 and 50 characters")
+        private String email;
 
-    @Schema(description = "User password", example = "123456")
-    @NotBlank(message = "Password is required")
-    @Size(min = 6, message = "Password must be at least 6 characters")
-    private String password;
+        @Schema(description = "User password", example = "123456")
+        @NotBlank(message = "Password cannot be empty")
+        @Size(min = 6, max = 50, message = "Password must contain between 6 and 50 characters")
+        private String password;
 
-    @Schema(description = "User username", example = "Alexander Praxedes")
-    @NotBlank(message = "Name is required")
-    @Size(max = 100, message = "Name must not exceed 100 characters")
-    private String name;
+        // TODO: verificar se altero para "profiles" e coloco os perfis iniciando com "ROLE"!
+        @Schema(description = "User profiles", example = "[\"DIRECTOR\", \"TEACHER\", \"RESPONSIBLE\"]")
+        @NotNull(message = "Roles are required")
+        private Set<UserRole> roles;
 
-    // TODO: verificar se altero para "profiles" e coloco os perfis iniciando com "ROLE"!
-    @Schema(description = "User profiles", example = "[\"DIRECTOR\", \"TEACHER\", \"RESPONSIBLE\"]")
-    @NotNull(message = "Roles are required")
-    private Set<UserRole> roles;
-
-    private String pushSubscription;
-
-    // Constructors
-    public CreateUserRequest() {}
-
-    public CreateUserRequest(String email, String username, String password, String name,
-                             Set<UserRole> roles, String pushSubscription) {
-        this.email = email;
-        this.username = username;
-        this.password = password;
-        this.name = name;
-        this.roles = roles;
-        this.pushSubscription = pushSubscription;
-    }
-
-    // Getters and Setters
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
-
-    public String getUsername() { return username; }
-    public void setUsername(String username) { this.username = username; }
-
-    public String getPassword() { return password; }
-    public void setPassword(String password) { this.password = password; }
-
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-
-    public Set<UserRole> getRoles() { return roles; }
-    public void setRoles(Set<UserRole> roles) { this.roles = roles; }
-
-    public String getPushSubscription() { return pushSubscription; }
-    public void setPushSubscription(String pushSubscription) { this.pushSubscription = pushSubscription; }
+        @Schema(description = "User push subscription", example = "... (colocar o exemplo")
+        private String pushSubscription;
 }

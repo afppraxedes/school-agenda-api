@@ -30,6 +30,9 @@ public class AuthControllerImpl implements AuthController {
     // Responsável pela autenticação (criação do token)
     @Override
     public ResponseEntity<AuthenticationResponse> authenticate(final AuthenticateRequest request) throws Exception {
+
+        System.out.println("Email: " + request.email() + "\nPassword: " + request.password());
+
         return ResponseEntity.ok().body(
                 new JWTAuthenticationImpl(jwtUtils, authenticationConfiguration.getAuthenticationManager())
                         .authenticate(request)
