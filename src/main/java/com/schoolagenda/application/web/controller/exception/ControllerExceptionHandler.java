@@ -2,6 +2,7 @@ package com.schoolagenda.application.web.controller.exception;
 
 import com.schoolagenda.domain.exception.RefreshTokenExpired;
 import com.schoolagenda.domain.exception.StandardError;
+import com.schoolagenda.domain.exception.TokenRefreshException;
 import com.schoolagenda.domain.exception.ValidationException;
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -54,7 +55,20 @@ public class ControllerExceptionHandler {
         }
 
         return ResponseEntity.badRequest().body(error);
+    }
 
+    // Exceção para refresh token não encontrado
+    @ExceptionHandler(TokenRefreshException.class)
+    ResponseEntity<StandardError> handleTokenRefreshException(
+            final TokenRefreshException ex, final HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                StandardError.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.NOT_FOUND.value())
+                .error(HttpStatus.NOT_FOUND.getReasonPhrase())
+                .message("Refresh token is not present in database!")
+                .path(request.getRequestURI())
+                .build());
     }
 
 }

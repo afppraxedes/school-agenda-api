@@ -3,6 +3,7 @@ package com.schoolagenda.application.web.controller;
 import com.schoolagenda.application.web.dto.request.CreateUserRequest;
 import com.schoolagenda.application.web.dto.request.UpdateUserRequest;
 import com.schoolagenda.application.web.dto.response.UserResponse;
+import com.schoolagenda.domain.model.User;
 import com.schoolagenda.domain.model.UserRole;
 import com.schoolagenda.domain.service.UserService;
 import com.schoolagenda.domain.service.impl.UserServiceImpl;
@@ -10,6 +11,8 @@ import com.schoolagenda.domain.service.impl.UserServiceImpl;
 import jakarta.validation.Valid;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -127,10 +130,24 @@ public class UserController {
     }
 
     // Current User Endpoints
+//    @GetMapping("/me")
+//    public ResponseEntity<UserResponse> getCurrentUser() {
+//        UserResponse response = userService.getCurrentUserProfile();
+//        return ResponseEntity.ok(response);
+//    }
+
+    // TODO: Mas com "User" estou expondo minha entidade! Não está correto! O correto está acima, ter
+    // como retorno um "UserResponse"! Mas estou apenas fazendo testes!
     @GetMapping("/me")
-    public ResponseEntity<UserResponse> getCurrentUser() {
-        UserResponse response = userService.getCurrentUserProfile();
-        return ResponseEntity.ok(response);
+    public String getCurrentUser(Authentication authentication) {
+        User user = (User) authentication.getPrincipal(); // Agora é User -->
+        return "Hello " + user.getName() + "! Your roles: " + user.getRoles();
+    }
+
+    @GetMapping("/test-all/director")
+    @PreAuthorize("hasAuthority('DIRECTOR')")
+    public String getUsers() {
+        return "List of users - DIRECTOR access only";
     }
 
     @PutMapping("/me")

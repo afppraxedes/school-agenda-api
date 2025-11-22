@@ -1,6 +1,8 @@
 package com.schoolagenda.domain.service.impl;
 
 import com.schoolagenda.application.web.dto.request.NotificationRequest;
+import com.schoolagenda.application.web.dto.response.NotificationResponse;
+import com.schoolagenda.application.web.dto.response.UserResponse;
 import com.schoolagenda.domain.model.Notification;
 import com.schoolagenda.domain.model.NotificationType;
 import com.schoolagenda.domain.model.User;
@@ -11,6 +13,7 @@ import com.schoolagenda.domain.service.WebPushService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -33,12 +36,32 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public List<NotificationRequest> getUserNotifications(Long userId) {
-        return notificationRepository.findByUserIdOrderByCreatedAtDesc(userId)
-                .stream()
-                .map(this::convertToDTO)
+    @Transactional(readOnly = true)
+    public List<NotificationResponse> getUserNotifications(Long userId) {
+//        return notificationRepository.findByUserIdOrderByCreatedAtDesc(userId)
+//                .stream()
+//                .map(this::convertToDTO)
+//                .collect(Collectors.toList());
+        return null;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<NotificationResponse> getAllNotifications() {
+        List<Notification> notifications = notificationRepository.findAll();
+        return notifications.stream()
+                .map(this::convertToResponse)
                 .collect(Collectors.toList());
     }
+
+
+//    @Transactional(readOnly = true)
+//    public List<UserResponse> getAllUsers() {
+//        List<User> users = userRepository.findAll();
+//        return users.stream()
+//                .map(this::convertToResponse)
+//                .collect(Collectors.toList());
+//    }
 
     @Override
     public NotificationRequest sendNotification(NotificationRequest notificationRequest) {
@@ -106,6 +129,34 @@ public class NotificationServiceImpl implements NotificationService {
         }
 
         logger.info("📢 Broadcast completed - Notifications: {}, Push sent: {}", users.size(), pushSent);
+    }
+
+    // TODO: Colocar conforme o "UserReponseImpl":
+    //  private UserResponse convertToResponse(User user) {
+    //        String profileType = determineProfileType(user.getRoles());
+    //        return UserResponse.builder()
+    //                .id(user.getId())
+    //                .email(user.getEmail())
+    //                .username(user.getUsername())
+    //                .name(user.getName())
+    //                .roles(user.getRoles())
+    //                .pushSubscription(user.getPushSubscription())
+    //                .profileType(profileType)
+    //                .build();
+    //    }
+
+    private NotificationResponse convertToResponse(Notification notification) {
+        return NotificationResponse.builder()
+                .id(notification.getId())
+                .title(notification.getTitle())
+                .message(notification.getMessage())
+                .userId(notification.getUser().getId())
+                .userName(notification.getUser().getName())
+                .read(notification.isRead())
+                .createdAt(notification.getCreatedAt())
+                .type(notification.getType())
+                .userRole(notification.getUser().getRoles().toString())
+                .build();
     }
 
     private NotificationRequest convertToDTO(Notification notification) {

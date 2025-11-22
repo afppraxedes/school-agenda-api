@@ -2,7 +2,9 @@ package com.schoolagenda.domain.service.impl;
 
 import com.schoolagenda.application.web.dto.request.EventRequest;
 import com.schoolagenda.application.web.dto.response.EventResponse;
+import com.schoolagenda.application.web.dto.response.UserResponse;
 import com.schoolagenda.domain.model.Event;
+import com.schoolagenda.domain.model.User;
 import com.schoolagenda.domain.repository.EventRepository;
 import com.schoolagenda.domain.service.EventService;
 import org.springframework.beans.factory.annotation.Autowired;

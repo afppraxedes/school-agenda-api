@@ -2,9 +2,12 @@ package com.schoolagenda.application.web.controller;
 
 import com.schoolagenda.application.web.dto.request.NotificationRequest;
 import com.schoolagenda.application.web.dto.request.PushSubscriptionRequest;
+import com.schoolagenda.application.web.dto.response.NotificationResponse;
 import com.schoolagenda.application.web.dto.response.UserResponse;
+import com.schoolagenda.domain.model.Notification;
 import com.schoolagenda.domain.model.NotificationType;
 import com.schoolagenda.domain.model.User;
+import com.schoolagenda.domain.repository.NotificationRepository;
 import com.schoolagenda.domain.repository.UserRepository;
 import com.schoolagenda.domain.service.impl.NotificationServiceImpl;
 import com.schoolagenda.domain.service.impl.UserServiceImpl;
@@ -26,15 +29,18 @@ import java.util.Map;
 @CrossOrigin(origins = "http://localhost:4200/**")
 public class NotificationController {
     private final NotificationServiceImpl notificationServiceImpl;
+    // TODO: "Jogar" todas as "consultas" utilizando "notificationRepository" para "notificationServiceImpl"!
+    private final NotificationRepository notificationRepository;
     private final UserServiceImpl userServiceImpl;
     private final UserRepository userRepository;
     private final WebPushService webPushService;
 
-    public NotificationController(NotificationServiceImpl notificationServiceImpl,
+    public NotificationController(NotificationServiceImpl notificationServiceImpl, NotificationRepository notificationRepository,
                                   UserServiceImpl userServiceImpl,
                                   UserRepository userRepository,
                                   WebPushService webPushService) {
         this.notificationServiceImpl = notificationServiceImpl;
+        this.notificationRepository = notificationRepository;
         this.userServiceImpl = userServiceImpl;
         this.userRepository = userRepository;
         this.webPushService = webPushService;
@@ -68,20 +74,36 @@ public class NotificationController {
 //    }
 
     // Notification
-    @GetMapping
-    public ResponseEntity<List<NotificationRequest>> getUserNotifications() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getName();
+    @GetMapping("/find-all")
+    public ResponseEntity<List<NotificationResponse>> getUserNotifications() {
+//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//        String username = authentication.getName();
+//
+//        try {
+//            UserResponse user = userServiceImpl.getUserByUsername(username);
+//            List<NotificationRequest> notifications = notificationServiceImpl.getUserNotifications(user.getId());
+//            return ResponseEntity.ok(notifications);
+//        } catch (UsernameNotFoundException e) {
+//            return ResponseEntity.notFound().build();
+//        } catch (Exception e) {
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+//        }
 
-        try {
-            UserResponse user = userServiceImpl.getUserByUsername(username);
-            List<NotificationRequest> notifications = notificationServiceImpl.getUserNotifications(user.getId());
-            return ResponseEntity.ok(notifications);
-        } catch (UsernameNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+//        String username = authentication.getName();
+//
+//        try {
+//            UserResponse user = userServiceImpl.getUserByUsername(username);
+//            List<NotificationResponse> notifications = notificationServiceImpl.getUserNotifications(user.getId());
+//            return ResponseEntity.ok(notifications);
+//        } catch (UsernameNotFoundException e) {
+//            return ResponseEntity.notFound().build();
+//        } catch (Exception e) {
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+//        }
+
+        List<NotificationResponse> responses = notificationServiceImpl.getAllNotifications();
+        return ResponseEntity.ok(responses);
     }
 
     @PostMapping("/subscribe")
@@ -178,10 +200,12 @@ public class NotificationController {
     @GetMapping("/unread-count")
     public ResponseEntity<Long> getUnreadCount() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getName();
+//        String username = authentication.getName();
+
+        User username = (User) authentication.getPrincipal();
 
         try {
-            UserResponse user = userServiceImpl.getUserByUsername(username);
+            UserResponse user = userServiceImpl.getUserByUsername(username.getUsername());
             Long count = notificationServiceImpl.getUnreadCount(user.getId());
             return ResponseEntity.ok(count);
         } catch (UsernameNotFoundException e) {
