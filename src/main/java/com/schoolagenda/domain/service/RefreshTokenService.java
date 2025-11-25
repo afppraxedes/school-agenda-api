@@ -79,6 +79,7 @@
 //package com.schoolagenda.application.service;
 package com.schoolagenda.domain.service;
 
+import com.schoolagenda.application.web.security.dtos.UserDetailsDTO;
 import com.schoolagenda.application.web.util.JwtService;
 import com.schoolagenda.domain.exception.ResourceNotFoundException;
 import com.schoolagenda.domain.exception.TokenRefreshException;
@@ -162,7 +163,9 @@ public class RefreshTokenService {
                 .map(this::verifyExpiration)
                 .map(RefreshToken::getUser)
                 .map(user -> {
-                    String token = jwtService.generateToken(user);
+                    String token = jwtService.generateToken(
+                            //TODO: a solução abaixo é provisória! Refatorar o "UserDetailsDTO.create"!
+                            UserDetailsDTO.create(user));
                     log.info("✅ New access token generated for user: {}", user.getEmail());
 
                     return TokenRefreshResponse.builder()

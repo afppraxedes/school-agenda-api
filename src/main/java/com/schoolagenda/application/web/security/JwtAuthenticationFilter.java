@@ -154,82 +154,126 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
-@Slf4j
+@Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private final JwtService jwtService;
+    private final JwtService jwtService; // ✅ Mesmo serviço
     private final UserDetailsService userDetailsService;
 
     @Override
-    protected void doFilterInternal(
-            @NonNull HttpServletRequest request,
-            @NonNull HttpServletResponse response,
-            @NonNull FilterChain filterChain
-    ) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain) throws ServletException, IOException {
 
         final String authHeader = request.getHeader("Authorization");
-        final String requestURI = request.getRequestURI();
 
-        log.info("🔐 JWT Filter - Request: {} {}", request.getMethod(), requestURI);
-
-        // Skip filter if no Bearer token
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            log.warn("❌ No Bearer token found for protected endpoint: {}", requestURI);
             filterChain.doFilter(request, response);
             return;
         }
 
         try {
             final String jwt = authHeader.substring(7);
-            log.info("🔐 JWT Token received (first 20 chars): {}...", jwt.substring(0, Math.min(20, jwt.length())));
 
-            final String userEmail = jwtService.extractUsername(jwt);
-            log.info("🔐 Extracted username from token: {}", userEmail);
+            // ✅ USAR JwtService PARA VALIDAR E EXTRAIR
+            if (jwtService.validateToken(jwt)) {
+                String username = jwtService.extractUsername(jwt);
 
-            if (userEmail == null) {
-                log.error("❌ Could not extract username from token");
-                filterChain.doFilter(request, response);
-                return;
-            }
-
-            // Only authenticate if no existing authentication
-            if (SecurityContextHolder.getContext().getAuthentication() == null) {
-                log.info("🔐 Loading user details for: {}", userEmail);
-
-                UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
-                log.info("🔐 User details loaded: {}", userDetails.getUsername());
-
-                log.info("🔐 Validating token...");
-                boolean isValid = jwtService.isTokenValid(jwt, userDetails);
-                log.info("🔐 Token valid: {}", isValid);
-
-                if (isValid) {
-                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                            userDetails,
-                            null,
-                            userDetails.getAuthorities()
-                    );
-
+                if (username != null) {
+                    UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                    UsernamePasswordAuthenticationToken authToken =
+                            new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
-
-                    log.info("✅ Successfully authenticated user: {} with authorities: {}",
-                            userEmail, userDetails.getAuthorities());
-                } else {
-                    log.error("❌ Token validation failed for user: {}", userEmail);
                 }
-            } else {
-                log.info("⏩ User already authenticated, skipping");
             }
+
         } catch (Exception e) {
-            log.error("💥 ERROR in JWT Filter: {}", e.getMessage(), e);
+            logger.error("Cannot set user authentication: {}", e);
         }
 
         filterChain.doFilter(request, response);
     }
 }
+
+//@Slf4j
+//@RequiredArgsConstructor
+//public class JwtAuthenticationFilter extends OncePerRequestFilter {
+//
+//    private final JwtService jwtService;
+//    private final UserDetailsService userDetailsService;
+//
+//    @Override
+//    protected void doFilterInternal(
+//            @NonNull HttpServletRequest request,
+//            @NonNull HttpServletResponse response,
+//            @NonNull FilterChain filterChain
+//    ) throws ServletException, IOException {
+//
+//        final String authHeader = request.getHeader("Authorization");
+//        final String requestURI = request.getRequestURI();
+//
+//        log.info("🔐 JWT Filter - Request: {} {}", request.getMethod(), requestURI);
+//
+//        // Skip filter if no Bearer token
+//        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+//            log.warn("❌ No Bearer token found for protected endpoint: {}", requestURI);
+//            filterChain.doFilter(request, response);
+//            return;
+//        }
+//
+//        try {
+//            final String jwt = authHeader.substring(7);
+//            log.info("🔐 JWT Token received (first 20 chars): {}...", jwt.substring(0, Math.min(20, jwt.length())));
+//
+//            final String userEmail = jwtService.extractUsername(jwt);
+//            log.info("🔐 Extracted username from token: {}", userEmail);
+//
+//            if (userEmail == null) {
+//                log.error("❌ Could not extract username from token");
+//                filterChain.doFilter(request, response);
+//                return;
+//            }
+//
+//            // Only authenticate if no existing authentication
+//            if (SecurityContextHolder.getContext().getAuthentication() == null) {
+//                log.info("🔐 Loading user details for: {}", userEmail);
+//
+//                UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
+//                log.info("🔐 User details loaded: {}", userDetails.getUsername());
+//
+//                log.info("🔐 Validating token...");
+//                boolean isValid = jwtService.isTokenValid(jwt, userDetails);
+//                log.info("🔐 Token valid: {}", isValid);
+//
+//                if (isValid) {
+//                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+//                            userDetails,
+//                            null,
+//                            userDetails.getAuthorities()
+//                    );
+//
+//                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+//                    SecurityContextHolder.getContext().setAuthentication(authToken);
+//
+//                    log.info("✅ Successfully authenticated user: {} with authorities: {}",
+//                            userEmail, userDetails.getAuthorities());
+//                } else {
+//                    log.error("❌ Token validation failed for user: {}", userEmail);
+//                }
+//            } else {
+//                log.info("⏩ User already authenticated, skipping");
+//            }
+//        } catch (Exception e) {
+//            log.error("💥 ERROR in JWT Filter: {}", e.getMessage(), e);
+//        }
+//
+//        filterChain.doFilter(request, response);
+//    }
+//}

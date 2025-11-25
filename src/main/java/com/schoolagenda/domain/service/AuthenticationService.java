@@ -1,6 +1,7 @@
 //package com.schoolagenda.application.service;
 package com.schoolagenda.domain.service;
 
+import com.schoolagenda.application.web.security.dtos.UserDetailsDTO;
 import com.schoolagenda.application.web.util.JwtService;
 import com.schoolagenda.domain.model.User;
 import com.schoolagenda.domain.model.UserRole;
@@ -27,6 +28,7 @@ public class AuthenticationService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+//    private final JWTUtils jwtUtils;
     private final AuthenticationManager authenticationManager;
     private final RefreshTokenService refreshTokenService; // ✅ Adicione esta dependência
 
@@ -53,7 +55,7 @@ public class AuthenticationService {
         // ✅ CORREÇÃO: Salva o refresh token no banco
         var refreshToken = refreshTokenService.createRefreshToken(savedUser.getId());
 
-        var accessToken = jwtService.generateToken(savedUser);
+        var accessToken = jwtService.generateToken(UserDetailsDTO.create(savedUser));
 
         return AuthenticationResponse.builder()
                 .type("Bearer")
@@ -76,7 +78,7 @@ public class AuthenticationService {
             var user = userRepository.findByEmail(request.getEmail())
                     .orElseThrow(() -> new RuntimeException("User not found"));
 
-            var accessToken = jwtService.generateToken(user);
+            var accessToken = jwtService.generateToken(UserDetailsDTO.create(user));
 
             // ✅ CORREÇÃO: Salva o refresh token no banco
             var refreshToken = refreshTokenService.createRefreshToken(user.getId());

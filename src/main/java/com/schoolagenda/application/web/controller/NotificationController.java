@@ -74,7 +74,7 @@ public class NotificationController {
 //    }
 
     // Notification
-    @GetMapping("/find-all")
+    @GetMapping()
     public ResponseEntity<List<NotificationResponse>> getUserNotifications() {
 //        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 //        String username = authentication.getName();
@@ -200,12 +200,15 @@ public class NotificationController {
     @GetMapping("/unread-count")
     public ResponseEntity<Long> getUnreadCount() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-//        String username = authentication.getName();
+////        String username = authentication.getName();
+//
+        User userLoad = (User) authentication.getPrincipal();
 
-        User username = (User) authentication.getPrincipal();
+        UserResponse userResponse = userServiceImpl.getUserById(userLoad.getId());
 
         try {
-            UserResponse user = userServiceImpl.getUserByUsername(username.getUsername());
+            UserResponse user = userServiceImpl.getUserByEmail(userResponse.getEmail());
+//            UserResponse user = userServiceImpl.getUserByUsername(username.getUsername());
             Long count = notificationServiceImpl.getUnreadCount(user.getId());
             return ResponseEntity.ok(count);
         } catch (UsernameNotFoundException e) {

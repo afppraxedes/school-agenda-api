@@ -653,8 +653,10 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     public UserResponse getCurrentUserProfile() {
+//        String username = getCurrentUsername();
         String username = getCurrentUsername();
-        return getUserByUsername(username);
+//        return getUserByUsername(username);
+        return getUserByEmail(username);
     }
 
     @Override

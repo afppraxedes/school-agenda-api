@@ -138,14 +138,30 @@ public class UserController {
 
     // TODO: Mas com "User" estou expondo minha entidade! Não está correto! O correto está acima, ter
     // como retorno um "UserResponse"! Mas estou apenas fazendo testes!
+//    @GetMapping("/me")
+//    public ResponseEntity<User> getCurrentUser(Authentication authentication) {
+//        User user = (User) authentication.getPrincipal(); // Agora é User -->
+//        return ResponseEntity.ok(user);
+//
+//        //return "Hello " + user.getName() + "! Your roles: " + user.getRoles();
+//    }
+
+//    @PreAuthorize("hasAuthority('DIRECTOR')")
+//    @GetMapping("/me")
+//    public ResponseEntity<UserResponse> getCurrentUser() {
+//        UserResponse response = userService.getCurrentUserProfile();
+//        return ResponseEntity.ok(response);
+//    }
+
+//    @PreAuthorize("hasAnyAuthority('DIRECTOR', 'TEACHER', 'RESPONSIBLE')")
     @GetMapping("/me")
-    public String getCurrentUser(Authentication authentication) {
-        User user = (User) authentication.getPrincipal(); // Agora é User -->
-        return "Hello " + user.getName() + "! Your roles: " + user.getRoles();
+    public ResponseEntity<UserResponse> getCurrentUser() {
+        UserResponse response = userService.getCurrentUserProfile();
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/test-all/director")
-    @PreAuthorize("hasAuthority('DIRECTOR')")
+//    @PreAuthorize("hasAuthority('DIRECTOR')")
     public String getUsers() {
         return "List of users - DIRECTOR access only";
     }

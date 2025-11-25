@@ -130,6 +130,7 @@ import com.schoolagenda.application.web.security.JwtAuthenticationFilter;
 import com.schoolagenda.application.web.util.JwtService;
 import com.schoolagenda.domain.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.apache.catalina.filters.CorsFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -205,6 +206,7 @@ public class SecurityConfig {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration configuration = new CorsConfiguration();
 
         configuration.setAllowedOrigins(Arrays.asList(
@@ -213,7 +215,10 @@ public class SecurityConfig {
                 "http://192.168.1.5:3000",
                 "http://192.168.1.5:4200",
                 "http://172.28.192.1:4200",
-                "https://*.ngrok-free.dev"
+                "http://192.168.1.4:8081",
+                "https://*.ngrok-free.dev",
+                "http://localhost:8081",
+                "http://localhost:8080/actuator/health"
         ));
 
         configuration.setAllowedMethods(List.of("*"));
@@ -222,9 +227,22 @@ public class SecurityConfig {
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        // Configuração para UTF-8
+//        configuration.addExposedHeader("Content-Type");
+//        configuration.addExposedHeader("Content-Disposition");
+//        configuration.addExposedHeader("Content-Length");
+
+        // Headers expostos
+        configuration.addExposedHeader("Content-Type");
+        configuration.addExposedHeader("Content-Length");
+        configuration.addExposedHeader("Authorization");
+
+//        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
+
+//        source.registerCorsConfiguration("/**", configuration);
+//        return new CorsFilter(/*source*/);
     }
 
     @Bean

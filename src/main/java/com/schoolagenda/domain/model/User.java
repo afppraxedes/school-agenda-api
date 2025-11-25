@@ -146,28 +146,29 @@ public class User implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false)
+    @Column(unique = true, nullable = false, length = 100)
     private String email;
 
-    @Column(unique = true, nullable = false)
+    @Column(unique = true, nullable = false, length = 50)
     private String username;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 255)
     private String password;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 100)
     private String name;
 
     @Enumerated(EnumType.STRING)
     @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "user_role", joinColumns = @JoinColumn(name = "user_id"))
+    @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id")) // ✅ Mudei para user_roles
+    @Column(name = "role")
+    @Builder.Default
     private Set<UserRole> roles = new HashSet<>();
 
     @Column(length = 2000)
     private String pushSubscription;
 
-    // ✅ MÉTODOS DO USERDETAILS IMPLEMENTADOS
-
+    // ✅ MÉTODOS DO USERDETAILS
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return roles.stream()
@@ -177,42 +178,103 @@ public class User implements UserDetails {
 
     @Override
     public String getUsername() {
-        return this.email; // ✅ Usa email como username para autenticação
+        return this.email; // Spring Security usa email como username
     }
 
-    // ✅ Método auxiliar para obter o username real se necessário
     public String getActualUsername() {
         return this.username;
     }
 
     @Override
-    public boolean isAccountNonExpired() {
-        return true;
-    }
-
+    public boolean isAccountNonExpired() { return true; }
     @Override
-    public boolean isAccountNonLocked() {
-        return true;
-    }
-
+    public boolean isAccountNonLocked() { return true; }
     @Override
-    public boolean isCredentialsNonExpired() {
-        return true;
-    }
-
+    public boolean isCredentialsNonExpired() { return true; }
     @Override
-    public boolean isEnabled() {
-        return true;
-    }
-
-    @Override
-    public String toString() {
-        return "User{" +
-                "id=" + id +
-                ", email='" + email + '\'' +
-                ", username='" + username + '\'' +
-                ", name='" + name + '\'' +
-                ", roles=" + roles +
-                '}';
-    }
+    public boolean isEnabled() { return true; }
 }
+
+//@Entity
+//@Table(name = "users")
+//@Getter
+//@Setter
+//@Builder
+//@AllArgsConstructor
+//@NoArgsConstructor
+//public class User implements UserDetails {
+//
+//    @Id
+//    @GeneratedValue(strategy = GenerationType.IDENTITY)
+//    private Long id;
+//
+//    @Column(unique = true, nullable = false)
+//    private String email;
+//
+//    @Column(unique = true, nullable = false)
+//    private String username;
+//
+//    @Column(nullable = false)
+//    private String password;
+//
+//    @Column(nullable = false)
+//    private String name;
+//
+//    @Enumerated(EnumType.STRING)
+//    @ElementCollection(fetch = FetchType.EAGER)
+//    @CollectionTable(name = "user_role", joinColumns = @JoinColumn(name = "user_id"))
+//    private Set<UserRole> roles = new HashSet<>();
+//
+//    @Column(length = 2000)
+//    private String pushSubscription;
+//
+//    // ✅ MÉTODOS DO USERDETAILS IMPLEMENTADOS
+//
+//    @Override
+//    public Collection<? extends GrantedAuthority> getAuthorities() {
+//        return roles.stream()
+//                .map(role -> new SimpleGrantedAuthority(role.name()))
+//                .collect(Collectors.toList());
+//    }
+//
+//    @Override
+//    public String getUsername() {
+//        return this.email; // ✅ Usa email como username para autenticação
+//    }
+//
+//    // ✅ Método auxiliar para obter o username real se necessário
+//    public String getActualUsername() {
+//        return this.username;
+//    }
+//
+//    @Override
+//    public boolean isAccountNonExpired() {
+//        return true;
+//    }
+//
+//    @Override
+//    public boolean isAccountNonLocked() {
+//        return true;
+//    }
+//
+//    @Override
+//    public boolean isCredentialsNonExpired() {
+//        return true;
+//    }
+//
+//    @Override
+//    public boolean isEnabled() {
+//        return true;
+//    }
+//
+//    @Override
+//    public String toString() {
+//        return "User{" +
+//                "id=" + id +
+//                ", email='" + email + '\'' +
+//                ", username='" + username + '\'' +
+//                ", name='" + name + '\'' +
+//                ", roles=" + roles +
+//                '}';
+//    }
+//}
