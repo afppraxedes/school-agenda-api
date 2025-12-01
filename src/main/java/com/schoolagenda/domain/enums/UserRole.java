@@ -1,11 +1,14 @@
-package com.schoolagenda.domain.model;
+package com.schoolagenda.domain.enums;
 
 import java.util.Arrays;
 
 public enum UserRole {
-    RESPONSIBLE ("RESPONSIBLE"),
+
+    ADMINISTRATOR ("ADMINISTRATOR"), // NOVO: Para gestão técnica do sistema
     TEACHER ("TEACHER"),
-    DIRECTOR ("DIRECTOR");
+    DIRECTOR ("DIRECTOR"),
+    RESPONSIBLE ("RESPONSIBLE"),
+    STUDENT ("STUDENT");       // NOVO: Para o aluno acessar seus próprios dados
 
     private final String description;
 

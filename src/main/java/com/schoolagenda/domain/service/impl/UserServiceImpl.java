@@ -4,7 +4,7 @@
 //import com.schoolagenda.application.web.dto.request.UpdateUserRequest;
 //import com.schoolagenda.application.web.dto.response.UserResponse;
 //import com.schoolagenda.domain.model.User;
-//import com.schoolagenda.domain.model.UserRole;
+//import com.schoolagenda.domain.enums.UserRole;
 //import com.schoolagenda.domain.repository.UserRepository;
 //import com.schoolagenda.domain.service.UserService;
 //import lombok.RequiredArgsConstructor;
@@ -382,7 +382,7 @@ import com.schoolagenda.application.web.dto.request.CreateUserRequest;
 import com.schoolagenda.application.web.dto.request.UpdateUserRequest;
 import com.schoolagenda.application.web.dto.response.UserResponse;
 import com.schoolagenda.domain.model.User;
-import com.schoolagenda.domain.model.UserRole;
+import com.schoolagenda.domain.enums.UserRole;
 import com.schoolagenda.domain.repository.UserRepository;
 import com.schoolagenda.domain.service.UserService;
 import lombok.RequiredArgsConstructor;

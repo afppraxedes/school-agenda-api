@@ -3,7 +3,7 @@ package com.schoolagenda.domain.service;
 import com.schoolagenda.application.web.dto.request.CreateUserRequest;
 import com.schoolagenda.application.web.dto.request.UpdateUserRequest;
 import com.schoolagenda.application.web.dto.response.UserResponse;
-import com.schoolagenda.domain.model.UserRole;
+import com.schoolagenda.domain.enums.UserRole;
 
 import java.util.List;
 

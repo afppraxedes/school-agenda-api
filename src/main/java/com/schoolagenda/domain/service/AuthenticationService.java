@@ -4,7 +4,7 @@ package com.schoolagenda.domain.service;
 import com.schoolagenda.application.web.security.dtos.UserDetailsDTO;
 import com.schoolagenda.application.web.util.JwtService;
 import com.schoolagenda.domain.model.User;
-import com.schoolagenda.domain.model.UserRole;
+import com.schoolagenda.domain.enums.UserRole;
 import com.schoolagenda.domain.repository.UserRepository;
 import com.schoolagenda.application.web.dto.request.AuthenticationRequest;
 import com.schoolagenda.application.web.dto.response.AuthenticationResponse;

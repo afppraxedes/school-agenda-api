@@ -1,6 +1,6 @@
 package com.schoolagenda.application.web.dto.request;
 
-import com.schoolagenda.domain.model.UserRole;
+import com.schoolagenda.domain.enums.UserRole;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -9,7 +9,6 @@ import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.With;
 
 import java.util.Set;
 

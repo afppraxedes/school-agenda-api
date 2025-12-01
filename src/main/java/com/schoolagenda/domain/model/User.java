@@ -122,6 +122,7 @@
 
 package com.schoolagenda.domain.model;
 
+import com.schoolagenda.domain.enums.UserRole;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;

@@ -1,7 +1,7 @@
 package com.schoolagenda.application.web.config;
 
 import com.schoolagenda.domain.model.User;
-import com.schoolagenda.domain.model.UserRole;
+import com.schoolagenda.domain.enums.UserRole;
 import com.schoolagenda.domain.repository.UserRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;

@@ -59,7 +59,8 @@ public class PushSubscriptionController {
 
             // Buscar o usuário real no banco de dados
 //            User user = userRepository.findByEmail(username)
-            User user = userRepository.findByUsername(username)
+//            User user = userRepository.findByUsername(username)
+            User user = userRepository.findByEmail(username)
                     .orElseThrow(() -> new RuntimeException("User not found with email: " + username));
 
             // Validar DTO

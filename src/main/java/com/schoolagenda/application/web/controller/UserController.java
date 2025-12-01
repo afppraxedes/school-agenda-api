@@ -3,16 +3,13 @@ package com.schoolagenda.application.web.controller;
 import com.schoolagenda.application.web.dto.request.CreateUserRequest;
 import com.schoolagenda.application.web.dto.request.UpdateUserRequest;
 import com.schoolagenda.application.web.dto.response.UserResponse;
-import com.schoolagenda.domain.model.User;
-import com.schoolagenda.domain.model.UserRole;
+import com.schoolagenda.domain.enums.UserRole;
 import com.schoolagenda.domain.service.UserService;
 import com.schoolagenda.domain.service.impl.UserServiceImpl;
 
 import jakarta.validation.Valid;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;

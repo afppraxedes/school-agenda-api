@@ -1,6 +1,6 @@
 //package com.schoolagenda.application.web.dto.response;
 
-//import com.schoolagenda.domain.model.UserRole;
+//import com.schoolagenda.domain.enums.UserRole;
 //import java.util.Set;
 //
 //public class UserResponse {
@@ -52,7 +52,7 @@
 
 package com.schoolagenda.application.web.dto.response;
 
-import com.schoolagenda.domain.model.UserRole;
+import com.schoolagenda.domain.enums.UserRole;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

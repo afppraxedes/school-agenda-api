@@ -1,6 +1,6 @@
 package com.schoolagenda.application.web.dto.request;
 
-import com.schoolagenda.domain.model.UserRole;
+import com.schoolagenda.domain.enums.UserRole;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Size;
 import java.util.Set;

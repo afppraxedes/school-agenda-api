@@ -1,6 +1,6 @@
 package com.schoolagenda.application.web.dto.response;
 
-import com.schoolagenda.domain.model.UserRole;
+import com.schoolagenda.domain.enums.UserRole;
 
 import java.util.Set;
 
