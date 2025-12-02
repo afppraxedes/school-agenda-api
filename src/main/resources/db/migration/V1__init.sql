@@ -31,7 +31,9 @@ CREATE TABLE student (
     birth_date DATE NOT NULL,
     class_name VARCHAR(255) NOT NULL,
     profile_photo VARCHAR(255),
-    registration_date TIMESTAMP(6)
+    registration_date TIMESTAMP(6),
+    user_id BIGINT UNIQUE,
+    FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
 -- Responsible Student Table (Relation between User and Student)

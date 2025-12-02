@@ -2,18 +2,23 @@
 INSERT INTO users (email, username, password, name, push_subscription) VALUES
 ('director@school.com', 'director', '$2a$10$wPHGWKkG.gL.m.j/V.i/..5/..', 'Director User', NULL),
 ('teacher@school.com', 'teacher', '$2a$10$wPHGWKkG.gL.m.j/V.i/..5/..', 'Teacher User', NULL),
-('responsible@school.com', 'responsible', '$2a$10$wPHGWKkG.gL.m.j/V.i/..5/..', 'Responsible User', NULL);
+('responsible@school.com', 'responsible', '$2a$10$wPHGWKkG.gL.m.j/V.i/..5/..', 'Responsible User', NULL),
+('admin@school.com', 'admin', '$2a$10$eAccYoNOHEqXve8aIWT8Nu3PkMXWBaOxJ9aORr7x.56trjDZ.mc7.', 'Administrator', NULL),
+('student@school.com', 'student', '$2a$10$eAccYoNOHEqXve8aIWT8Nu3PkMXWBaOxJ9aORr7x.56trjDZ.mc7.', 'Student User', NULL);
 
 -- User Roles
 INSERT INTO user_roles (user_id, role) VALUES
 (1, 'DIRECTOR'),
 (2, 'TEACHER'),
-(3, 'RESPONSIBLE');
+(3, 'RESPONSIBLE'),
+(4, 'ADMINISTRATOR'),
+(5, 'STUDENT');
 
 -- Students
-INSERT INTO student (full_name, birth_date, class_name, profile_photo, registration_date) VALUES
-('Alice Student', '2015-05-10', 'Class 1A', NULL, NOW()),
-('Bob Student', '2014-08-20', 'Class 2B', NULL, NOW());
+INSERT INTO student (full_name, birth_date, class_name, profile_photo, registration_date, user_id) VALUES
+('Alice Student', '2015-05-10', 'Class 1A', NULL, NOW(), NULL),
+('Bob Student', '2014-08-20', 'Class 2B', NULL, NOW(), NULL),
+('Student User', '2010-01-01', 'Class 3C', NULL, NOW(), 5);
 
 -- Responsible Student
 INSERT INTO responsable_student (responsable_id, student_id, created_at, updated_at) VALUES
