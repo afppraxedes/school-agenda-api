@@ -47,9 +47,6 @@ public class User implements UserDetails {
     @Column(length = 2000)
     private String pushSubscription;
 
-    @OneToOne(mappedBy = "user")
-    private Student student;
-
     // METHODS OF USERDETAILS
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

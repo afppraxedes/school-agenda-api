@@ -16,14 +16,14 @@ INSERT INTO user_roles (user_id, role) VALUES
 
 -- Students
 INSERT INTO student (full_name, birth_date, class_name, profile_photo, registration_date, user_id) VALUES
-('Alice Student', '2015-05-10', 'Class 1A', NULL, NOW(), NULL),
-('Bob Student', '2014-08-20', 'Class 2B', NULL, NOW(), NULL),
-('Student User', '2010-01-01', 'Class 3C', NULL, NOW(), 5);
+('Alice Student', '2015-05-10', 'Class 1A', NULL, NOW(), 1),
+('Bob Student', '2014-08-20', 'Class 2B', NULL, NOW(), 2),
+('Student User', '2010-01-01', 'Class 3C', NULL, NOW(), 4);
 
 -- Responsible Student
-INSERT INTO responsable_student (responsable_id, student_id, created_at, updated_at) VALUES
-(3, 1, NOW(), NOW()),
-(3, 2, NOW(), NOW());
+INSERT INTO responsable_student (id, responsable_id, student_id, created_at, updated_at) VALUES
+(1, 3, 1, NOW(), NOW()),
+(2, 3, 2, NOW(), NOW());
 
 -- Announcements
 INSERT INTO announcements (title, description, image_path, type, order_position, created_at, updated_at, is_active) VALUES
