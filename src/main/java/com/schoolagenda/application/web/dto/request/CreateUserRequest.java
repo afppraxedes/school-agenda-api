@@ -40,7 +40,7 @@ public class CreateUserRequest{
         private String password;
 
         // TODO: verificar se altero para "profiles" e coloco os perfis iniciando com "ROLE"!
-        @Schema(description = "User profiles", example = "[\"DIRECTOR\", \"TEACHER\", \"RESPONSIBLE\"]")
+        @Schema(description = "User profiles", example = "[\"ADMINISTRATOR\", \"DIRECTOR\", \"TEACHER\", \"RESPONSIBLE\", \"STUDENT\"]")
         @NotNull(message = "Roles are required")
         private Set<UserRole> roles;
 

@@ -27,10 +27,26 @@ public class UserController {
         this.userService = userService;
     }
 
+    // TODO: colocar os "perfis de acesso" para cada "endpoint"!!!
+    // TODO: IMPORTANTE -> verificar a nomenclatura dos mpetodos, pios algums começar com "get" e outros "find"! Manter
+    // uma nomenclatura padronizada para todo o sistema (isso será feito na refatoralão!)
     // CRUD Endpoints
     @PostMapping
     public ResponseEntity<UserResponse> createUser(@Valid @RequestBody CreateUserRequest request) {
         UserResponse response = userService.createUser(request);
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+        userService.deleteUser(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<UserResponse> updateUser(
+            @PathVariable Long id, @Valid @RequestBody UpdateUserRequest request) {
+        UserResponse response = userService.updateUser(id, request);
         return ResponseEntity.ok(response);
     }
 
@@ -44,19 +60,6 @@ public class UserController {
     public ResponseEntity<UserResponse> getUserById(@PathVariable Long id) {
         UserResponse response = userService.getUserById(id);
         return ResponseEntity.ok(response);
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<UserResponse> updateUser(
-            @PathVariable Long id, @Valid @RequestBody UpdateUserRequest request) {
-        UserResponse response = userService.updateUser(id, request);
-        return ResponseEntity.ok(response);
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        userService.deleteUser(id);
-        return ResponseEntity.noContent().build();
     }
 
     // Search and Filter Endpoints
@@ -126,30 +129,6 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
-    // Current User Endpoints
-//    @GetMapping("/me")
-//    public ResponseEntity<UserResponse> getCurrentUser() {
-//        UserResponse response = userService.getCurrentUserProfile();
-//        return ResponseEntity.ok(response);
-//    }
-
-    // TODO: Mas com "User" estou expondo minha entidade! Não está correto! O correto está acima, ter
-    // como retorno um "UserResponse"! Mas estou apenas fazendo testes!
-//    @GetMapping("/me")
-//    public ResponseEntity<User> getCurrentUser(Authentication authentication) {
-//        User user = (User) authentication.getPrincipal(); // Agora é User -->
-//        return ResponseEntity.ok(user);
-//
-//        //return "Hello " + user.getName() + "! Your roles: " + user.getRoles();
-//    }
-
-//    @PreAuthorize("hasAuthority('DIRECTOR')")
-//    @GetMapping("/me")
-//    public ResponseEntity<UserResponse> getCurrentUser() {
-//        UserResponse response = userService.getCurrentUserProfile();
-//        return ResponseEntity.ok(response);
-//    }
-
 //    @PreAuthorize("hasAnyAuthority('DIRECTOR', 'TEACHER', 'RESPONSIBLE')")
     @GetMapping("/me")
     public ResponseEntity<UserResponse> getCurrentUser() {
@@ -157,12 +136,8 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/test-all/director")
-//    @PreAuthorize("hasAuthority('DIRECTOR')")
-    public String getUsers() {
-        return "List of users - DIRECTOR access only";
-    }
-
+    // TODO: rever do "FBE" a implementação de segurança, pois o "username" está retornando o "email"
+    // e está dando problema ao utilizar este "endpoint"!
     @PutMapping("/me")
     public ResponseEntity<UserResponse> updateCurrentUser(@Valid @RequestBody UpdateUserRequest request) {
         UserResponse response = userService.updateCurrentUserProfile(request);

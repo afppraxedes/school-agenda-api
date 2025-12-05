@@ -5,8 +5,8 @@ import java.util.Arrays;
 public enum UserRole {
 
     ADMINISTRATOR ("ADMINISTRATOR"), // NOVO: Para gestão técnica do sistema
-    TEACHER ("TEACHER"),
     DIRECTOR ("DIRECTOR"),
+    TEACHER ("TEACHER"),
     RESPONSIBLE ("RESPONSIBLE"),
     STUDENT ("STUDENT");       // NOVO: Para o aluno acessar seus próprios dados
 

@@ -9,7 +9,7 @@ public class GeneratePassword {
         // td3319 (Director)
         // td7120 (Teacher)
         // td8083 (Responsible)
-        System.out.println(encoder.encode("td8083"));
+        System.out.println(encoder.encode("td3319"));
     }
 
 }

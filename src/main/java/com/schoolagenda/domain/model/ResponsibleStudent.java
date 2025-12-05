@@ -19,6 +19,16 @@ public class ResponsibleStudent {
     @JoinColumn(name = "student_id", nullable = false)
     private Student student;
 
+    // TODO: refatorar as "datas do vínculo (created_at e updated_at) para:
+    // Timestamps do vínculo
+//    @CreationTimestamp
+//    @Column(name = "linked_at", updatable = false)
+//    private LocalDateTime linkedAt;
+//
+//    @UpdateTimestamp
+//    @Column(name = "relationship_updated_at")
+//    private LocalDateTime relationshipUpdatedAt;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 

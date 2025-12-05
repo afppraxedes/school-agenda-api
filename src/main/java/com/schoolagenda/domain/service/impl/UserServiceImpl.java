@@ -381,6 +381,8 @@ package com.schoolagenda.domain.service.impl;
 import com.schoolagenda.application.web.dto.request.CreateUserRequest;
 import com.schoolagenda.application.web.dto.request.UpdateUserRequest;
 import com.schoolagenda.application.web.dto.response.UserResponse;
+import com.schoolagenda.domain.exception.DuplicateResourceException;
+import com.schoolagenda.domain.exception.ResourceNotFoundException;
 import com.schoolagenda.domain.model.User;
 import com.schoolagenda.domain.enums.UserRole;
 import com.schoolagenda.domain.repository.UserRepository;
@@ -433,7 +435,7 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     public UserResponse getUserById(Long id) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
         return convertToResponse(user);
     }
 
@@ -450,22 +452,30 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public UserResponse updateUser(Long id, UpdateUserRequest request) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
 
+        // Validações
         if (request.getEmail() != null && !request.getEmail().equals(user.getEmail())) {
-            if (userRepository.existsByEmail(request.getEmail())) {
-                throw new RuntimeException("Email already exists: " + request.getEmail());
-            }
+            validateEmailUniqueness(request.getEmail(), id);
             user.setEmail(request.getEmail());
         }
 
         if (request.getUsername() != null && !request.getUsername().equals(user.getUsername())) {
-            if (userRepository.existsByUsername(request.getUsername())) {
-                throw new RuntimeException("Username already exists: " + request.getUsername());
-            }
+            validateUsernameUniqueness(request.getUsername(), id);
             user.setUsername(request.getUsername());
         }
 
+        // Atualiza outros campos
+        updateUserFields(user, request);
+
+        User updatedUser = userRepository.save(user);
+        return convertToResponse(updatedUser);
+    }
+
+    /**
+     * Atualiza os demais campos do usuário
+     */
+    private void updateUserFields(User user, UpdateUserRequest request) {
         if (request.getName() != null) {
             user.setName(request.getName());
         }
@@ -481,16 +491,27 @@ public class UserServiceImpl implements UserService {
         if (request.getPushSubscription() != null) {
             user.setPushSubscription(request.getPushSubscription());
         }
+    }
 
-        User updatedUser = userRepository.save(user);
-        return convertToResponse(updatedUser);
+    private void validateEmailUniqueness(String email, Long currentUserId) {
+        boolean emailExists = userRepository.existsByEmailAndIdNot(email, currentUserId);
+        if (emailExists) {
+            throw new DuplicateResourceException("Email '" + email + "' is already taken");
+        }
+    }
+
+    private void validateUsernameUniqueness(String username, Long currentUserId) {
+        boolean usernameExists = userRepository.existsByUsernameAndIdNot(username, currentUserId);
+        if (usernameExists) {
+            throw new DuplicateResourceException("Username '" + username + "' is already taken");
+        }
     }
 
     @Override
     @Transactional
     public void deleteUser(Long id) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
         userRepository.delete(user);
     }
 
@@ -507,7 +528,7 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     public UserResponse getUserByEmail(String email) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
         return convertToResponse(user);
     }
 
@@ -515,7 +536,7 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     public UserResponse getUserByUsername(String username) {
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found with username: " + username));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with username: " + username));
         return convertToResponse(user);
     }
 
@@ -564,7 +585,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public UserResponse updatePushSubscription(Long userId, String pushSubscription) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
         user.setPushSubscription(pushSubscription);
         User updatedUser = userRepository.save(user);
         return convertToResponse(updatedUser);
@@ -574,7 +595,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public UserResponse removePushSubscription(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
         user.setPushSubscription(null);
         User updatedUser = userRepository.save(user);
         return convertToResponse(updatedUser);
@@ -634,7 +655,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public UserResponse addRoleToUser(Long userId, UserRole role) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
         user.getRoles().add(role);
         User updatedUser = userRepository.save(user);
         return convertToResponse(updatedUser);
@@ -644,7 +665,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public UserResponse removeRoleFromUser(Long userId, UserRole role) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
         user.getRoles().remove(role);
         User updatedUser = userRepository.save(user);
         return convertToResponse(updatedUser);
@@ -664,7 +685,7 @@ public class UserServiceImpl implements UserService {
     public UserResponse updateCurrentUserProfile(UpdateUserRequest request) {
         String username = getCurrentUsername();
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found with username: " + username));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with username: " + username));
         return updateUser(user.getId(), request);
     }
 
@@ -682,7 +703,7 @@ public class UserServiceImpl implements UserService {
         return UserResponse.builder()
                 .id(user.getId())
                 .email(user.getEmail())
-                .username(user.getUsername())
+                .username(user.getActualUsername())
                 .name(user.getName())
                 .roles(user.getRoles())
                 .pushSubscription(user.getPushSubscription())
