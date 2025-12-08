@@ -1,4 +1,4 @@
-package infrastructure.external.webpush;
+package com.schoolagenda.infrastructure.external.webpush;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.schoolagenda.domain.service.WebPushService;

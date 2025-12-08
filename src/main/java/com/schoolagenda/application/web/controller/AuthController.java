@@ -1,52 +1,49 @@
-package com.schoolagenda.application.web.controller;
-
+//package com.schoolagenda.application.web.controller.impl;
+//
+//import com.schoolagenda.application.web.controller.AuthController;
 //import com.schoolagenda.application.web.dto.request.AuthenticateRequest;
 //import com.schoolagenda.application.web.dto.request.RefreshTokenRequest;
 //import com.schoolagenda.application.web.dto.response.AuthenticationResponse;
 //import com.schoolagenda.application.web.dto.response.RefreshTokenResponse;
-//import com.schoolagenda.domain.exception.StandardError;
+//import com.schoolagenda.application.web.security.JWTAuthenticationImpl;
+//import com.schoolagenda.application.web.util.JWTUtils;
+//import com.schoolagenda.domain.service.RefreshTokenService;
+//import lombok.RequiredArgsConstructor;
 //
-//import io.swagger.v3.oas.annotations.Operation;
-//import io.swagger.v3.oas.annotations.media.Content;
-//import io.swagger.v3.oas.annotations.media.Schema;
-//import io.swagger.v3.oas.annotations.responses.ApiResponse;
-//import io.swagger.v3.oas.annotations.responses.ApiResponses;
-//
-//import jakarta.validation.Valid;
-//
-//import org.springframework.http.MediaType;
 //import org.springframework.http.ResponseEntity;
-//import org.springframework.web.bind.annotation.PostMapping;
-//import org.springframework.web.bind.annotation.RequestBody;
-//import org.springframework.web.bind.annotation.RequestMapping;
+//import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+//import org.springframework.web.bind.annotation.RestController;
 //
-//import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
-
-//@RequestMapping("/api/auth")
-public interface AuthController {
-
-//    @Operation(summary = "Authenticate user")
-//    @ApiResponses(value = {
-//            @ApiResponse(responseCode = "200", description = "User authenticated", content = @Content(mediaType = APPLICATION_JSON_VALUE, schema = @Schema(implementation = AuthenticationResponse.class))),
-//            @ApiResponse(responseCode = "400", description = "Bad request", content = @Content(mediaType = APPLICATION_JSON_VALUE, schema = @Schema(implementation = StandardError.class))),
-//            @ApiResponse(responseCode = "401", description = "Bad credentials", content = @Content(mediaType = APPLICATION_JSON_VALUE, schema = @Schema(implementation = StandardError.class))),
-//            @ApiResponse(responseCode = "404", description = "Username not found", content = @Content(mediaType = APPLICATION_JSON_VALUE, schema = @Schema(implementation = StandardError.class))),
-//            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = APPLICATION_JSON_VALUE, schema = @Schema(implementation = StandardError.class)))
-//    })
-//    @PostMapping("/login")
-//    ResponseEntity<AuthenticationResponse> authenticate(@Valid @RequestBody AuthenticateRequest request) throws Exception;
+//@RestController
+//public class AuthControllerImpl implements AuthController {
 //
-//    // Endpoint (contrato) para o "Refresh Token"
-//    @Operation(summary = "Refresh Token")
-//    @ApiResponses(value = {
-//            @ApiResponse(responseCode = "200", description = "Token refreshed", content = @Content(mediaType = APPLICATION_JSON_VALUE, schema = @Schema(implementation = RefreshTokenResponse.class))),
-//            @ApiResponse(responseCode = "400", description = "Bad request", content = @Content(mediaType = APPLICATION_JSON_VALUE, schema = @Schema(implementation = StandardError.class))),
-//            @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(mediaType = APPLICATION_JSON_VALUE, schema = @Schema(implementation = StandardError.class))),
-//            @ApiResponse(responseCode = "404", description = "Username not found", content = @Content(mediaType = APPLICATION_JSON_VALUE, schema = @Schema(implementation = StandardError.class))),
-//            @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(mediaType = APPLICATION_JSON_VALUE, schema = @Schema(implementation = StandardError.class)))
-//    })
-//    @RequestMapping("/refresh-token")
-//    ResponseEntity<RefreshTokenResponse> refreshToken(@Valid @RequestBody final RefreshTokenRequest request);
+//    private final JWTUtils jwtUtils;
+//    private final RefreshTokenService refreshTokenService;
+//    private final AuthenticationConfiguration authenticationConfiguration;
+//
+//    public AuthControllerImpl(JWTUtils jwtUtils, RefreshTokenService refreshTokenService, AuthenticationConfiguration authenticationConfiguration) {
+//        this.jwtUtils = jwtUtils;
+//        this.refreshTokenService = refreshTokenService;
+//        this.authenticationConfiguration = authenticationConfiguration;
+//    }
+//
+//    // Responsável pela autenticação (criação do token)
+//    @Override
+//    public ResponseEntity<AuthenticationResponse> authenticate(final AuthenticateRequest request) throws Exception {
+//
+//        System.out.println("Email: " + request.email() + "\nPassword: " + request.password());
+//
+//        return ResponseEntity.ok().body(
+//                new JWTAuthenticationImpl(jwtUtils, authenticationConfiguration.getAuthenticationManager())
+//                        .authenticate(request)
+//                        .withRefreshToken(refreshTokenService.save(request.email()).getId())
+//        );
+//    }
+//
+//    // Responsável pelo "refresh token"
+//    @Override
+//    public ResponseEntity<RefreshTokenResponse> refreshToken(RefreshTokenRequest request) {
+//        return ResponseEntity.ok().body(refreshTokenService.refreshToken(request.refreshToken()));
+//    }
+//}
 
-
-}

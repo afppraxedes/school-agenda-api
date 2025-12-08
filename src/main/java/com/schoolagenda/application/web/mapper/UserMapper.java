@@ -1,4 +1,4 @@
-package com.schoolagenda.mapper;
+package com.schoolagenda.application.web.mapper;
 
 
 import com.schoolagenda.application.web.dto.request.CreateUserRequest;

@@ -1,10 +1,9 @@
-package com.schoolagenda.application.web.config;
+package com.schoolagenda.infrastructure.config;
 
 import com.schoolagenda.application.web.security.JwtAuthenticationFilter;
 import com.schoolagenda.application.web.util.JwtService;
 import com.schoolagenda.domain.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.apache.catalina.filters.CorsFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -39,17 +38,26 @@ public class SecurityConfig {
     private final UserRepository userRepository;
     private final JwtService jwtService; // ✅ Injete JwtService diretamente
 
+    // TODO: Verificar a versão do "swagger" e "spring-doc" quando for implementar toda documentação, pois parece
+    // estar numa versão "anterior" ("/api-docs/" e não "/v3/api-docs/"!)
     // Whitelist de endpoints públicos
     private static final String[] PUBLIC_ENDPOINTS = {
-            "/api/auth/**",
+//            "/api/auth/**",
             "/api/auth/login",
             "/api/auth/register",
+
             "/h2-console/**",
-            "/swagger-ui/**",
-            "/swagger-ui/api-docs/swagger-config",
-            "/v3/api-docs/**",
+
+            "/swagger-ui.html",
+            "/swagger-ui/**",           // ← UI do Swagger
+            "/v3/api-docs/**",          // ← Docs da v3
+            "/api-docs/**",             // ← SEUS grupos (public, actuator, etc)
             "/swagger-resources/**",
-            "/webjars/**"
+            "/webjars/**",
+            "/configuration/**",
+
+            "/actuator/health",
+            "/actuator/info",
     };
 
     @Bean
@@ -93,6 +101,7 @@ public class SecurityConfig {
                 "https://*.ngrok-free.dev",
                 "http://localhost:8081",
                 "http://localhost:8080/actuator/health"
+//                "http://localhost:8080/swagger-ui/**"
         ));
 
         configuration.setAllowedMethods(List.of("*"));

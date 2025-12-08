@@ -1,4 +1,4 @@
-package com.schoolagenda.application.web.config;
+package com.schoolagenda.infrastructure.config;
 
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;

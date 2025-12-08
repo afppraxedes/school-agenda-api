@@ -71,6 +71,20 @@ public class ControllerExceptionHandler {
                         .build());
     }
 
+    // Exceção para erros de negócio (exceção global)
+    @ExceptionHandler(BusinessResourceException.class)
+    ResponseEntity<StandardError> handleBusinessResourceException(
+            final BusinessResourceException ex, final HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                StandardError.builder()
+                        .timestamp(LocalDateTime.now())
+                        .status(HttpStatus.NOT_FOUND.value())
+                        .error(HttpStatus.NOT_FOUND.getReasonPhrase())
+                        .message(ex.getMessage())
+                        .path(request.getRequestURI())
+                        .build());
+    }
+
     // Exceção para parâmetros com formatos (tipos de dados) inválidos
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     ResponseEntity<StandardError> handleMethodArgumentTypeMismatchException(
@@ -108,11 +122,12 @@ public class ControllerExceptionHandler {
                         .timestamp(LocalDateTime.now())
                         .status(HttpStatus.BAD_REQUEST.value())
                         .error("Field validation exception.")
-                        .message("A user is already registered")
+                        .message(ex.getMessage())
                         .path(request.getRequestURI())
                         .build());
     }
 
+    // Exceção para recurso não encontrado
     @ExceptionHandler(ResourceNotFoundException.class)
     ResponseEntity<StandardError> handleResourceNotFoundException(
             final ResourceNotFoundException ex, final HttpServletRequest request) {

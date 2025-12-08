@@ -4,7 +4,9 @@ INSERT INTO users (email, username, password, name, push_subscription) VALUES
 ('teacher@school.com', 'teacher', '$2a$10$wPHGWKkG.gL.m.j/V.i/..5/..', 'Teacher User', NULL),
 ('responsible@school.com', 'responsible', '$2a$10$wPHGWKkG.gL.m.j/V.i/..5/..', 'Responsible User', NULL),
 ('admin@school.com', 'admin', '$2a$10$eAccYoNOHEqXve8aIWT8Nu3PkMXWBaOxJ9aORr7x.56trjDZ.mc7.', 'Administrator', NULL),
-('student@school.com', 'student', '$2a$10$eAccYoNOHEqXve8aIWT8Nu3PkMXWBaOxJ9aORr7x.56trjDZ.mc7.', 'Student User', NULL);
+('student@school.com', 'student', '$2a$10$eAccYoNOHEqXve8aIWT8Nu3PkMXWBaOxJ9aORr7x.56trjDZ.mc7.', 'Student User', NULL),
+('marcelo.diretor@school.com', 'marcelo', '$2a$10$5GxIkMhjdW8o21iFOaVIQucO/zXxucFQQpJOXaRxGuFfcNWV8BPUu', 'Marcelo Diretor', NULL),
+('alexander.admin@school.com', 'alex', '$2a$10$RR44jktAtMMuHOzQife3GeEZU48aXYcs6E1j5xHSdPvudKHFPsE4G', 'Alex Administrador', NULL);
 
 -- User Roles
 INSERT INTO user_roles (user_id, role) VALUES
@@ -12,7 +14,10 @@ INSERT INTO user_roles (user_id, role) VALUES
 (2, 'TEACHER'),
 (3, 'RESPONSIBLE'),
 (4, 'ADMINISTRATOR'),
-(5, 'STUDENT');
+(5, 'STUDENT'),
+(6, 'DIRECTOR'),
+(7, 'ADMINISTRATOR'),
+(7,	'DIRECTOR');
 
 -- Students
 INSERT INTO student (full_name, birth_date, class_name, profile_photo, registration_date, user_id) VALUES

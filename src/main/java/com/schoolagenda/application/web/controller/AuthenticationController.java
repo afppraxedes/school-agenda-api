@@ -1,5 +1,5 @@
 //package com.schoolagenda.application.web.controller;
-package com.schoolagenda.application.web.controller.impl;
+package com.schoolagenda.application.web.controller;
 
 
 import com.schoolagenda.application.web.dto.request.RegisterRequest;

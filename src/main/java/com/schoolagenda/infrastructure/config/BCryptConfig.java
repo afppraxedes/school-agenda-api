@@ -1,4 +1,4 @@
-package com.schoolagenda.application.web.config;
+package com.schoolagenda.infrastructure.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

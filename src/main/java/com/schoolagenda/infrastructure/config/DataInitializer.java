@@ -1,4 +1,4 @@
-package com.schoolagenda.application.web.config;
+package com.schoolagenda.infrastructure.config;
 
 import com.schoolagenda.domain.model.User;
 import com.schoolagenda.domain.enums.UserRole;

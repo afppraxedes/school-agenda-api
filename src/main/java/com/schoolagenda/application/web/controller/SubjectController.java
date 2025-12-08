@@ -1,0 +1,88 @@
+package com.schoolagenda.application.web.controller;
+
+import com.schoolagenda.application.web.dto.request.SubjectRequest;
+import com.schoolagenda.application.web.dto.response.SubjectResponse;
+import com.schoolagenda.domain.service.SubjectService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/v1/subjects")
+@RequiredArgsConstructor
+@Tag(name = "Disciplinas", description = "Gerenciamento de disciplinas")
+public class SubjectController {
+
+    private final SubjectService subjectService;
+
+    @PostMapping
+    @Operation(summary = "Criar uma nova disciplina")
+    public ResponseEntity<SubjectResponse> create(@Valid @RequestBody SubjectRequest request) {
+        SubjectResponse response = subjectService.create(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @GetMapping("/{id}")
+    @Operation(summary = "Buscar disciplina por ID")
+    public ResponseEntity<SubjectResponse> findById(@PathVariable Long id) {
+        SubjectResponse response = subjectService.findById(id);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping
+    @Operation(summary = "Listar todas as disciplinas")
+    public ResponseEntity<List<SubjectResponse>> findAll() {
+        List<SubjectResponse> responses = subjectService.findAll();
+        return ResponseEntity.ok(responses);
+    }
+
+    @GetMapping("/teacher/{teacherId}")
+    @Operation(summary = "Listar disciplinas de um professor")
+    public ResponseEntity<List<SubjectResponse>> findByTeacher(@PathVariable Long teacherId) {
+        List<SubjectResponse> responses = subjectService.findByTeacher(teacherId);
+        return ResponseEntity.ok(responses);
+    }
+
+    @GetMapping("/school-year/{schoolYear}")
+    @Operation(summary = "Listar disciplinas por ano letivo")
+    public ResponseEntity<List<SubjectResponse>> findBySchoolYear(@PathVariable String schoolYear) {
+        List<SubjectResponse> responses = subjectService.findBySchoolYear(schoolYear);
+        return ResponseEntity.ok(responses);
+    }
+
+    @GetMapping("/active")
+    @Operation(summary = "Listar disciplinas ativas")
+    public ResponseEntity<List<SubjectResponse>> findActive() {
+        List<SubjectResponse> responses = subjectService.findActive();
+        return ResponseEntity.ok(responses);
+    }
+
+    @PutMapping("/{id}")
+    @Operation(summary = "Atualizar disciplina")
+    public ResponseEntity<SubjectResponse> update(
+            @PathVariable Long id,
+            @Valid @RequestBody SubjectRequest request) {
+        SubjectResponse response = subjectService.update(id, request);
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Excluir disciplina")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        subjectService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{id}/toggle-status")
+    @Operation(summary = "Alternar status ativo/inativo")
+    public ResponseEntity<SubjectResponse> toggleStatus(@PathVariable Long id) {
+        SubjectResponse response = subjectService.toggleStatus(id);
+        return ResponseEntity.ok(response);
+    }
+}

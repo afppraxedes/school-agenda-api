@@ -110,8 +110,18 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     List<User> findByNameContainingIgnoreCase(String name);
 
-    boolean existsByEmailAndIdNot(String email, Long id);
-    boolean existsByUsernameAndIdNot(String username, Long id);
+    // TODO: métodos que estavam anteriormente funcionando corretamente
+//    boolean existsByEmailAndIdNot(String email, Long id);
+//    boolean existsByUsernameAndIdNot(String username, Long id);
+
+    // TODO: Novos método! Verificar no postman se está tudo correto com a validação de email!
+    // Esse parâmetro "excludeId" está com nome "estranho"!
+    @Query("SELECT COUNT(u) > 0 FROM User u WHERE u.email = :email AND u.id != :excludeId")
+    boolean existsByEmailAndIdNot(@Param("email") String email, @Param("excludeId") Long excludeId);
+
+    // Esse parâmetro "excludeId" está com nome "estranho"!
+    @Query("SELECT COUNT(u) > 0 FROM User u WHERE u.username = :username AND u.id != :excludeId")
+    boolean existsByUsernameAndIdNot(@Param("username") String username, @Param("excludeId") Long excludeId);
 
     @Query("SELECT COUNT(u) FROM User u JOIN u.roles r WHERE r = :role")
     long countByRole(@Param("role") UserRole role);
