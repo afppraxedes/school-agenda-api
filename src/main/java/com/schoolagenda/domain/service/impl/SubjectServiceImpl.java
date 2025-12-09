@@ -27,7 +27,7 @@ public class SubjectServiceImpl implements SubjectService {
 
     @Transactional
     public SubjectResponse create(SubjectRequest request) {
-        log.info("Criando nova disciplina: {}", request.getName());
+        log.info("Creating a new subject: {}", request.getName());
 
         validateSubjectRequest(request);
 
@@ -35,29 +35,29 @@ public class SubjectServiceImpl implements SubjectService {
 
         if (request.getTeacherUserId() != null) {
             User teacher = userRepository.findById(request.getTeacherUserId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Professor não encontrado com ID: " + request.getTeacherUserId()));
+                    .orElseThrow(() -> new ResourceNotFoundException("Teacher not found with ID: " + request.getTeacherUserId()));
             subject.setTeacher(teacher);
         }
 
         Subject savedSubject = subjectRepository.save(subject);
-        log.info("Disciplina criada com ID: {}", savedSubject.getId());
+        log.info("Subject created with ID: {}", savedSubject.getId());
 
         return subjectMapper.toResponse(savedSubject);
     }
 
     @Transactional(readOnly = true)
     public SubjectResponse findById(Long id) {
-        log.debug("Buscando disciplina com ID: {}", id);
+        log.debug("Searching for subject with ID: {}", id);
 
         Subject subject = subjectRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Disciplina não encontrada com ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Subject not found with ID: " + id));
 
         return subjectMapper.toResponse(subject);
     }
 
     @Transactional(readOnly = true)
     public List<SubjectResponse> findAll() {
-        log.debug("Buscando todas as disciplinas");
+        log.debug("Searching for all subjects");
         return subjectRepository.findAll().stream()
                 .map(subjectMapper::toResponse)
                 .toList();
@@ -65,23 +65,45 @@ public class SubjectServiceImpl implements SubjectService {
 
     @Transactional(readOnly = true)
     public List<SubjectResponse> findByTeacher(Long teacherId) {
-        log.debug("Buscando disciplinas do professor ID: {}", teacherId);
-        return subjectRepository.findByTeacherId(teacherId).stream()
+        log.debug("Searching for subjects by teacher ID.: {}", teacherId);
+
+        List<Subject> response = subjectRepository.findByTeacherId(teacherId);
+
+        // TODO: esta validação está apenas como "provisória". Criar um método que faça
+        // a busca, para que não precise ficar "replicando" esta mesma instrução!
+        if(response.isEmpty()) {
+            throw new ResourceNotFoundException("Teacher not found with ID: " + teacherId);
+        }
+
+        return response.stream()
                 .map(subjectMapper::toResponse)
                 .toList();
+//        return subjectRepository.findByTeacherId(teacherId).stream()
+//                .map(subjectMapper::toResponse)
+//                .toList();
     }
 
     @Transactional(readOnly = true)
     public List<SubjectResponse> findBySchoolYear(String schoolYear) {
-        log.debug("Buscando disciplinas do ano letivo: {}", schoolYear);
-        return subjectRepository.findBySchoolYear(schoolYear).stream()
+        log.debug("BSearching for subjects in the academic year: {}", schoolYear);
+
+        List<Subject> response = subjectRepository.findBySchoolYear(schoolYear);
+
+        if(response.isEmpty()) {
+            throw new ResourceNotFoundException("No subjects found for the academic year " + schoolYear);
+        }
+
+        return response.stream()
                 .map(subjectMapper::toResponse)
                 .toList();
+//        return subjectRepository.findBySchoolYear(schoolYear).stream()
+//                .map(subjectMapper::toResponse)
+//                .toList();
     }
 
     @Transactional(readOnly = true)
     public List<SubjectResponse> findActive() {
-        log.debug("Buscando disciplinas ativas");
+        log.debug("Searching for active subjects");
         return subjectRepository.findByActiveTrue().stream()
                 .map(subjectMapper::toResponse)
                 .toList();
@@ -89,10 +111,10 @@ public class SubjectServiceImpl implements SubjectService {
 
     @Transactional
     public SubjectResponse update(Long id, SubjectRequest request) {
-        log.info("Atualizando disciplina ID: {}", id);
+        log.info("Updating subject ID: {}", id);
 
         Subject subject = subjectRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Disciplina não encontrada com ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Subject not found with ID: " + id));
 
         validateSubjectRequest(request, id);
 
@@ -100,41 +122,41 @@ public class SubjectServiceImpl implements SubjectService {
 
         if (request.getTeacherUserId() != null) {
             User teacher = userRepository.findById(request.getTeacherUserId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Professor não encontrado com ID: " + request.getTeacherUserId()));
+                    .orElseThrow(() -> new ResourceNotFoundException("Teacher not found with ID: " + request.getTeacherUserId()));
             subject.setTeacher(teacher);
         } else {
             subject.setTeacher(null);
         }
 
         Subject updatedSubject = subjectRepository.save(subject);
-        log.info("Disciplina atualizada com ID: {}", id);
+        log.info("Subject updated with ID: {}", id);
 
         return subjectMapper.toResponse(updatedSubject);
     }
 
     @Transactional
     public void delete(Long id) {
-        log.info("Excluindo disciplina ID: {}", id);
+        log.info("Deleting subject ID: {}", id);
 
         if (!subjectRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Disciplina não encontrada com ID: " + id);
+            throw new ResourceNotFoundException("Subject not found with ID: " + id);
         }
 
         subjectRepository.deleteById(id);
-        log.info("Disciplina excluída com ID: {}", id);
+        log.info("Subject deleted with ID: {}", id);
     }
 
     @Transactional
     public SubjectResponse toggleStatus(Long id) {
-        log.info("Alternando status da disciplina ID: {}", id);
+        log.info("Changing subject ID status: {}", id);
 
         Subject subject = subjectRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Disciplina não encontrada com ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Subject not found with ID: " + id));
 
         subject.setActive(!subject.getActive());
         Subject updatedSubject = subjectRepository.save(subject);
 
-        log.info("Status da disciplina ID: {} alterado para: {}", id, updatedSubject.getActive());
+        log.info("Subject ID status: {} changed to: {}", id, updatedSubject.getActive());
         return subjectMapper.toResponse(updatedSubject);
     }
 
@@ -161,7 +183,7 @@ public class SubjectServiceImpl implements SubjectService {
 
             if (exists) {
                 throw new IllegalArgumentException(
-                        String.format("Já existe uma disciplina com nome '%s' no ano letivo '%s'",
+                        String.format("There is already a subject named Mathematics '%s' in the academic year '%s'",
                                 request.getName(), request.getSchoolYear())
                 );
             }
