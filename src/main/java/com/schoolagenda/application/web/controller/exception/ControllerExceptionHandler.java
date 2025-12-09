@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.web.firewall.RequestRejectedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -55,6 +56,20 @@ public class ControllerExceptionHandler {
         }
 
         return ResponseEntity.badRequest().body(error);
+    }
+
+    // Exceção para URL's mal formatadas
+    @ExceptionHandler(RequestRejectedException.class)
+    ResponseEntity<StandardError> handleRequestRejectedException(
+            final RequestRejectedException ex, final HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                StandardError.builder()
+                        .timestamp(LocalDateTime.now())
+                        .status(HttpStatus.BAD_REQUEST.value())
+                        .error(HttpStatus.BAD_REQUEST.getReasonPhrase())
+                        .message("The request was rejected because the URL is malformed")
+                        .path(request.getRequestURI())
+                        .build());
     }
 
     // Exceção para campos que não possuam valor

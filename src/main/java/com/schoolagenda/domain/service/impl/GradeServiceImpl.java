@@ -32,31 +32,31 @@ public class GradeServiceImpl implements GradeService {
     @Override
     @Transactional
     public GradeResponse create(GradeRequest request) {
-        log.info("Criando nova nota para avaliação ID: {}, estudante ID: {}",
+        log.info("Creating a new grade for assessment ID: {}, student ID: {}",
                 request.getAssessmentId(), request.getStudentUserId());
 
         validateGradeRequest(request);
 
         Assessment assessment = assessmentRepository.findById(request.getAssessmentId())
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Avaliação não encontrada com ID: " + request.getAssessmentId()));
+                        "Assessment not found by ID: " + request.getAssessmentId()));
 
         User student = userRepository.findById(request.getStudentUserId())
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Estudante não encontrado com ID: " + request.getStudentUserId()));
+                        "Student not found by ID: " + request.getStudentUserId()));
 
         User gradedBy = null;
         if (request.getGradedByUserId() != null) {
             gradedBy = userRepository.findById(request.getGradedByUserId())
                     .orElseThrow(() -> new ResourceNotFoundException(
-                            "Usuário não encontrado com ID: " + request.getGradedByUserId()));
+                            "User not found by ID: " + request.getGradedByUserId()));
         }
 
         // Verifica se já existe nota para esta combinação
         if (gradeRepository.existsByAssessmentIdAndStudentId(
                 request.getAssessmentId(), request.getStudentUserId())) {
             throw new IllegalArgumentException(
-                    "Já existe uma nota para este estudante nesta avaliação");
+                    "A grade already exists for this student in this assessment");
         }
 
         Grade grade = gradeMapper.toEntity(request);
@@ -71,7 +71,7 @@ public class GradeServiceImpl implements GradeService {
         }
 
         Grade savedGrade = gradeRepository.save(grade);
-        log.info("Nota criada com ID: {}", savedGrade.getId());
+        log.info("Grade created with ID: {}", savedGrade.getId());
 
         return gradeMapper.toResponse(savedGrade);
     }
@@ -79,11 +79,11 @@ public class GradeServiceImpl implements GradeService {
     @Override
     @Transactional(readOnly = true)
     public GradeResponse findById(Long id) {
-        log.debug("Buscando nota com ID: {}", id);
+        log.debug("Searching for grade with ID: {}", id);
 
         Grade grade = gradeRepository.findByIdWithDetails(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Nota não encontrada com ID: " + id));
+                        "Grade not found with ID: " + id));
 
         return gradeMapper.toResponse(grade);
     }
@@ -91,11 +91,11 @@ public class GradeServiceImpl implements GradeService {
     @Override
     @Transactional(readOnly = true)
     public GradeResponse findByAssessmentAndStudent(Long assessmentId, Long studentId) {
-        log.debug("Buscando nota para avaliação {} e estudante {}", assessmentId, studentId);
+        log.debug("Searching for grade for assessment {} and student {}", assessmentId, studentId);
 
         Grade grade = gradeRepository.findByAssessmentIdAndStudentId(assessmentId, studentId)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Nota não encontrada para esta combinação"));
+                        "Note not found for this combination."));
 
         return gradeMapper.toResponse(grade);
     }
@@ -103,7 +103,7 @@ public class GradeServiceImpl implements GradeService {
     @Override
     @Transactional(readOnly = true)
     public List<GradeResponse> findByAssessment(Long assessmentId) {
-        log.debug("Buscando notas da avaliação ID: {}", assessmentId);
+        log.debug("Searching for grades for assessment ID: {}", assessmentId);
         return gradeRepository.findByAssessmentId(assessmentId).stream()
                 .map(gradeMapper::toResponse)
                 .toList();
@@ -112,8 +112,15 @@ public class GradeServiceImpl implements GradeService {
     @Override
     @Transactional(readOnly = true)
     public List<GradeResponse> findByStudent(Long studentId) {
-        log.debug("Buscando notas do estudante ID: {}", studentId);
-        return gradeRepository.findByStudentId(studentId).stream()
+        log.debug("Searching for grades for student ID: {}", studentId);
+
+        List<Grade> response = gradeRepository.findByStudentId(studentId);
+
+        if(response.isEmpty()) {
+            throw new ResourceNotFoundException("Student not found with ID: " + studentId);
+        }
+
+        return response.stream()
                 .map(gradeMapper::toResponse)
                 .toList();
     }
@@ -121,7 +128,7 @@ public class GradeServiceImpl implements GradeService {
     @Override
     @Transactional(readOnly = true)
     public List<GradeResponse> findByStudentAndSubject(Long studentId, Long subjectId) {
-        log.debug("Buscando notas do estudante {} na disciplina {}", studentId, subjectId);
+        log.debug("Searching for student grades {} in the subject {}", studentId, subjectId);
         return gradeRepository.findByStudentIdAndSubjectId(studentId, subjectId).stream()
                 .map(gradeMapper::toResponse)
                 .toList();
@@ -130,7 +137,7 @@ public class GradeServiceImpl implements GradeService {
     @Override
     @Transactional(readOnly = true)
     public List<GradeResponse> findUngradedByAssessment(Long assessmentId) {
-        log.debug("Buscando estudantes sem nota na avaliação ID: {}", assessmentId);
+        log.debug("Searching for students without a grade in assessment ID: {}", assessmentId);
         return gradeRepository.findUngradedByAssessmentId(assessmentId).stream()
                 .map(gradeMapper::toResponse)
                 .toList();
@@ -139,27 +146,27 @@ public class GradeServiceImpl implements GradeService {
     @Override
     @Transactional
     public GradeResponse update(Long id, GradeRequest request) {
-        log.info("Atualizando nota ID: {}", id);
+        log.info("Updating grade ID: {}", id);
 
         Grade grade = gradeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Nota não encontrada com ID: " + id));
+                        "Grade not found with ID: " + id));
 
         validateGradeRequest(request, id);
 
         Assessment assessment = assessmentRepository.findById(request.getAssessmentId())
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Avaliação não encontrada com ID: " + request.getAssessmentId()));
+                        "Assessment not found with ID: " + request.getAssessmentId()));
 
         User student = userRepository.findById(request.getStudentUserId())
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Estudante não encontrado com ID: " + request.getStudentUserId()));
+                        "Student not found with ID: " + request.getStudentUserId()));
 
         User gradedBy = null;
         if (request.getGradedByUserId() != null) {
             gradedBy = userRepository.findById(request.getGradedByUserId())
                     .orElseThrow(() -> new ResourceNotFoundException(
-                            "Usuário não encontrado com ID: " + request.getGradedByUserId()));
+                            "User not found with ID: " + request.getGradedByUserId()));
         }
 
         gradeMapper.updateEntity(request, grade);
@@ -174,7 +181,7 @@ public class GradeServiceImpl implements GradeService {
         }
 
         Grade updatedGrade = gradeRepository.save(grade);
-        log.info("Nota atualizada com ID: {}", id);
+        log.info("Grade updated with ID: {}", id);
 
         return gradeMapper.toResponse(updatedGrade);
     }
@@ -182,36 +189,36 @@ public class GradeServiceImpl implements GradeService {
     @Override
     @Transactional
     public void delete(Long id) {
-        log.info("Excluindo nota ID: {}", id);
+        log.info("Deleting grade ID: {}", id);
 
         if (!gradeRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Nota não encontrada com ID: " + id);
+            throw new ResourceNotFoundException("Note not found with ID: " + id);
         }
 
         gradeRepository.deleteById(id);
-        log.info("Nota excluída com ID: {}", id);
+        log.info("Grade deleted with ID: {}", id);
     }
 
     @Override
     @Transactional
     public GradeResponse bulkCreate(List<GradeRequest> requests) {
-        log.info("Criando {} notas em lote", requests.size());
+        log.info("Creating {} grades in batch", requests.size());
 
         List<Grade> grades = requests.stream()
                 .map(request -> {
                     Assessment assessment = assessmentRepository.findById(request.getAssessmentId())
                             .orElseThrow(() -> new ResourceNotFoundException(
-                                    "Avaliação não encontrada com ID: " + request.getAssessmentId()));
+                                    "Assessment not found with ID: " + request.getAssessmentId()));
 
                     User student = userRepository.findById(request.getStudentUserId())
                             .orElseThrow(() -> new ResourceNotFoundException(
-                                    "Estudante não encontrado com ID: " + request.getStudentUserId()));
+                                    "Student not found with ID: " + request.getStudentUserId()));
 
                     User gradedBy = null;
                     if (request.getGradedByUserId() != null) {
                         gradedBy = userRepository.findById(request.getGradedByUserId())
                                 .orElseThrow(() -> new ResourceNotFoundException(
-                                        "Usuário não encontrado com ID: " + request.getGradedByUserId()));
+                                        "User not found with ID: " + request.getGradedByUserId()));
                     }
 
                     Grade grade = gradeMapper.toEntity(request);
@@ -225,7 +232,7 @@ public class GradeServiceImpl implements GradeService {
                 .toList();
 
         List<Grade> savedGrades = gradeRepository.saveAll(grades);
-        log.info("{} notas criadas em lote", savedGrades.size());
+        log.info("{} Grades created in batch", savedGrades.size());
 
         // Retorna a primeira nota criada (ou poderia retornar todas)
         return savedGrades.isEmpty() ? null : gradeMapper.toResponse(savedGrades.get(0));
@@ -234,7 +241,12 @@ public class GradeServiceImpl implements GradeService {
     @Override
     @Transactional(readOnly = true)
     public Double calculateStudentAverage(Long studentId, Long subjectId) {
-        log.debug("Calculando média do estudante {} na disciplina {}", studentId, subjectId);
+        log.debug("Calculating student average {} in the subject {}", studentId, subjectId);
+
+        // TODO: fazer a validação para "studentId" e "subjectId" não encontrado.
+        // Para buscas de "grade", "student", "assessment" e "subject" criar métodos internos
+        // para verificar a existência.
+
         return gradeRepository.calculateAverageByStudentAndSubject(studentId, subjectId);
     }
 
@@ -248,12 +260,12 @@ public class GradeServiceImpl implements GradeService {
         if (request.getScore() != null) {
             Assessment assessment = assessmentRepository.findById(request.getAssessmentId())
                     .orElseThrow(() -> new ResourceNotFoundException(
-                            "Avaliação não encontrada com ID: " + request.getAssessmentId()));
+                            "Assessment not found with ID: " + request.getAssessmentId()));
 
             if (assessment.getMaxScore() != null &&
                     request.getScore().compareTo(assessment.getMaxScore()) > 0) {
                 throw new IllegalArgumentException(
-                        String.format("A nota (%s) não pode ser maior que a nota máxima da avaliação (%s)",
+                        String.format("A grade (%s) cannot be higher than the maximum grade for the assessment. (%s)",
                                 request.getScore(), assessment.getMaxScore()));
             }
         }
