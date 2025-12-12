@@ -1,7 +1,11 @@
 package com.schoolagenda.domain.service.impl;
 
+import com.schoolagenda.application.web.dto.common.PaginationResponse;
+import com.schoolagenda.application.web.dto.common.PaginationRequest;
+import com.schoolagenda.application.web.dto.common.subject.SubjectFilterRequest;
 import com.schoolagenda.application.web.dto.request.SubjectRequest;
 import com.schoolagenda.application.web.dto.response.SubjectResponse;
+import com.schoolagenda.domain.exception.InvalidFilterException;
 import com.schoolagenda.domain.exception.ResourceNotFoundException;
 import com.schoolagenda.domain.model.Subject;
 import com.schoolagenda.domain.model.User;
@@ -9,8 +13,11 @@ import com.schoolagenda.domain.repository.SubjectRepository;
 import com.schoolagenda.domain.repository.UserRepository;
 import com.schoolagenda.domain.service.SubjectService;
 import com.schoolagenda.application.web.mapper.SubjectMapper;
+import com.schoolagenda.domain.specification.SubjectSpecifications;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -188,5 +195,21 @@ public class SubjectServiceImpl implements SubjectService {
                 );
             }
         }
+    }
+
+    // Paginação
+    // TODO: verificar essa "estrutura" (arquivos e respectivos pacotes) para paginação, pois se trata de consultas
+    // mais complexas e acho que deveriam ficar numa "outra estrutura" (pacotes) para esta finalizadade!
+    @Transactional(readOnly = true)
+    public PaginationResponse<SubjectResponse> search(SubjectFilterRequest filter, PaginationRequest pageRequest) {
+        // Validação do filter
+        if (filter != null && filter.hasName() && filter.getName().length() < 2) {
+            throw new InvalidFilterException("Termo de busca deve ter pelo menos 2 caracteres");
+        }
+
+        Specification<Subject> spec = SubjectSpecifications.withFilters(filter);
+        Page<Subject> page = subjectRepository.findAll(spec, pageRequest.toPageable());
+
+        return PaginationResponse.of(page.map(subjectMapper::toResponse));
     }
 }

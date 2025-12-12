@@ -1,11 +1,16 @@
 package com.schoolagenda.application.web.controller;
 
 import com.schoolagenda.application.web.controller.doc.AssessmentControllerDoc;
+import com.schoolagenda.application.web.dto.common.PaginationRequest;
+import com.schoolagenda.application.web.dto.common.PaginationResponse;
+import com.schoolagenda.application.web.dto.common.assessment.AssessmentFilterRequest;
 import com.schoolagenda.application.web.dto.request.AssessmentRequest;
 import com.schoolagenda.application.web.dto.response.AssessmentResponse;
 import com.schoolagenda.domain.service.AssessmentService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -43,27 +48,9 @@ public class AssessmentController implements AssessmentControllerDoc {
     }
 
     @Override
-    @GetMapping("/subject/{subjectId}")
-    public ResponseEntity<List<AssessmentResponse>> findBySubject(@PathVariable Long subjectId) {
-        List<AssessmentResponse> responses = assessmentService.findBySubject(subjectId);
-        return ResponseEntity.ok(responses);
-    }
-
-    @Override
     @GetMapping("/subject/{subjectId}/published")
     public ResponseEntity<List<AssessmentResponse>> findPublishedBySubject(@PathVariable Long subjectId) {
         List<AssessmentResponse> responses = assessmentService.findPublishedBySubject(subjectId);
-        return ResponseEntity.ok(responses);
-    }
-
-    @Override
-    @GetMapping("/published")
-    public ResponseEntity<List<AssessmentResponse>> findPublishedByFilters(
-            @RequestParam(required = false) Long subjectId,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-
-        List<AssessmentResponse> responses = assessmentService.findPublishedByFilters(subjectId, startDate, endDate);
         return ResponseEntity.ok(responses);
     }
 
@@ -106,4 +93,70 @@ public class AssessmentController implements AssessmentControllerDoc {
         AssessmentResponse response = assessmentService.unpublish(id);
         return ResponseEntity.ok(response);
     }
+
+    // Paginação
+    @Override
+    @GetMapping("/search")
+    @Operation(summary = "Buscar avaliações com filtros e paginação")
+    public ResponseEntity<PaginationResponse<AssessmentResponse>> search(
+            @Valid PaginationRequest pageRequest,
+            @ModelAttribute AssessmentFilterRequest filter) {
+
+        // Validação manual
+//        if (pageRequest == null) {
+//            pageRequest = new PaginationRequest();
+//        }
+//        if (pageRequest.getSortBy() == null) {
+//            pageRequest.setSortBy("id");
+//        }
+//        if (pageRequest.getDirection() == null) {
+////            pageRequest.setDirection("ASC");
+//            pageRequest.setDirection(Sort.Direction.ASC);
+//        }
+
+        PaginationResponse<AssessmentResponse> response = assessmentService.search(pageRequest, filter);
+        return ResponseEntity.ok(response);
+    }
+
+    // TODO: Verificar qual utilizar: A listagem com "paginação" (abaixo) ou sem "paginação" (mais abaixo)
+    @Override
+    @GetMapping("/published")
+    @Operation(summary = "Listar avaliações publicadas")
+    public ResponseEntity<PaginationResponse<AssessmentResponse>> findPublished(
+            @Valid PaginationRequest pageRequest) {
+
+        PaginationResponse<AssessmentResponse> response = assessmentService.findPublished(pageRequest);
+        return ResponseEntity.ok(response);
+    }
+
+//    @Override
+//    @GetMapping("/published")
+//    public ResponseEntity<List<AssessmentResponse>> findPublishedByFilters(
+//            @RequestParam(required = false) Long subjectId,
+//            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+//            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+//
+//        List<AssessmentResponse> responses = assessmentService.findPublishedByFilters(subjectId, startDate, endDate);
+//        return ResponseEntity.ok(responses);
+//    }
+
+    // TODO: Verificar qual utilizar: A listagem com "paginação" (abaixo) ou sem "paginação" (mais abaixo)
+    @Override
+    @GetMapping("/subject/{subjectId}")
+    @Operation(summary = "Listar avaliações de uma disciplina")
+    public ResponseEntity<PaginationResponse<AssessmentResponse>> findBySubject(
+            @PathVariable Long subjectId,
+            @Valid PaginationRequest pageRequest) {
+
+        PaginationResponse<AssessmentResponse> response =
+                assessmentService.findBySubject(pageRequest, subjectId);
+        return ResponseEntity.ok(response);
+    }
+
+//    @Override
+//    @GetMapping("/subject/{subjectId}")
+//    public ResponseEntity<List<AssessmentResponse>> findBySubject(@PathVariable Long subjectId) {
+//        List<AssessmentResponse> responses = assessmentService.findBySubject(subjectId);
+//        return ResponseEntity.ok(responses);
+//    }
 }

@@ -2,6 +2,7 @@ package com.schoolagenda.domain.repository;
 
 import com.schoolagenda.domain.model.Grade;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -10,7 +11,8 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface GradeRepository extends JpaRepository<Grade, Long> {
+public interface GradeRepository extends JpaRepository<Grade, Long>,
+        JpaSpecificationExecutor<Grade> {
 
     Optional<Grade> findByAssessmentIdAndStudentId(Long assessmentId, Long studentId);
 

@@ -52,6 +52,7 @@ public class SecurityConfig {
             "/swagger-ui/**",           // ← UI do Swagger
             "/v3/api-docs/**",          // ← Docs da v3
             "/api-docs/**",             // ← SEUS grupos (public, actuator, etc)
+            "/api/v1/**",
             "/swagger-resources/**",
             "/webjars/**",
             "/configuration/**",

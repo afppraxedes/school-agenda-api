@@ -1,8 +1,13 @@
 package com.schoolagenda.domain.service.impl;
 
+import com.schoolagenda.application.web.dto.common.PaginationRequest;
+import com.schoolagenda.application.web.dto.common.PaginationResponse;
+import com.schoolagenda.application.web.dto.common.grade.GradeFilterRequest;
+import com.schoolagenda.application.web.dto.common.grade.GradeStatistics;
 import com.schoolagenda.application.web.dto.request.GradeRequest;
 import com.schoolagenda.application.web.dto.response.GradeResponse;
 import com.schoolagenda.application.web.mapper.GradeMapper;
+import com.schoolagenda.domain.exception.InvalidFilterException;
 import com.schoolagenda.domain.exception.ResourceNotFoundException;
 import com.schoolagenda.domain.model.Assessment;
 import com.schoolagenda.domain.model.Grade;
@@ -11,11 +16,15 @@ import com.schoolagenda.domain.repository.AssessmentRepository;
 import com.schoolagenda.domain.repository.GradeRepository;
 import com.schoolagenda.domain.repository.UserRepository;
 import com.schoolagenda.domain.service.GradeService;
+import com.schoolagenda.domain.specification.GradeSpecifications;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -280,5 +289,138 @@ public class GradeServiceImpl implements GradeService {
 //                                request.getScore(), assessment.getMaxScore()));
 //            }
 //        }
+    }
+
+    // ========== MÉTODOS PAGINADOS ==========
+    @Transactional(readOnly = true)
+    public PaginationResponse<GradeResponse> search(PaginationRequest pageRequest,
+                                                    GradeFilterRequest filter) {
+        log.debug("Buscando notas paginadas: {}", filter);
+
+        validateFilter(filter);
+        Specification<Grade> spec = buildSpecification(filter);
+
+        Page<Grade> page = gradeRepository.findAll(spec, pageRequest.toPageable());
+        logSearchMetrics(page, filter);
+
+        return PaginationResponse.of(page.map(gradeMapper::toResponse));
+    }
+
+    @Transactional(readOnly = true)
+    public PaginationResponse<GradeResponse> findByAssessment(PaginationRequest pageRequest,
+                                                        Long assessmentId) {
+        Specification<Grade> spec = GradeSpecifications.byAssessment(assessmentId);
+        Page<Grade> page = gradeRepository.findAll(spec, pageRequest.toPageable());
+        return PaginationResponse.of(page.map(gradeMapper::toResponse));
+    }
+
+    @Transactional(readOnly = true)
+    public PaginationResponse<GradeResponse> findByStudent(PaginationRequest pageRequest,
+                                                     Long studentId) {
+        Specification<Grade> spec = GradeSpecifications.byStudent(studentId)
+                .and(GradeSpecifications.isGraded()); // Apenas notas lançadas
+
+        Page<Grade> page = gradeRepository.findAll(spec, pageRequest.toPageable());
+        return PaginationResponse.of(page.map(gradeMapper::toResponse));
+    }
+
+    @Transactional(readOnly = true)
+    public PaginationResponse<GradeResponse> findUngradedByAssessment(PaginationRequest pageRequest,
+                                                                Long assessmentId) {
+        Specification<Grade> spec = GradeSpecifications.byAssessment(assessmentId)
+                .and(GradeSpecifications.isNotGraded());
+
+        Page<Grade> page = gradeRepository.findAll(spec, pageRequest.toPageable());
+        return PaginationResponse.of(page.map(gradeMapper::toResponse));
+    }
+
+    @Transactional(readOnly = true)
+    public PaginationResponse<GradeResponse> findPassingGrades(PaginationRequest pageRequest,
+                                                         BigDecimal passingScore) {
+        Specification<Grade> spec = GradeSpecifications.isGraded()
+                .and(GradeSpecifications.isPassing(passingScore));
+
+        Page<Grade> page = gradeRepository.findAll(spec, pageRequest.toPageable());
+        return PaginationResponse.of(page.map(gradeMapper::toResponse));
+    }
+
+    @Transactional(readOnly = true)
+    public PaginationResponse<GradeResponse> findByStudentAndSubject(PaginationRequest pageRequest,
+                                                               Long studentId,
+                                                               Long subjectId) {
+        Specification<Grade> spec = GradeSpecifications.byStudent(studentId)
+                .and(GradeSpecifications.bySubject(subjectId))
+                .and(GradeSpecifications.isGraded());
+
+        Page<Grade> page = gradeRepository.findAll(spec, pageRequest.toPageable());
+        return PaginationResponse.of(page.map(gradeMapper::toResponse));
+    }
+
+    // CALCULAR ESTATÍSTICA
+//    @Transactional(readOnly = true)
+//    public GradeStatistics calculateStatistics(Long assessmentId) {
+//        Specification<Grade> spec = GradeSpecifications.byAssessment(assessmentId)
+//                .and(GradeSpecifications.isGraded());
+//
+//        List<Grade> grades = gradeRepository.findAll(spec);
+//
+//        // Calcula média, maior, menor, etc.
+//        return GradeStatistics.from(grades);
+//    }
+
+    // ========== MÉTODOS LEGACY (se necessário) ==========
+
+//    @Transactional(readOnly = true)
+//    public List<GradeResponse> findAll() {
+//        return gradeRepository.findAll().stream()
+//                .map(gradeMapper::toResponse)
+//                .toList();
+//    }
+
+    // ========== MÉTODOS PRIVADOS AUXILIARES ==========
+
+    private void validateFilter(GradeFilterRequest filter) {
+        if (filter == null) return;
+
+        // Valida intervalo de notas
+        if (filter.hasScoreRange() && !filter.isScoreRangeValid()) {
+            throw new InvalidFilterException("Nota mínima não pode ser maior que nota máxima");
+        }
+
+        // Valida notas negativas
+        if (filter.getMinScore() != null && filter.getMinScore().compareTo(BigDecimal.ZERO) < 0) {
+            throw new InvalidFilterException("Nota não pode ser negativa");
+        }
+
+        if (filter.getMaxScore() != null && filter.getMaxScore().compareTo(BigDecimal.ZERO) < 0) {
+            throw new InvalidFilterException("Nota não pode ser negativa");
+        }
+    }
+
+    private Specification<Grade> buildSpecification(GradeFilterRequest filter) {
+        if (filter == null) {
+            return Specification.allOf();
+        }
+        return GradeSpecifications.withFilters(filter);
+    }
+
+    private void logSearchMetrics(Page<Grade> page, GradeFilterRequest filter) {
+        if (log.isDebugEnabled()) {
+            log.debug("Busca de notas concluída - Resultados: {}/{} | Filtro: {}",
+                    page.getNumberOfElements(),
+                    page.getTotalElements(),
+                    filter != null ? filter.toString() : "Nenhum");
+        }
+
+        // Estatísticas úteis
+        if (page.getTotalElements() > 0 && filter != null && filter.getMinScore() != null) {
+            long passingCount = page.getContent().stream()
+                    .filter(grade -> grade.getScore() != null
+                            && grade.getScore().compareTo(filter.getMinScore()) >= 0)
+                    .count();
+
+            log.debug("Notas acima de {}: {}/{}",
+                    filter.getMinScore(), passingCount, page.getNumberOfElements());
+        }
     }
 }

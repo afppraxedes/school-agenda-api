@@ -1,5 +1,8 @@
 package com.schoolagenda.application.web.controller;
 
+import com.schoolagenda.application.web.dto.common.PaginationRequest;
+import com.schoolagenda.application.web.dto.common.PaginationResponse;
+import com.schoolagenda.application.web.dto.common.subject.SubjectFilterRequest;
 import com.schoolagenda.application.web.dto.request.SubjectRequest;
 import com.schoolagenda.application.web.dto.response.SubjectResponse;
 import com.schoolagenda.domain.service.SubjectService;
@@ -7,6 +10,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -32,6 +37,44 @@ public class SubjectController {
     @Operation(summary = "Buscar disciplina por ID")
     public ResponseEntity<SubjectResponse> findById(@PathVariable Long id) {
         SubjectResponse response = subjectService.findById(id);
+        return ResponseEntity.ok(response);
+    }
+
+    // Paginação
+//    @GetMapping("/search")
+//    @Operation(summary = "Buscar disciplinas com filtros avançados")
+//    public ResponseEntity<PaginationResponse<SubjectResponse>> search(
+//            @Valid PaginationRequest pageRequest,
+//            @Valid @ModelAttribute SubjectFilterRequest filter) {
+//
+//        // Exemplo: ordenação personalizada se não foi fornecida
+//        if (pageRequest.getSortOrders().isEmpty()) {
+//            pageRequest.addSort("name", Sort.Direction.ASC);
+//            pageRequest.addSort("id", Sort.Direction.ASC);
+//        }
+//
+//        PaginationResponse<SubjectResponse> response = subjectService.search(filter, pageRequest);
+//        return ResponseEntity.ok(response);
+//    }
+
+    @GetMapping("/search")
+    public ResponseEntity<PaginationResponse<SubjectResponse>> search(
+            PaginationRequest pageRequest, // Sem @Valid temporariamente
+            SubjectFilterRequest filter) {
+
+        // Validação manual
+        if (pageRequest == null) {
+            pageRequest = new PaginationRequest();
+        }
+        if (pageRequest.getSortBy() == null) {
+            pageRequest.setSortBy("id");
+        }
+        if (pageRequest.getDirection() == null) {
+//            pageRequest.setDirection("ASC");
+            pageRequest.setDirection(Sort.Direction.ASC);
+        }
+
+        PaginationResponse<SubjectResponse> response = subjectService.search(filter, pageRequest);
         return ResponseEntity.ok(response);
     }
 

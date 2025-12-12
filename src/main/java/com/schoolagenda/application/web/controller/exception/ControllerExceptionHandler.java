@@ -3,12 +3,14 @@ package com.schoolagenda.application.web.controller.exception;
 import com.schoolagenda.domain.exception.*;
 import jakarta.servlet.http.HttpServletRequest;
 
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.web.firewall.RequestRejectedException;
 import org.springframework.validation.FieldError;
+import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -82,6 +84,32 @@ public class ControllerExceptionHandler {
                         .status(HttpStatus.BAD_REQUEST.value())
                         .error(HttpStatus.BAD_REQUEST.getReasonPhrase())
                         .message("JSON parse error: All fields must have a valid format")
+                        .path(request.getRequestURI())
+                        .build());
+    }
+
+    @ExceptionHandler(InvalidFilterException.class)
+    ResponseEntity<StandardError> handleInvalidFilterException(
+            final InvalidFilterException ex, final HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                StandardError.builder()
+                        .timestamp(LocalDateTime.now())
+                        .status(HttpStatus.BAD_REQUEST.value())
+                        .error(HttpStatus.BAD_REQUEST.getReasonPhrase())
+                        .message(ex.getMessage())
+                        .path(request.getRequestURI())
+                        .build());
+    }
+
+    @ExceptionHandler(DataAccessException.class)
+    ResponseEntity<StandardError> handleDataAccessException(
+            final DataAccessException ex, final HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                StandardError.builder()
+                        .timestamp(LocalDateTime.now())
+                        .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                        .error(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase())
+                        .message("Erro interno ao processar busca")
                         .path(request.getRequestURI())
                         .build());
     }

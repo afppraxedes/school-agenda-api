@@ -1,5 +1,8 @@
 package com.schoolagenda.application.web.controller.doc;
 
+import com.schoolagenda.application.web.dto.common.PaginationRequest;
+import com.schoolagenda.application.web.dto.common.PaginationResponse;
+import com.schoolagenda.application.web.dto.common.assessment.AssessmentFilterRequest;
 import com.schoolagenda.application.web.dto.request.AssessmentRequest;
 import com.schoolagenda.application.web.dto.response.AssessmentResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -35,25 +38,12 @@ public interface AssessmentControllerDoc {
     @Operation(summary = "Listar todas as avaliações")
     ResponseEntity<List<AssessmentResponse>> findAll();
 
-    @Operation(summary = "Listar avaliações de uma disciplina")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Lista de avaliações (pode ser vazia)"),
-            @ApiResponse(responseCode = "404", description = "Disciplina não encontrada")
-    })
-    ResponseEntity<List<AssessmentResponse>> findBySubject(@PathVariable Long subjectId);
-
     @Operation(summary = "Listar avaliações publicadas de uma disciplina")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista de avaliações publicadas (pode ser vazia)"),
             @ApiResponse(responseCode = "404", description = "Disciplina não encontrada")
     })
     ResponseEntity<List<AssessmentResponse>> findPublishedBySubject(@PathVariable Long subjectId);
-
-    @Operation(summary = "Listar avaliações publicadas com filtros")
-    ResponseEntity<List<AssessmentResponse>> findPublishedByFilters(
-            @RequestParam(required = false) Long subjectId,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate);
 
     @Operation(summary = "Listar avaliações próximas")
     ResponseEntity<List<AssessmentResponse>> findUpcoming(
@@ -72,5 +62,41 @@ public interface AssessmentControllerDoc {
 
     @Operation(summary = "Despublicar avaliação")
     ResponseEntity<AssessmentResponse> unpublish(@PathVariable Long id);
+
+    // Paginação
+    @Operation(summary = "Buscar avaliações com filtros e paginação")
+    ResponseEntity<PaginationResponse<AssessmentResponse>> search(
+            @Valid PaginationRequest pageRequest,
+            @ModelAttribute AssessmentFilterRequest filter);
+
+    // Listagem com "paginação"
+    @Operation(summary = "Listar avaliações publicadas")
+    ResponseEntity<PaginationResponse<AssessmentResponse>> findPublished(
+            @Valid PaginationRequest pageRequest);
+
+      // Listagem sem "paginação"
+//    @Operation(summary = "Listar avaliações publicadas com filtros")
+//    ResponseEntity<List<AssessmentResponse>> findPublishedByFilters(
+//            @RequestParam(required = false) Long subjectId,
+//            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+//            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate);
+
+    // Listagem com "paginação"
+    @Operation(summary = "Listar avaliações de uma disciplina")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lista de avaliações (pode ser vazia)"),
+            @ApiResponse(responseCode = "404", description = "Disciplina não encontrada")
+    })
+    ResponseEntity<PaginationResponse<AssessmentResponse>> findBySubject(
+            @PathVariable Long subjectId,
+            @Valid PaginationRequest pageRequest);
+
+    // Listagem sem "paginação"
+//    @Operation(summary = "Listar avaliações de uma disciplina")
+//    @ApiResponses(value = {
+//            @ApiResponse(responseCode = "200", description = "Lista de avaliações (pode ser vazia)"),
+//            @ApiResponse(responseCode = "404", description = "Disciplina não encontrada")
+//    })
+//    ResponseEntity<List<AssessmentResponse>> findBySubject(@PathVariable Long subjectId);
 
 }

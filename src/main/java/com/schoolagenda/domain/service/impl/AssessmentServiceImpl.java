@@ -1,9 +1,13 @@
 package com.schoolagenda.domain.service.impl;
 
+import com.schoolagenda.application.web.dto.common.PaginationRequest;
+import com.schoolagenda.application.web.dto.common.PaginationResponse;
+import com.schoolagenda.application.web.dto.common.assessment.AssessmentFilterRequest;
 import com.schoolagenda.application.web.dto.request.AssessmentRequest;
 import com.schoolagenda.application.web.dto.response.AssessmentResponse;
 import com.schoolagenda.application.web.mapper.AssessmentMapper;
 import com.schoolagenda.domain.exception.BusinessResourceException;
+import com.schoolagenda.domain.exception.InvalidFilterException;
 import com.schoolagenda.domain.exception.ResourceNotFoundException;
 import com.schoolagenda.domain.model.Assessment;
 import com.schoolagenda.domain.model.Subject;
@@ -12,8 +16,11 @@ import com.schoolagenda.domain.repository.AssessmentRepository;
 import com.schoolagenda.domain.repository.SubjectRepository;
 import com.schoolagenda.domain.repository.UserRepository;
 import com.schoolagenda.domain.service.AssessmentService;
+import com.schoolagenda.domain.specification.AssessmentSpecifications;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -314,5 +321,64 @@ public class AssessmentServiceImpl implements AssessmentService {
 
         log.info("Avaliação despublicada com ID: {}", id);
         return assessmentMapper.toResponse(updatedAssessment);
+    }
+
+    // Paginação
+    @Override
+    @Transactional(readOnly = true)
+    public PaginationResponse<AssessmentResponse> search(PaginationRequest pageRequest,
+                                                   AssessmentFilterRequest filter) {
+        log.debug("Buscando avaliações paginadas: {}", filter);
+
+        // Validação do filtro
+        if (filter != null && filter.hasDateRange() && !filter.isDateRangeValid()) {
+            throw new InvalidFilterException("Data inicial não pode ser após data final");
+        }
+
+        // Cria specification
+        Specification<Assessment> spec = (filter != null)
+                ? AssessmentSpecifications.withFilters(filter)
+                : Specification.allOf();
+
+        // Executa busca
+        Page<Assessment> page = assessmentRepository.findAll(spec, pageRequest.toPageable());
+
+        return PaginationResponse.of(page.map(assessmentMapper::toResponse));
+    }
+
+    @Override
+    // Métodos adicionais úteis
+    @Transactional(readOnly = true)
+    public PaginationResponse<AssessmentResponse> findPublished(PaginationRequest pageRequest) {
+        Specification<Assessment> spec = AssessmentSpecifications.isPublished();
+        Page<Assessment> page = assessmentRepository.findAll(spec, pageRequest.toPageable());
+        return PaginationResponse.of(page.map(assessmentMapper::toResponse));
+    }
+
+
+    @Override
+    @Transactional(readOnly = true)
+    public PaginationResponse<AssessmentResponse> findBySubject(PaginationRequest pageRequest,
+                                                                Long subjectId) {
+        Specification<Assessment> spec = AssessmentSpecifications.bySubject(subjectId)
+                .and(AssessmentSpecifications.isPublished());
+
+        Page<Assessment> page = assessmentRepository.findAll(spec, pageRequest.toPageable());
+        return PaginationResponse.of(page.map(assessmentMapper::toResponse));
+    }
+
+    // Para validação de filtros para "grade"
+    private void validateFilter(AssessmentFilterRequest filter) {
+        if (filter == null) return;
+
+        // Valida datas
+        if (filter.hasDateRange() && filter.getDueDateFrom().isAfter(filter.getDueDateTo())) {
+            throw new InvalidFilterException("Data inicial não pode ser após data final");
+        }
+
+        // Valida título muito curto
+        if (filter.hasTitle() && filter.getTitle().trim().length() < 2) {
+            throw new InvalidFilterException("Título deve ter pelo menos 2 caracteres");
+        }
     }
 }
