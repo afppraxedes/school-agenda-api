@@ -92,7 +92,7 @@ public class GradeController {
 //        return ResponseEntity.noContent().build();
 //    }
 
-    // MÉTODO REFATORADO PELO "GEMINI".
+    // MÉTODO REFATORADO PELO "GEMINI". Limpar o arquivo!
     /**
      * Exclui uma nota existente.
      * Permitido apenas para Professores, Diretores e Administradores.
