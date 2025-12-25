@@ -28,9 +28,15 @@ public class AssessmentRequest {
     @JsonFormat(pattern = "dd/MM/yyyy")
     private LocalDate dueDate;
 
-    @DecimalMin(value = "0.01", message = "A nota máxima deve ser maior que zero")
+    @NotNull
+    @DecimalMin(value = "0.1", message = "A nota máxima deve ser maior que zero")
     @Digits(integer = 3, fraction = 2, message = "A nota máxima deve ter no máximo 3 inteiros e 2 decimais")
     private BigDecimal maxScore = new BigDecimal("10.00");
+
+    @NotNull
+    @DecimalMin(value = "0.1", message = "o peso máximo deve ser maior que zero")
+    @Digits(integer = 1, fraction = 2, message = "o peso deve ter no máximo 1 inteiro e 2 decimais")
+    private BigDecimal weight;
 
     private Boolean published = false;
 

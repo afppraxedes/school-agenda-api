@@ -5,16 +5,15 @@ import com.schoolagenda.application.web.dto.common.PaginationResponse;
 import com.schoolagenda.application.web.dto.common.grade.GradeFilterRequest;
 import com.schoolagenda.application.web.dto.request.GradeRequest;
 import com.schoolagenda.application.web.dto.response.GradeResponse;
+import com.schoolagenda.application.web.dto.response.ReportCardResponse;
+import com.schoolagenda.application.web.dto.response.SubjectSummaryResponse;
 import com.schoolagenda.application.web.mapper.GradeMapper;
 import com.schoolagenda.application.web.security.dto.AgendaUserDetails;
 import com.schoolagenda.domain.enums.UserRole;
 import com.schoolagenda.domain.exception.BusinessResourceException;
 import com.schoolagenda.domain.exception.InvalidFilterException;
 import com.schoolagenda.domain.exception.ResourceNotFoundException;
-import com.schoolagenda.domain.model.Assessment;
-import com.schoolagenda.domain.model.Grade;
-import com.schoolagenda.domain.model.Student;
-import com.schoolagenda.domain.model.User;
+import com.schoolagenda.domain.model.*;
 import com.schoolagenda.domain.repository.*;
 import com.schoolagenda.domain.service.GradeService;
 import com.schoolagenda.domain.specification.GradeSpecifications;
@@ -27,8 +26,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -41,6 +44,7 @@ public class GradeServiceImpl implements GradeService {
     private final GradeMapper gradeMapper;
     private final TeacherClassRepository teacherClassRepository;
     private final StudentRepository studentRepository;
+    private final ResponsibleStudentRepository responsibleStudentRepository;
 
     @Override
     @Transactional
@@ -312,9 +316,147 @@ public class GradeServiceImpl implements GradeService {
         return gradeRepository.calculateAverageByStudentAndSubject(studentId, subjectId);
     }
 
-    private void validateGradeRequest(GradeRequest request) {
-        validateGradeRequest(request, null);
+    @Override
+    @Transactional(readOnly = true)
+    public ReportCardResponse getStudentReportCard(Long studentUserId, AgendaUserDetails currentUser) {
+        // 1. Validações de Segurança (conforme implementamos no passo anterior)
+        if (currentUser.hasRole(UserRole.RESPONSIBLE)) {
+            validateRelationship(currentUser.getId(), studentUserId);
+        }
+
+        // 2. Busca o aluno e todas as suas notas
+        Student student = studentRepository.findByUserId(studentUserId)
+                .orElseThrow(() -> new ResourceNotFoundException("Estudante não encontrado"));
+
+        List<Grade> allGrades = gradeRepository.findAllByStudentId(studentUserId);
+
+        // 3. Agrupa as notas por Disciplina
+        Map<Subject, List<Grade>> gradesBySubject = allGrades.stream()
+                .collect(Collectors.groupingBy(g -> g.getAssessment().getSubject()));
+
+        // 4. Calcula o resumo de cada disciplina
+        List<SubjectSummaryResponse> subjectSummaries = gradesBySubject.entrySet().stream()
+                .map(entry -> calculateSubjectAverage(entry.getKey(), entry.getValue()))
+                .toList();
+
+        // 5. Calcula a média global das médias das disciplinas
+        BigDecimal globalAverage = calculateGlobalAverage(subjectSummaries);
+
+        return new ReportCardResponse(
+                student.getUser().getId(),
+                student.getFullName(),
+                student.getSchoolClass().getName(),
+                subjectSummaries,
+                globalAverage
+        );
     }
+
+//    @Override
+//    @Transactional(readOnly = true)
+//    public ReportCardResponse getStudentReportCard(Long studentUserId) {
+//        // 1. Procura o estudante e as suas notas
+//        Student student = studentRepository.findByUserId(studentUserId)
+//                .orElseThrow(() -> new ResourceNotFoundException("Estudante não encontrado"));
+//
+//        List<Grade> allGrades = gradeRepository.findAllByStudentId(studentUserId);
+//
+//        // 2. Agrupa as notas por Disciplina (Subject)
+//        Map<Subject, List<Grade>> gradesBySubject = allGrades.stream()
+//                .collect(Collectors.groupingBy(g -> g.getAssessment().getSubject()));
+//
+//        // 3. Transforma cada grupo numa SubjectSummaryResponse
+//        List<SubjectSummaryResponse> subjectSummaries = gradesBySubject.entrySet().stream()
+//                .map(entry -> calculateSubjectAverage(entry.getKey(), entry.getValue()))
+//                .toList();
+//
+//        // 4. Calcula a média global do aluno
+//        BigDecimal globalAverage = calculateGlobalAverage(subjectSummaries);
+//
+//        return new ReportCardResponse(
+//                student.getUser().getId(),
+//                student.getFullName(),
+//                student.getSchoolClass().getName(),
+//                subjectSummaries,
+//                globalAverage
+//        );
+//    }
+
+    private BigDecimal calculateGlobalAverage(List<SubjectSummaryResponse> subjectSummaries) {
+        if (subjectSummaries == null || subjectSummaries.isEmpty()) {
+            return BigDecimal.ZERO;
+        }
+
+        BigDecimal sumOfAverages = subjectSummaries.stream()
+                .map(SubjectSummaryResponse::average)
+                .filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        return sumOfAverages.divide(
+                BigDecimal.valueOf(subjectSummaries.size()),
+                2,
+                RoundingMode.HALF_UP
+        );
+    }
+
+    private SubjectSummaryResponse calculateSubjectAverage(Subject subject, List<Grade> grades) {
+        BigDecimal totalPoints = BigDecimal.ZERO;
+        BigDecimal totalWeight = BigDecimal.ZERO;
+
+        for (Grade grade : grades) {
+            if (grade.getScore() != null) {
+                BigDecimal weight = grade.getAssessment().getWeight(); // Assumindo que Assessment tem weight
+                totalPoints = totalPoints.add(grade.getScore().multiply(weight));
+                totalWeight = totalWeight.add(weight);
+            }
+        }
+
+        BigDecimal average = totalWeight.compareTo(BigDecimal.ZERO) > 0
+                ? totalPoints.divide(totalWeight, 2, RoundingMode.HALF_UP)
+                : BigDecimal.ZERO;
+
+        return new SubjectSummaryResponse(
+                subject.getId(),
+                subject.getName(),
+                grades.stream().map(gradeMapper::toDetailResponse).toList(),
+                average,
+                average.compareTo(new BigDecimal("6.0")) >= 0 // Regra de aprovação
+        );
+    }
+
+    /**
+     * Valida se o usuário logado (Responsável) possui vínculo com o aluno solicitado.
+     * Lança AccessDeniedException caso o vínculo não exista.
+     */
+    private void validateRelationship(Long responsibleUserId, Long studentUserId) {
+        boolean isLinked = responsibleStudentRepository.existsByResponsibleIdAndStudentUserId(
+                responsibleUserId, studentUserId);
+
+        if (!isLinked) {
+            log.warn("Tentativa de acesso não autorizada: Usuário {} tentou acessar boletim do aluno {}",
+                    responsibleUserId, studentUserId);
+            throw new AccessDeniedException("Você não possui permissão para visualizar os dados deste estudante.");
+        }
+    }
+
+//    @Override
+//    @Transactional(readOnly = true)
+//    public ReportCardResponse getStudentReportCard(Long studentUserId, AgendaUserDetails currentUser) {
+//        // SEGURANÇA: Se for RESPONSÁVEL, valida o vínculo
+//        if (currentUser.hasRole(UserRole.RESPONSIBLE)) {
+//            validateRelationship(currentUser.getId(), studentUserId);
+//        }
+//
+//        // SEGURANÇA: Se for STUDENT, garante que ele só veja o dele
+//        if (currentUser.hasRole(UserRole.STUDENT) && !currentUser.getId().equals(studentUserId)) {
+//            throw new AccessDeniedException("Você só pode visualizar o seu próprio boletim.");
+//        }
+//
+//        // ... Restante da lógica de cálculo que enviamos anteriormente
+//    }
+
+//    private void validateGradeRequest(GradeRequest request) {
+//        validateGradeRequest(request, null);
+//    }
 
     private void validateGradeRequest(GradeRequest request, Long excludeId) {
         // Valida se a nota não excede o máximo da avaliação

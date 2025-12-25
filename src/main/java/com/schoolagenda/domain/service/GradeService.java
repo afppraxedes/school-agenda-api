@@ -5,6 +5,7 @@ import com.schoolagenda.application.web.dto.common.PaginationResponse;
 import com.schoolagenda.application.web.dto.common.grade.GradeFilterRequest;
 import com.schoolagenda.application.web.dto.request.GradeRequest;
 import com.schoolagenda.application.web.dto.response.GradeResponse;
+import com.schoolagenda.application.web.dto.response.ReportCardResponse;
 import com.schoolagenda.application.web.security.dto.AgendaUserDetails;
 
 import java.math.BigDecimal;
@@ -29,6 +30,9 @@ public interface GradeService {
     List<GradeResponse> findUngradedByAssessment(Long assessmentId);
 
     Double calculateStudentAverage(Long studentId, Long subjectId);
+//    ReportCardResponse getStudentReportCard(Long studentUserId);
+
+    ReportCardResponse getStudentReportCard(Long studentUserId, AgendaUserDetails currentUser);
 
     // ========== MÉTODOS PAGINADOS ==========
     // TODO: Método anterior antes do "RBAC"

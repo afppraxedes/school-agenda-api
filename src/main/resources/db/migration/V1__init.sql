@@ -222,6 +222,7 @@ CREATE TABLE assessments (
     created_by_user_id BIGINT,
     due_date DATE,
     max_score NUMERIC(5,2) DEFAULT 10.00,
+    weight DECIMAL(5,2) DEFAULT 1.0,
     is_published BOOLEAN DEFAULT FALSE,
     created_by VARCHAR(150) DEFAULT NULL,
     last_modified_by VARCHAR(150) DEFAULT NULL,
@@ -243,10 +244,14 @@ CREATE TABLE assessments (
 );
 
 -- Índices para assessments
+-- (Opcional) Comentário na coluna para documentação do banco
+COMMENT ON COLUMN assessments.weight IS 'Peso da avaliação para cálculo de média ponderada (ex: 1.0, 2.0, 3.0)';
 CREATE INDEX idx_assessments_subject ON assessments(subject_id);
 CREATE INDEX idx_assessments_created_by ON assessments(created_by_user_id);
 CREATE INDEX idx_assessments_due_date ON assessments(due_date);
 CREATE INDEX idx_assessments_published ON assessments(is_published);
+-- Índice para performance, caso você precise filtrar avaliações por peso no futuro
+CREATE INDEX idx_assessments_weight ON assessments(weight);
 
 -- Trigger para updated_at
 CREATE TRIGGER trigger_assessments_updated_at

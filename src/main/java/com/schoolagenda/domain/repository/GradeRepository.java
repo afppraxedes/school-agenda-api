@@ -39,5 +39,16 @@ public interface GradeRepository extends JpaRepository<Grade, Long>,
             @Param("studentId") Long studentId,
             @Param("subjectId") Long subjectId);
 
+    /**
+     * Busca todas as notas de um estudante específico.
+     * O 'JOIN FETCH' garante que a Avaliação e a Disciplina venham na mesma consulta,
+     * tornando o cálculo do boletim muito mais rápido.
+     */
+    @Query("SELECT g FROM Grade g " +
+            "JOIN FETCH g.assessment a " +
+            "JOIN FETCH a.subject " +
+            "WHERE g.student.id = :studentUserId")
+    List<Grade> findAllByStudentId(@Param("studentUserId") Long studentUserId);
+
     boolean existsByAssessmentIdAndStudentId(Long assessmentId, Long studentId);
 }

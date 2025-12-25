@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Data
@@ -17,6 +18,7 @@ public class AssessmentSimpleResponse {
     @JsonFormat(pattern = "dd/MM/yyyy")
     private LocalDate dueDate;
 
-    private Double maxScore;
+    private BigDecimal maxScore;
+    private BigDecimal weight;
     private Boolean published;
 }
