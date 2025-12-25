@@ -42,8 +42,12 @@ public class Assessment extends BaseAuditableEntity {
     @Column(name = "due_date")
     private LocalDate dueDate;
 
-    @Column(name = "max_score", precision = 5, scale = 2)
+    @Column(name = "max_score", precision = 5, scale = 2, nullable = false)
     private BigDecimal maxScore = new BigDecimal("10.00");
+
+    // NOVO CAMPO: Peso da avaliação para o cálculo de médias
+    @Column(name = "weight", precision = 5, scale = 2, nullable = false)
+    private BigDecimal weight = BigDecimal.ONE; // Valor padrão 1.0
 
     @Column(name = "is_published")
     private Boolean published = false;

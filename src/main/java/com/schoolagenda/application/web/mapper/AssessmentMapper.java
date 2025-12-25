@@ -22,6 +22,7 @@ public interface AssessmentMapper {
     @Mapping(source = "subjectId", target = "subject.id")
 //    @Mapping(source = "createdByUserId", target = "createdBy.id")
     @Mapping(target = "maxScore", qualifiedByName = "assessmentScaleBigDecimal")
+    @Mapping(target = "weight", qualifiedByName = "assessmentScaleBigDecimal")
     Assessment toEntity(AssessmentRequest request);
 
     // @Mapping(target = "active", source = "isActive") // Mapeamento inverso se necessário
@@ -34,6 +35,7 @@ public interface AssessmentMapper {
     @Mapping(source = "subjectId", target = "subject.id")
 //    @Mapping(source = "createdByUserId", target = "createdBy.id")
     @Mapping(target = "maxScore", qualifiedByName = "assessmentScaleBigDecimal")
+    @Mapping(target = "weight", qualifiedByName = "assessmentScaleBigDecimal")
     void updateEntity(AssessmentRequest request, @MappingTarget Assessment assessment);
 
     @Named("assessmentScaleBigDecimal")

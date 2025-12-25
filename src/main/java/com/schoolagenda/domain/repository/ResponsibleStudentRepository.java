@@ -39,4 +39,12 @@ public interface ResponsibleStudentRepository extends JpaRepository<ResponsibleS
 
     // Delete by responsible and student
     void deleteByResponsibleIdAndStudentId(Long responsibleId, Long studentId);
+
+    // Verifica se existe o vínculo entre o ID do usuário responsável e o ID do usuário estudante
+    @Query("SELECT COUNT(rs) > 0 FROM ResponsibleStudent rs " +
+            "WHERE rs.responsible.id = :responsibleUserId " +
+            "AND rs.student.user.id = :studentUserId")
+    boolean existsByResponsibleIdAndStudentUserId(
+            @Param("responsibleUserId") Long responsibleUserId,
+            @Param("studentUserId") Long studentUserId);
 }

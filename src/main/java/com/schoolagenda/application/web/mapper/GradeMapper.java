@@ -1,6 +1,7 @@
 package com.schoolagenda.application.web.mapper;
 
 import com.schoolagenda.application.web.dto.request.GradeRequest;
+import com.schoolagenda.application.web.dto.response.GradeDetailResponse;
 import com.schoolagenda.application.web.dto.response.GradeResponse;
 import com.schoolagenda.domain.model.Grade;
 import com.schoolagenda.domain.model.SchoolClass;
@@ -31,6 +32,12 @@ public interface GradeMapper {
     Grade toEntity(GradeRequest request);
 
     GradeResponse toResponse(Grade grade);
+
+    // No GradeMapper (MapStruct)
+    @Mapping(source = "assessment.title", target = "assessmentTitle")
+    @Mapping(source = "assessment.weight", target = "weight")
+    @Mapping(source = "score", target = "score")
+    GradeDetailResponse toDetailResponse(Grade grade);
 
     @Mapping(target = "id", ignore = true)           // ID nunca muda
     @Mapping(target = "createdBy", ignore = true)    // Quem criou nunca muda

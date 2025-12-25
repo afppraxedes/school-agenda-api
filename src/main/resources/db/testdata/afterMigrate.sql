@@ -49,10 +49,10 @@ INSERT INTO subjects (name, school_year, teacher_user_id, is_active, created_at,
 ('Química', '2025', 2, FALSE, '2025-12-09, 16:54:47.862365', '2025-12-09 13:57:58.45501');
 
 -- Assessment
-INSERT INTO assessments (title, description, subject_id, created_by_user_id, due_date, max_score, is_published, created_by, last_modified_by, created_at, updated_at) VALUES
-('Prova de Matemática', 'Prova do quarto bimestre', 1, 2, '2025-12-10', 10.00, TRUE, NULL, NULL, NOW(), NOW()),
-('Prova de Matemática', 'Prova do terceiro bimestre', 1,2,'2025-09-05', 10.00, TRUE, NULL, NULL, NOW(), NOW()),
-('Prova de Geografia', 'Prova do quarto bimestre', 2, 2, '2025-12-09', 10.00, TRUE, NULL, NULL, NOW(), NOW());
+INSERT INTO assessments (title, description, subject_id, created_by_user_id, due_date, max_score, weight, is_published, created_by, last_modified_by, created_at, updated_at) VALUES
+('Prova de Matemática', 'Prova do quarto bimestre', 1, 2, '2025-12-10', 10.00, 2.0, TRUE, NULL, NULL, NOW(), NOW()),
+('Prova de Matemática', 'Prova do terceiro bimestre', 1,2,'2025-09-05', 10.00, 2.0, TRUE, NULL, NULL, NOW(), NOW()),
+('Prova de Geografia', 'Prova do quarto bimestre', 2, 2, '2025-12-09', 10.00, 1.0, TRUE, NULL, NULL, NOW(), NOW());
 
 -- Grade
 INSERT INTO grades (assessment_id, student_user_id, score, max_score, feedback, graded_by_user_id, graded_at, is_absent, is_excused, created_by, last_modified_by, created_at, updated_at) VALUES

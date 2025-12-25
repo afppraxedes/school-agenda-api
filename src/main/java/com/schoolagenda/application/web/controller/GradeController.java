@@ -5,7 +5,9 @@ import com.schoolagenda.application.web.dto.common.PaginationResponse;
 import com.schoolagenda.application.web.dto.common.grade.GradeFilterRequest;
 import com.schoolagenda.application.web.dto.request.GradeRequest;
 import com.schoolagenda.application.web.dto.response.GradeResponse;
+import com.schoolagenda.application.web.dto.response.ReportCardResponse;
 import com.schoolagenda.application.web.security.dto.AgendaUserDetails;
+import com.schoolagenda.domain.enums.UserRole;
 import com.schoolagenda.domain.service.GradeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -105,6 +107,31 @@ public class GradeController {
             @AuthenticationPrincipal AgendaUserDetails currentUser) {
 
         gradeService.delete(id, currentUser);
+    }
+
+//    @GetMapping("/report-card/{studentUserId}")
+//    @PreAuthorize("hasAnyAuthority('DIRECTOR', 'ADMINISTRATOR') or " +
+//            "(hasAuthority('STUDENT') and #studentUserId == authentication.principal.id) or " +
+//            "hasAuthority('RESPONSIBLE')") // No Service validaremos se o estudante é filho do responsável
+//    public ResponseEntity<ReportCardResponse> getReportCard(@PathVariable Long studentUserId,
+//                                                            @AuthenticationPrincipal AgendaUserDetails currentUser) {
+//
+//        // Se for Responsável, validar se studentUserId pertence a um dos seus dependentes
+//        if (currentUser.hasRole(UserRole.RESPONSIBLE)) {
+//            validateRelationship(currentUser.getId(), studentUserId);
+//        }
+//
+//        return ResponseEntity.ok(gradeService.getStudentReportCard(studentUserId));
+//    }
+
+    @GetMapping("/report-card/{studentUserId}")
+    @PreAuthorize("hasAnyAuthority('DIRECTOR', 'ADMINISTRATOR', 'TEACHER', 'STUDENT', 'RESPONSIBLE')")
+    public ResponseEntity<ReportCardResponse> getReportCard(
+            @PathVariable Long studentUserId,
+            @AuthenticationPrincipal AgendaUserDetails currentUser) {
+
+        // A validação de quem pode ver o quê ocorre dentro do Service
+        return ResponseEntity.ok(gradeService.getStudentReportCard(studentUserId, currentUser));
     }
 
     // TODO: DAQUI PARA BAIXO VERIFICAR QUAIS TIPOS DE PERMISSÕES CADA RECURSO TERÁ!

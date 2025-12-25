@@ -25,6 +25,7 @@ public class AssessmentResponse extends BaseAuditableResponse {
     private LocalDate dueDate;
 
     private BigDecimal maxScore;
+    private BigDecimal weight;
     private Boolean published;
 
 //    @JsonFormat(pattern = "dd/MM/yyyy HH:mm")
@@ -43,7 +44,8 @@ public class AssessmentResponse extends BaseAuditableResponse {
 //    private LocalDateTime updatedAt;
 
     public AssessmentResponse(Long id, String title, String description, SubjectSimpleResponse subject,
-                              LocalDate dueDate, BigDecimal maxScore, Boolean published, boolean overdue, boolean active
+                              LocalDate dueDate, BigDecimal maxScore, BigDecimal weight, Boolean published,
+                              boolean overdue, boolean active
                               /*String createdBy, String lastModifiedBy, LocalDateTime createdAt, LocalDateTime updatedAt*/) {
         this.id = id;
         this.title = title;
@@ -54,6 +56,7 @@ public class AssessmentResponse extends BaseAuditableResponse {
         this.published = published;
         this.overdue = overdue;
         this.active = active;
+        this.weight = weight;
 //        this.createdBy = createdBy;
 //        this.lastModifiedBy = lastModifiedBy;
 //        this.createdAt = createdAt;
@@ -118,6 +121,14 @@ public class AssessmentResponse extends BaseAuditableResponse {
 
     public BigDecimal getMaxScore() {
         return maxScore;
+    }
+
+    public BigDecimal getWeight() {
+        return weight;
+    }
+
+    public void setWeight(BigDecimal weight) {
+        this.weight = weight;
     }
 
     public void setMaxScore(BigDecimal maxScore) {
