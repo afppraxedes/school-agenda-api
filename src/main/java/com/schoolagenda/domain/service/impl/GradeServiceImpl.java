@@ -9,6 +9,7 @@ import com.schoolagenda.application.web.dto.response.ReportCardResponse;
 import com.schoolagenda.application.web.dto.response.SubjectSummaryResponse;
 import com.schoolagenda.application.web.mapper.GradeMapper;
 import com.schoolagenda.application.web.security.dto.AgendaUserDetails;
+import com.schoolagenda.domain.enums.AcademicStatus;
 import com.schoolagenda.domain.enums.UserRole;
 import com.schoolagenda.domain.exception.BusinessResourceException;
 import com.schoolagenda.domain.exception.InvalidFilterException;
@@ -316,6 +317,7 @@ public class GradeServiceImpl implements GradeService {
         return gradeRepository.calculateAverageByStudentAndSubject(studentId, subjectId);
     }
 
+    // BOLETIM ESCOLAR DO ESTUDANTE]
     @Override
     @Transactional(readOnly = true)
     public ReportCardResponse getStudentReportCard(Long studentUserId, AgendaUserDetails currentUser) {
@@ -398,13 +400,18 @@ public class GradeServiceImpl implements GradeService {
         );
     }
 
+    // MÉTODO ATUA COM O "ENUM DE STATUS" DE APROVAÇÃO
     private SubjectSummaryResponse calculateSubjectAverage(Subject subject, List<Grade> grades) {
+        BigDecimal minPassAverage = new BigDecimal("6.0");
+        BigDecimal minRecoveryAverage = new BigDecimal("4.0");
+
+        // 1. Cálculo da Média Ponderada (já implementado anteriormente)
         BigDecimal totalPoints = BigDecimal.ZERO;
         BigDecimal totalWeight = BigDecimal.ZERO;
 
         for (Grade grade : grades) {
             if (grade.getScore() != null) {
-                BigDecimal weight = grade.getAssessment().getWeight(); // Assumindo que Assessment tem weight
+                BigDecimal weight = grade.getAssessment().getWeight();
                 totalPoints = totalPoints.add(grade.getScore().multiply(weight));
                 totalWeight = totalWeight.add(weight);
             }
@@ -414,14 +421,63 @@ public class GradeServiceImpl implements GradeService {
                 ? totalPoints.divide(totalWeight, 2, RoundingMode.HALF_UP)
                 : BigDecimal.ZERO;
 
+        // 2. Lógica de Aprovação Automática
+        AcademicStatus status;
+        BigDecimal pointsNeeded = BigDecimal.ZERO;
+        boolean canDoRecovery = false;
+
+        if (average.compareTo(minPassAverage) >= 0) {
+            status = AcademicStatus.APROVADO;
+        } else if (average.compareTo(minRecoveryAverage) >= 0) {
+            status = AcademicStatus.RECUPERACAO;
+            pointsNeeded = minPassAverage.subtract(average);
+            canDoRecovery = true;
+        } else {
+            status = AcademicStatus.REPROVADO;
+            pointsNeeded = minPassAverage.subtract(average);
+        }
+
+        // Se não houver notas lançadas ainda, o status é EM_CURSO
+        if (grades.isEmpty()) {
+            status = AcademicStatus.EM_CURSO;
+        }
+
         return new SubjectSummaryResponse(
                 subject.getId(),
                 subject.getName(),
                 grades.stream().map(gradeMapper::toDetailResponse).toList(),
                 average,
-                average.compareTo(new BigDecimal("6.0")) >= 0 // Regra de aprovação
+                status,
+                pointsNeeded,
+                canDoRecovery
         );
     }
+
+    // MÉTODO ANTERIOR SEM O "ENUM DE STATUS" DE APROVAÇÃO
+//    private SubjectSummaryResponse calculateSubjectAverage(Subject subject, List<Grade> grades) {
+//        BigDecimal totalPoints = BigDecimal.ZERO;
+//        BigDecimal totalWeight = BigDecimal.ZERO;
+//
+//        for (Grade grade : grades) {
+//            if (grade.getScore() != null) {
+//                BigDecimal weight = grade.getAssessment().getWeight(); // Assumindo que Assessment tem weight
+//                totalPoints = totalPoints.add(grade.getScore().multiply(weight));
+//                totalWeight = totalWeight.add(weight);
+//            }
+//        }
+//
+//        BigDecimal average = totalWeight.compareTo(BigDecimal.ZERO) > 0
+//                ? totalPoints.divide(totalWeight, 2, RoundingMode.HALF_UP)
+//                : BigDecimal.ZERO;
+//
+//        return new SubjectSummaryResponse(
+//                subject.getId(),
+//                subject.getName(),
+//                grades.stream().map(gradeMapper::toDetailResponse).toList(),
+//                average,
+//                average.compareTo(new BigDecimal("6.0")) >= 0 // Regra de aprovação
+//        );
+//    }
 
     /**
      * Valida se o usuário logado (Responsável) possui vínculo com o aluno solicitado.
