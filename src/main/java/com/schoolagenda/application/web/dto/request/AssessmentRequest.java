@@ -38,7 +38,17 @@ public class AssessmentRequest {
     @Digits(integer = 1, fraction = 2, message = "o peso deve ter no máximo 1 inteiro e 2 decimais")
     private BigDecimal weight;
 
+    private boolean isRecovery;
+
     private Boolean published = false;
 
     private Long createdByUserId;
+
+    // CAMPOS DA ÚLTIMA IMPLEMENTAÇÃO SIGERIDA PELO "GEMINI"! VERIFICAR SE UTILIZO SOMENTE OS CAMPOS ABAIXO!
+//    @NotBlank String title,
+//    @NotNull Long subjectId,
+//    @NotNull BigDecimal maxScore,
+//    @NotNull BigDecimal weight,
+//    boolean isRecovery, // Novo campo
+//    LocalDateTime date
 }

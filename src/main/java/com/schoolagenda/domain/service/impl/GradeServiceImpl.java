@@ -29,9 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -400,16 +398,39 @@ public class GradeServiceImpl implements GradeService {
         );
     }
 
-    // MÉTODO ATUA COM O "ENUM DE STATUS" DE APROVAÇÃO
     private SubjectSummaryResponse calculateSubjectAverage(Subject subject, List<Grade> grades) {
         BigDecimal minPassAverage = new BigDecimal("6.0");
-        BigDecimal minRecoveryAverage = new BigDecimal("4.0");
 
-        // 1. Cálculo da Média Ponderada (já implementado anteriormente)
+        // 1. Separar notas regulares de notas de recuperação
+        List<Grade> regularGrades = grades.stream()
+                .filter(g -> !g.getAssessment().isRecovery())
+                .collect(Collectors.toList());
+
+        Optional<Grade> recoveryGrade = grades.stream()
+                .filter(g -> g.getAssessment().isRecovery())
+                .findFirst(); // Assumindo uma recuperação por disciplina/período
+
+        // 2. Aplicar a substituição se a recuperação existir e for maior que a menor nota
+        if (recoveryGrade.isPresent() && recoveryGrade.get().getScore() != null) {
+            BigDecimal recoveryScore = recoveryGrade.get().getScore();
+
+            // Encontra a menor nota regular que seja menor que a nota da recuperação
+            regularGrades.stream()
+                    .filter(g -> g.getScore() != null)
+                    .min(Comparator.comparing(Grade::getScore))
+                    .ifPresent(lowestGrade -> {
+                        if (recoveryScore.compareTo(lowestGrade.getScore()) > 0) {
+                            log.info("Substituindo nota {} pela recuperação {}", lowestGrade.getScore(), recoveryScore);
+                            lowestGrade.setScore(recoveryScore); // Substituição temporária para cálculo
+                        }
+                    });
+        }
+
+        // 3. Cálculo da Média Ponderada com as notas já processadas
         BigDecimal totalPoints = BigDecimal.ZERO;
         BigDecimal totalWeight = BigDecimal.ZERO;
 
-        for (Grade grade : grades) {
+        for (Grade grade : regularGrades) {
             if (grade.getScore() != null) {
                 BigDecimal weight = grade.getAssessment().getWeight();
                 totalPoints = totalPoints.add(grade.getScore().multiply(weight));
@@ -421,26 +442,8 @@ public class GradeServiceImpl implements GradeService {
                 ? totalPoints.divide(totalWeight, 2, RoundingMode.HALF_UP)
                 : BigDecimal.ZERO;
 
-        // 2. Lógica de Aprovação Automática
-        AcademicStatus status;
-        BigDecimal pointsNeeded = BigDecimal.ZERO;
-        boolean canDoRecovery = false;
-
-        if (average.compareTo(minPassAverage) >= 0) {
-            status = AcademicStatus.APROVADO;
-        } else if (average.compareTo(minRecoveryAverage) >= 0) {
-            status = AcademicStatus.RECUPERACAO;
-            pointsNeeded = minPassAverage.subtract(average);
-            canDoRecovery = true;
-        } else {
-            status = AcademicStatus.REPROVADO;
-            pointsNeeded = minPassAverage.subtract(average);
-        }
-
-        // Se não houver notas lançadas ainda, o status é EM_CURSO
-        if (grades.isEmpty()) {
-            status = AcademicStatus.EM_CURSO;
-        }
+        // 4. Determinação do Status Final (Aproveitando a lógica anterior)
+        AcademicStatus status = determineStatus(average, grades.isEmpty());
 
         return new SubjectSummaryResponse(
                 subject.getId(),
@@ -448,10 +451,70 @@ public class GradeServiceImpl implements GradeService {
                 grades.stream().map(gradeMapper::toDetailResponse).toList(),
                 average,
                 status,
-                pointsNeeded,
-                canDoRecovery
+                minPassAverage.subtract(average).max(BigDecimal.ZERO),
+                average.compareTo(minPassAverage) < 0
         );
     }
+
+    private AcademicStatus determineStatus(BigDecimal average, boolean noGrades) {
+        if (noGrades) return AcademicStatus.EM_CURSO;
+        if (average.compareTo(new BigDecimal("6.0")) >= 0) return AcademicStatus.APROVADO;
+        if (average.compareTo(new BigDecimal("4.0")) >= 0) return AcademicStatus.RECUPERACAO;
+        return AcademicStatus.REPROVADO;
+    }
+
+    // MÉTODO ATUA COM O "ENUM DE STATUS" DE APROVAÇÃO
+//    private SubjectSummaryResponse calculateSubjectAverage(Subject subject, List<Grade> grades) {
+//        BigDecimal minPassAverage = new BigDecimal("6.0");
+//        BigDecimal minRecoveryAverage = new BigDecimal("4.0");
+//
+//        // 1. Cálculo da Média Ponderada (já implementado anteriormente)
+//        BigDecimal totalPoints = BigDecimal.ZERO;
+//        BigDecimal totalWeight = BigDecimal.ZERO;
+//
+//        for (Grade grade : grades) {
+//            if (grade.getScore() != null) {
+//                BigDecimal weight = grade.getAssessment().getWeight();
+//                totalPoints = totalPoints.add(grade.getScore().multiply(weight));
+//                totalWeight = totalWeight.add(weight);
+//            }
+//        }
+//
+//        BigDecimal average = totalWeight.compareTo(BigDecimal.ZERO) > 0
+//                ? totalPoints.divide(totalWeight, 2, RoundingMode.HALF_UP)
+//                : BigDecimal.ZERO;
+//
+//        // 2. Lógica de Aprovação Automática
+//        AcademicStatus status;
+//        BigDecimal pointsNeeded = BigDecimal.ZERO;
+//        boolean canDoRecovery = false;
+//
+//        if (average.compareTo(minPassAverage) >= 0) {
+//            status = AcademicStatus.APROVADO;
+//        } else if (average.compareTo(minRecoveryAverage) >= 0) {
+//            status = AcademicStatus.RECUPERACAO;
+//            pointsNeeded = minPassAverage.subtract(average);
+//            canDoRecovery = true;
+//        } else {
+//            status = AcademicStatus.REPROVADO;
+//            pointsNeeded = minPassAverage.subtract(average);
+//        }
+//
+//        // Se não houver notas lançadas ainda, o status é EM_CURSO
+//        if (grades.isEmpty()) {
+//            status = AcademicStatus.EM_CURSO;
+//        }
+//
+//        return new SubjectSummaryResponse(
+//                subject.getId(),
+//                subject.getName(),
+//                grades.stream().map(gradeMapper::toDetailResponse).toList(),
+//                average,
+//                status,
+//                pointsNeeded,
+//                canDoRecovery
+//        );
+//    }
 
     // MÉTODO ANTERIOR SEM O "ENUM DE STATUS" DE APROVAÇÃO
 //    private SubjectSummaryResponse calculateSubjectAverage(Subject subject, List<Grade> grades) {

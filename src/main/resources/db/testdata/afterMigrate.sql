@@ -42,17 +42,17 @@ INSERT INTO responsable_student (id, responsable_id, student_id, created_at, upd
 
 -- Subjects
 INSERT INTO subjects (name, school_year, teacher_user_id, is_active, created_at, updated_at) VALUES
-('Matemática', '2025', 2, TRUE, '2025-12-06 16:08:43.302868', '2025-12-06 16:08:43.302868'),
+('Matemática', '2025', 2, TRUE,  '2025-12-06 16:08:43.302868', '2025-12-06 16:08:43.302868'),
 ('Geografia', '2025', 2, TRUE, '2025-12-08 22:08:37.385838', '2025-12-08 22:08:37.385838'),
 ('História', '2025', 2, TRUE, '2025-12-08 22:08:54.704289', '2025-12-08 22:08:54.704289'),
 ('Física', '2025', 2, TRUE, '2025-12-08, 22:09:06.694278', '2025-12-08 22:09:06.694278'),
 ('Química', '2025', 2, FALSE, '2025-12-09, 16:54:47.862365', '2025-12-09 13:57:58.45501');
 
 -- Assessment
-INSERT INTO assessments (title, description, subject_id, created_by_user_id, due_date, max_score, weight, is_published, created_by, last_modified_by, created_at, updated_at) VALUES
-('Prova de Matemática', 'Prova do quarto bimestre', 1, 2, '2025-12-10', 10.00, 2.0, TRUE, NULL, NULL, NOW(), NOW()),
-('Prova de Matemática', 'Prova do terceiro bimestre', 1,2,'2025-09-05', 10.00, 2.0, TRUE, NULL, NULL, NOW(), NOW()),
-('Prova de Geografia', 'Prova do quarto bimestre', 2, 2, '2025-12-09', 10.00, 1.0, TRUE, NULL, NULL, NOW(), NOW());
+INSERT INTO assessments (title, description, subject_id, created_by_user_id, due_date, max_score, weight, is_published, is_recovery, created_by, last_modified_by, created_at, updated_at) VALUES
+('Prova de Matemática', 'Prova do quarto bimestre', 1, 2, '2025-12-10', 10.00, 2.0, TRUE, FALSE, NULL, NULL, NOW(), NOW()),
+('Prova de Matemática', 'Prova do terceiro bimestre', 1,2,'2025-09-05', 10.00, 2.0, TRUE, FALSE, NULL, NULL, NOW(), NOW()),
+('Prova de Geografia', 'Prova do quarto bimestre', 2, 2, '2025-12-09', 10.00, 1.0, TRUE, FALSE, NULL, NULL, NOW(), NOW());
 
 -- Grade
 INSERT INTO grades (assessment_id, student_user_id, score, max_score, feedback, graded_by_user_id, graded_at, is_absent, is_excused, created_by, last_modified_by, created_at, updated_at) VALUES
@@ -81,3 +81,12 @@ INSERT INTO notifications (title, message, user_id, read, created_at, type) VALU
 INSERT INTO teacher_classes (teacher_id, subject_id, school_class_id, created_by, last_modified_by, created_at, updated_at) VALUES
 (2, 1, 1, NULL, NULL, NOW(), NOW()),
 (2, 4, 2, NULL, NULL, NOW(), NOW());
+
+-- Attendances
+-- Limpa para evitar erros de duplicidade em re-execuções, se necessário
+-- DELETE FROM attendances WHERE student_id = 1;
+
+INSERT INTO attendances (student_id, subject_id, date, present, note, created_at) VALUES
+(1, 1, CURRENT_DATE - INTERVAL '2 days', true, 'Presença normal', NOW()),
+(1, 1, CURRENT_DATE - INTERVAL '1 day', false, 'Falta sem justificativa', NOW()),
+(1, 1, CURRENT_DATE, true, 'Presença normal', NOW());
