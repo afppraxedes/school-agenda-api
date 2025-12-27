@@ -27,6 +27,7 @@ public class AssessmentResponse extends BaseAuditableResponse {
     private BigDecimal maxScore;
     private BigDecimal weight;
     private Boolean published;
+    private boolean isRecovery;
 
 //    @JsonFormat(pattern = "dd/MM/yyyy HH:mm")
 //    private LocalDateTime createdAt;
@@ -44,7 +45,7 @@ public class AssessmentResponse extends BaseAuditableResponse {
 //    private LocalDateTime updatedAt;
 
     public AssessmentResponse(Long id, String title, String description, SubjectSimpleResponse subject,
-                              LocalDate dueDate, BigDecimal maxScore, BigDecimal weight, Boolean published,
+                              LocalDate dueDate, BigDecimal maxScore, BigDecimal weight, Boolean published, boolean isRecovery,
                               boolean overdue, boolean active
                               /*String createdBy, String lastModifiedBy, LocalDateTime createdAt, LocalDateTime updatedAt*/) {
         this.id = id;
@@ -57,6 +58,7 @@ public class AssessmentResponse extends BaseAuditableResponse {
         this.overdue = overdue;
         this.active = active;
         this.weight = weight;
+        this.isRecovery = isRecovery;
 //        this.createdBy = createdBy;
 //        this.lastModifiedBy = lastModifiedBy;
 //        this.createdAt = createdAt;
@@ -141,6 +143,14 @@ public class AssessmentResponse extends BaseAuditableResponse {
 
     public void setPublished(Boolean published) {
         this.published = published;
+    }
+
+    public boolean isRecovery() {
+        return isRecovery;
+    }
+
+    public void setRecovery(boolean recovery) {
+        isRecovery = recovery;
     }
 
     public void setOverdue(boolean overdue) {

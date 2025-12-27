@@ -52,6 +52,9 @@ public class Assessment extends BaseAuditableEntity {
     @Column(name = "is_published")
     private Boolean published = false;
 
+    @Column(nullable = false)
+    private boolean isRecovery = false;
+
 //    @CreationTimestamp
 //    @Column(name = "created_at", updatable = false)
 //    private LocalDateTime createdAt;

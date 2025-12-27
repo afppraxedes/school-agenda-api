@@ -7,6 +7,7 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.web.firewall.RequestRejectedException;
 import org.springframework.validation.FieldError;
@@ -70,6 +71,20 @@ public class ControllerExceptionHandler {
                         .status(HttpStatus.BAD_REQUEST.value())
                         .error(HttpStatus.BAD_REQUEST.getReasonPhrase())
                         .message("The request was rejected because the URL is malformed")
+                        .path(request.getRequestURI())
+                        .build());
+    }
+
+    // Exceção para URL's mal formatadas
+    @ExceptionHandler(AccessDeniedException.class)
+    ResponseEntity<StandardError> handleAccessDeniedException(
+            final AccessDeniedException ex, final HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+                StandardError.builder()
+                        .timestamp(LocalDateTime.now())
+                        .status(HttpStatus.FORBIDDEN.value())
+                        .error(HttpStatus.FORBIDDEN.getReasonPhrase())
+                        .message(ex.getMessage())
                         .path(request.getRequestURI())
                         .build());
     }
