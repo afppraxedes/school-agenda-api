@@ -16,6 +16,7 @@ import com.schoolagenda.domain.exception.InvalidFilterException;
 import com.schoolagenda.domain.exception.ResourceNotFoundException;
 import com.schoolagenda.domain.model.*;
 import com.schoolagenda.domain.repository.*;
+import com.schoolagenda.domain.service.AttendanceService;
 import com.schoolagenda.domain.service.GradeService;
 import com.schoolagenda.domain.specification.GradeSpecifications;
 import lombok.RequiredArgsConstructor;
@@ -44,6 +45,7 @@ public class GradeServiceImpl implements GradeService {
     private final TeacherClassRepository teacherClassRepository;
     private final StudentRepository studentRepository;
     private final ResponsibleStudentRepository responsibleStudentRepository;
+    private final AttendanceService attendanceService;
 
     @Override
     @Transactional
@@ -319,27 +321,25 @@ public class GradeServiceImpl implements GradeService {
     @Override
     @Transactional(readOnly = true)
     public ReportCardResponse getStudentReportCard(Long studentUserId, AgendaUserDetails currentUser) {
-        // 1. Validações de Segurança (conforme implementamos no passo anterior)
-        if (currentUser.hasRole(UserRole.RESPONSIBLE)) {
-            validateRelationship(currentUser.getId(), studentUserId);
-        }
+        // 1. Validações de segurança (já implementadas)
+        validateReportCardAccess(studentUserId, currentUser);
 
-        // 2. Busca o aluno e todas as suas notas
+        // 2. Busca o estudante e suas notas
         Student student = studentRepository.findByUserId(studentUserId)
                 .orElseThrow(() -> new ResourceNotFoundException("Estudante não encontrado"));
 
         List<Grade> allGrades = gradeRepository.findAllByStudentId(studentUserId);
 
-        // 3. Agrupa as notas por Disciplina
+        // 3. Agrupa por Disciplina
         Map<Subject, List<Grade>> gradesBySubject = allGrades.stream()
                 .collect(Collectors.groupingBy(g -> g.getAssessment().getSubject()));
 
-        // 4. Calcula o resumo de cada disciplina
+        // 4. CHAMADA AO SEU MÉTODO (Passando o studentUserId como 3º parâmetro)
         List<SubjectSummaryResponse> subjectSummaries = gradesBySubject.entrySet().stream()
-                .map(entry -> calculateSubjectAverage(entry.getKey(), entry.getValue()))
+                .map(entry -> calculateSubjectAverage(entry.getKey(), entry.getValue(), studentUserId))
                 .toList();
 
-        // 5. Calcula a média global das médias das disciplinas
+        // 5. Média Global
         BigDecimal globalAverage = calculateGlobalAverage(subjectSummaries);
 
         return new ReportCardResponse(
@@ -381,6 +381,40 @@ public class GradeServiceImpl implements GradeService {
 //        );
 //    }
 
+    private void validateReportCardAccess(Long studentUserId, AgendaUserDetails currentUser) {
+        // 1. Se for ADMINISTRADOR ou DIRETOR, o acesso é irrestrito
+        if (currentUser.hasRole(UserRole.ADMINISTRATOR) || currentUser.hasRole(UserRole.DIRECTOR)) {
+            return;
+        }
+
+        // 2. Se for PROFESSOR, ele pode ver o boletim (opcional, dependendo da sua regra)
+        // Caso queira restringir para apenas professores daquele aluno, adicionar lógica extra aqui.
+        if (currentUser.hasRole(UserRole.TEACHER)) {
+            return;
+        }
+
+        // 3. Se for ESTUDANTE, ele só pode ver o seu próprio ID
+        if (currentUser.hasRole(UserRole.STUDENT)) {
+            if (!currentUser.getId().equals(studentUserId)) {
+                log.warn("Acesso negado: Aluno {} tentou acessar boletim do aluno {}", currentUser.getId(), studentUserId);
+                throw new AccessDeniedException("Você só tem permissão para visualizar o seu próprio boletim.");
+            }
+            return;
+        }
+
+        // 4. Se for RESPONSÁVEL, deve haver vínculo na tabela 'responsible_student'
+        if (currentUser.hasRole(UserRole.RESPONSIBLE)) {
+            boolean isLinked = responsibleStudentRepository.existsByResponsibleIdAndStudentUserId(
+                    currentUser.getId(), studentUserId);
+
+            if (!isLinked) {
+                log.warn("Acesso negado: Responsável {} tentou acessar boletim não vinculado do aluno {}",
+                        currentUser.getId(), studentUserId);
+                throw new AccessDeniedException("Você não possui permissão para visualizar os dados deste estudante.");
+            }
+        }
+    }
+
     private BigDecimal calculateGlobalAverage(List<SubjectSummaryResponse> subjectSummaries) {
         if (subjectSummaries == null || subjectSummaries.isEmpty()) {
             return BigDecimal.ZERO;
@@ -398,35 +432,211 @@ public class GradeServiceImpl implements GradeService {
         );
     }
 
-    private SubjectSummaryResponse calculateSubjectAverage(Subject subject, List<Grade> grades) {
+    // NOVA VERSÃO DO MÉTODO COM A LÓGICA DE FREQUÊNCIA INCLUÍDA E PONTOS NECESSÁRIOS
+    private SubjectSummaryResponse calculateSubjectAverage(Subject subject, List<Grade> grades, Long studentId) {
         BigDecimal minPassAverage = new BigDecimal("6.0");
 
-        // 1. Separar notas regulares de notas de recuperação
+        // 1. CHAMA O CÁLCULO DE NOTAS (Média Ponderada + Recuperação)
+        BigDecimal average = performWeightedAverageCalculation(grades);
+
+        // 2. BUSCA DADOS DE FREQUÊNCIA NO SERVICE
+        long totalClasses = attendanceService.countByStudentIdAndSubjectId(studentId, subject.getId());
+        long totalAbsences = attendanceService.countByStudentIdAndSubjectIdAndPresentFalse(studentId, subject.getId());
+
+        // 3. CHAMA O CÁLCULO DE FREQUÊNCIA (%)
+        BigDecimal attendancePercentage = calculateAttendancePercentage(totalClasses, totalAbsences);
+
+        // 4. VALIDAÇÕES DE STATUS E APROVAÇÃO
+        boolean isApprovedByAttendance = attendancePercentage.compareTo(new BigDecimal("75.0")) >= 0;
+        AcademicStatus status = determineStatus(average, attendancePercentage, grades.isEmpty());
+
+        // 5. CAMPOS AUXILIARES PARA O ALUNO
+        BigDecimal pointsNeeded = minPassAverage.subtract(average).max(BigDecimal.ZERO);
+        boolean canDoRecovery = (status == AcademicStatus.RECUPERACAO || status == AcademicStatus.REPROVADO)
+                && isApprovedByAttendance;
+
+        return new SubjectSummaryResponse(
+                subject.getId(),
+                subject.getName(),
+                grades.stream().map(gradeMapper::toDetailResponse).toList(),
+                average,
+                status,
+                pointsNeeded,
+                canDoRecovery,
+                attendancePercentage,
+                totalAbsences,
+                isApprovedByAttendance
+        );
+    }
+//    private SubjectSummaryResponse calculateSubjectAverage(Subject subject, List<Grade> grades, Long studentId) {
+//        BigDecimal minPassAverage = new BigDecimal("6.0");
+//
+//        // 1. CHAMA O CÁLCULO DE NOTAS (Média Ponderada + Recuperação)
+//        BigDecimal average = performWeightedAverageCalculation(grades);
+//
+//        // 2. BUSCA DADOS DE FREQUÊNCIA NO SERVICE
+//        long totalClasses = attendanceService.countByStudentIdAndSubjectId(studentId, subject.getId());
+//        long totalAbsences = attendanceService.countByStudentIdAndSubjectIdAndPresentFalse(studentId, subject.getId());
+//
+//        // 3. CHAMA O CÁLCULO DE FREQUÊNCIA (%)
+//        BigDecimal attendancePercentage = calculateAttendancePercentage(totalClasses, totalAbsences);
+//
+//        // 4. VALIDAÇÕES DE STATUS E APROVAÇÃO
+//        boolean isApprovedByAttendance = attendancePercentage.compareTo(new BigDecimal("75.0")) >= 0;
+//        AcademicStatus status = determineStatus(average, attendancePercentage, grades.isEmpty());
+//
+//        // 5. CAMPOS AUXILIARES PARA O ALUNO
+//        BigDecimal pointsNeeded = minPassAverage.subtract(average).max(BigDecimal.ZERO);
+//        boolean canDoRecovery = (status == AcademicStatus.RECUPERACAO || status == AcademicStatus.REPROVADO)
+//                && isApprovedByAttendance;
+//
+//        return new SubjectSummaryResponse(
+//                subject.getId(),
+//                subject.getName(),
+//                grades.stream().map(gradeMapper::toDetailResponse).toList(),
+//                average,
+//                status,
+//                pointsNeeded,
+//                canDoRecovery,
+//                attendancePercentage,
+//                totalAbsences,
+//                isApprovedByAttendance
+//        );
+//    }
+
+    // VERSÃO ATUAL DO MÉTODO COM A LÓGICA DE FREQUÊNCIA INCLUÍDA, MAS SEM A LÓGICA DE "PONTOS NECESSÁRIOS"
+//    private SubjectSummaryResponse calculateSubjectAverage(Subject subject, List<Grade> grades, Long studentId) {
+//        // 1. Lógica de Média Ponderada (já implementada anteriormente)
+//        BigDecimal average = performWeightedAverageCalculation(grades);
+//
+//        // 2. BUSCA DE FREQUÊNCIA
+//        long totalClasses = attendanceService.countByStudentIdAndSubjectId(studentId, subject.getId());
+//        long totalAbsences = attendanceService.countByStudentIdAndSubjectIdAndPresentFalse(studentId, subject.getId());
+//
+//        BigDecimal attendancePercentage = BigDecimal.valueOf(100.0);
+//        if (totalClasses > 0) {
+//            long presences = totalClasses - totalAbsences;
+//            attendancePercentage = BigDecimal.valueOf(presences)
+//                    .multiply(BigDecimal.valueOf(100))
+//                    .divide(BigDecimal.valueOf(totalClasses), 2, RoundingMode.HALF_UP);
+//        }
+//
+//        boolean isApprovedByAttendance = attendancePercentage.compareTo(new BigDecimal("75.0")) >= 0;
+//
+//        // 3. Status Acadêmico (Agora considerando nota E falta)
+//        AcademicStatus status = determineStatus(average, attendancePercentage, grades.isEmpty());
+//
+//        return new SubjectSummaryResponse(
+//                subject.getId(),
+//                subject.getName(),
+//                grades.stream().map(gradeMapper::toDetailResponse).toList(),
+//                average,
+//                status,
+//                minPassAverage.subtract(average).max(BigDecimal.ZERO),
+//                average.compareTo(minPassAverage) < 0,
+//                attendancePercentage,
+//                totalAbsences,
+//                isApprovedByAttendance
+//        );
+//    }
+
+    // MÉTODO ANTERIOR COM A LÓGICA DE RECUPERAÇÃO
+//    private SubjectSummaryResponse calculateSubjectAverage(Subject subject, List<Grade> grades) {
+//        BigDecimal minPassAverage = new BigDecimal("6.0");
+//
+//        // 1. Separar notas regulares de notas de recuperação
+//        List<Grade> regularGrades = grades.stream()
+//                .filter(g -> !g.getAssessment().isRecovery())
+//                .collect(Collectors.toList());
+//
+//        Optional<Grade> recoveryGrade = grades.stream()
+//                .filter(g -> g.getAssessment().isRecovery())
+//                .findFirst(); // Assumindo uma recuperação por disciplina/período
+//
+//        // 2. Aplicar a substituição se a recuperação existir e for maior que a menor nota
+//        if (recoveryGrade.isPresent() && recoveryGrade.get().getScore() != null) {
+//            BigDecimal recoveryScore = recoveryGrade.get().getScore();
+//
+//            // Encontra a menor nota regular que seja menor que a nota da recuperação
+//            regularGrades.stream()
+//                    .filter(g -> g.getScore() != null)
+//                    .min(Comparator.comparing(Grade::getScore))
+//                    .ifPresent(lowestGrade -> {
+//                        if (recoveryScore.compareTo(lowestGrade.getScore()) > 0) {
+//                            log.info("Substituindo nota {} pela recuperação {}", lowestGrade.getScore(), recoveryScore);
+//                            lowestGrade.setScore(recoveryScore); // Substituição temporária para cálculo
+//                        }
+//                    });
+//        }
+//
+//        // 3. Cálculo da Média Ponderada com as notas já processadas
+//        BigDecimal totalPoints = BigDecimal.ZERO;
+//        BigDecimal totalWeight = BigDecimal.ZERO;
+//
+//        for (Grade grade : regularGrades) {
+//            if (grade.getScore() != null) {
+//                BigDecimal weight = grade.getAssessment().getWeight();
+//                totalPoints = totalPoints.add(grade.getScore().multiply(weight));
+//                totalWeight = totalWeight.add(weight);
+//            }
+//        }
+//
+//        BigDecimal average = totalWeight.compareTo(BigDecimal.ZERO) > 0
+//                ? totalPoints.divide(totalWeight, 2, RoundingMode.HALF_UP)
+//                : BigDecimal.ZERO;
+//
+//        // 4. Determinação do Status Final (Aproveitando a lógica anterior)
+//        AcademicStatus status = determineStatus(average, grades.isEmpty());
+//
+//        return new SubjectSummaryResponse(
+//                subject.getId(),
+//                subject.getName(),
+//                grades.stream().map(gradeMapper::toDetailResponse).toList(),
+//                average,
+//                status,
+//                minPassAverage.subtract(average).max(BigDecimal.ZERO),
+//                average.compareTo(minPassAverage) < 0
+//        );
+//    }
+
+    // Responsável por realizar o cálculo matemático da assiduidade, tratando o cenário onde ainda não houve
+    // aulas registradas (evitando divisão por zero).
+    private BigDecimal calculateAttendancePercentage(long totalClasses, long totalAbsences) {
+        if (totalClasses <= 0) {
+            return BigDecimal.valueOf(100.0); // Se não houve aulas, a frequência é 100%
+        }
+
+        long presences = totalClasses - totalAbsences;
+        return BigDecimal.valueOf(presences)
+                .multiply(BigDecimal.valueOf(100))
+                .divide(BigDecimal.valueOf(totalClasses), 2, RoundingMode.HALF_UP);
+    }
+
+    // Responsável por realizar o cálculo matemático da média ponderada, aplicando a lógica de recuperação.
+    // Centraliza a matemática das notas e a lógica de recuperação.
+    private BigDecimal performWeightedAverageCalculation(List<Grade> grades) {
+        // 1. Separar notas regulares e aplicar lógica de recuperação (conforme vimos antes)
         List<Grade> regularGrades = grades.stream()
                 .filter(g -> !g.getAssessment().isRecovery())
                 .collect(Collectors.toList());
 
         Optional<Grade> recoveryGrade = grades.stream()
-                .filter(g -> g.getAssessment().isRecovery())
-                .findFirst(); // Assumindo uma recuperação por disciplina/período
+                .filter(g -> g.getAssessment().isRecovery() && g.getScore() != null)
+                .findFirst();
 
-        // 2. Aplicar a substituição se a recuperação existir e for maior que a menor nota
-        if (recoveryGrade.isPresent() && recoveryGrade.get().getScore() != null) {
-            BigDecimal recoveryScore = recoveryGrade.get().getScore();
-
-            // Encontra a menor nota regular que seja menor que a nota da recuperação
+        // Lógica de substituição da menor nota pela recuperação
+        recoveryGrade.ifPresent(recovery -> {
             regularGrades.stream()
                     .filter(g -> g.getScore() != null)
                     .min(Comparator.comparing(Grade::getScore))
-                    .ifPresent(lowestGrade -> {
-                        if (recoveryScore.compareTo(lowestGrade.getScore()) > 0) {
-                            log.info("Substituindo nota {} pela recuperação {}", lowestGrade.getScore(), recoveryScore);
-                            lowestGrade.setScore(recoveryScore); // Substituição temporária para cálculo
+                    .ifPresent(lowest -> {
+                        if (recovery.getScore().compareTo(lowest.getScore()) > 0) {
+                            lowest.setScore(recovery.getScore());
                         }
                     });
-        }
+        });
 
-        // 3. Cálculo da Média Ponderada com as notas já processadas
+        // 2. Cálculo da Média Ponderada
         BigDecimal totalPoints = BigDecimal.ZERO;
         BigDecimal totalWeight = BigDecimal.ZERO;
 
@@ -438,30 +648,31 @@ public class GradeServiceImpl implements GradeService {
             }
         }
 
-        BigDecimal average = totalWeight.compareTo(BigDecimal.ZERO) > 0
+        return totalWeight.compareTo(BigDecimal.ZERO) > 0
                 ? totalPoints.divide(totalWeight, 2, RoundingMode.HALF_UP)
                 : BigDecimal.ZERO;
-
-        // 4. Determinação do Status Final (Aproveitando a lógica anterior)
-        AcademicStatus status = determineStatus(average, grades.isEmpty());
-
-        return new SubjectSummaryResponse(
-                subject.getId(),
-                subject.getName(),
-                grades.stream().map(gradeMapper::toDetailResponse).toList(),
-                average,
-                status,
-                minPassAverage.subtract(average).max(BigDecimal.ZERO),
-                average.compareTo(minPassAverage) < 0
-        );
     }
 
-    private AcademicStatus determineStatus(BigDecimal average, boolean noGrades) {
+    // NOVA VERSÃO DO MÉTODO COM A LÓGICA DE RECUPERAÇÃO REVISADA
+    private AcademicStatus determineStatus(BigDecimal average, BigDecimal attendance, boolean noGrades) {
         if (noGrades) return AcademicStatus.EM_CURSO;
-        if (average.compareTo(new BigDecimal("6.0")) >= 0) return AcademicStatus.APROVADO;
+
+        boolean hasGrade = average.compareTo(new BigDecimal("6.0")) >= 0;
+        boolean hasAttendance = attendance.compareTo(new BigDecimal("75.0")) >= 0;
+
+        if (hasGrade && hasAttendance) return AcademicStatus.APROVADO;
+        if (!hasAttendance) return AcademicStatus.REPROVADO; // Reprovado por falta direto
         if (average.compareTo(new BigDecimal("4.0")) >= 0) return AcademicStatus.RECUPERACAO;
+
         return AcademicStatus.REPROVADO;
     }
+
+//    private AcademicStatus determineStatus(BigDecimal average, boolean noGrades) {
+//        if (noGrades) return AcademicStatus.EM_CURSO;
+//        if (average.compareTo(new BigDecimal("6.0")) >= 0) return AcademicStatus.APROVADO;
+//        if (average.compareTo(new BigDecimal("4.0")) >= 0) return AcademicStatus.RECUPERACAO;
+//        return AcademicStatus.REPROVADO;
+//    }
 
     // MÉTODO ATUA COM O "ENUM DE STATUS" DE APROVAÇÃO
 //    private SubjectSummaryResponse calculateSubjectAverage(Subject subject, List<Grade> grades) {
