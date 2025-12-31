@@ -367,8 +367,7 @@ CREATE TABLE attendances (
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW(),
 
-    -- Unicidade: impede registrar duas frequências para o mesmo aluno na mesma disciplina e dia
-    CONSTRAINT uk_attendance_unique UNIQUE (student_id, subject_id, date),
+    CONSTRAINT uk_attendance_unique UNIQUE (student_id, subject_id, date, timetable_id),
     CONSTRAINT fk_attendance_student FOREIGN KEY (student_id) REFERENCES student(id),
     CONSTRAINT fk_attendance_subject FOREIGN KEY (subject_id) REFERENCES subjects(id),
     CONSTRAINT fk_attendance_timetable FOREIGN KEY (timetable_id) REFERENCES timetables(id)
