@@ -15,5 +15,6 @@ public interface TimetableService {
     void delete(Long id);
     TimetableResponse getNextClass(AgendaUserDetails currentUser);
     byte[] generateTimetablePdf(Long schoolClassId);
+    public TimetableResponse getCurrentOrNextClass(AgendaUserDetails currentUser);
 
 }

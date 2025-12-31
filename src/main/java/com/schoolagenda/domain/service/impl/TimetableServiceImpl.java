@@ -199,4 +199,49 @@ public class TimetableServiceImpl implements TimetableService {
         document.close();
         return baos.toByteArray();
     }
+
+    // Exemplo de uso dentro do TimetableServiceImpl
+    @Override
+    @Transactional(readOnly = true)
+    public TimetableResponse getCurrentOrNextClass(AgendaUserDetails currentUser) {
+        DayOfWeek today = LocalDate.now().getDayOfWeek();
+        LocalTime now = LocalTime.now();
+
+        Optional<Timetable> timetable = Optional.empty();
+
+        if (currentUser.hasRole(UserRole.TEACHER)) {
+            timetable = timetableRepository.findCurrentOrNextByTeacher(currentUser.getId(), today, now);
+        } else if (currentUser.hasRole(UserRole.STUDENT)) {
+            Student student = studentRepository.findByUserId(currentUser.getId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Estudante não encontrado"));
+
+            timetable = timetableRepository.findCurrentOrNextByClass(student.getSchoolClass().getId(), today, now);
+        }
+
+        return timetable.map(timetableMapper::toResponse)
+                .orElseThrow(() -> new ResourceNotFoundException("Nenhuma aula encontrada para o restante do dia."));
+    }
+
+    // Implementação anteiror do método getCurrentOrNextClass.
+//    @Override
+//    public TimetableResponse getCurrentOrNextClass(AgendaUserDetails currentUser) {
+//        DayOfWeek today = LocalDate.now().getDayOfWeek();
+//        LocalTime now = LocalTime.now();
+//
+//        Optional<Timetable> timetable;
+//
+//        if (currentUser.hasRole(UserRole.TEACHER)) {
+//            timetable = timetableRepository.findCurrentOrNextByTeacher(currentUser.getId(), today, now);
+//        } else {
+//            // Busca a turma do aluno através do StudentRepository primeiro
+//            Student student = studentRepository.findByUserId(currentUser.getId())
+//                    .orElseThrow(() -> new ResourceNotFoundException("Estudante não encontrado"));
+//
+//            timetable = timetableRepository.findCurrentOrNextByClass(student.getSchoolClass().getId(), today, now);
+//        }
+//
+//        return timetable.map(timetableMapper::toResponse)
+//                .orElseThrow(() -> new ResourceNotFoundException("Não há aulas pendentes para o restante do dia de hoje."));
+//    }
+
 }
