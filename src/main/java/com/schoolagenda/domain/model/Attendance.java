@@ -27,6 +27,10 @@ public class Attendance extends BaseAuditableEntity {
     @JoinColumn(name = "subject_id", nullable = false)
     private Subject subject;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "timetable_id") // Novo vínculo com o horário
+    private Timetable timetable;
+
     @Column(nullable = false)
     private LocalDate date;
 

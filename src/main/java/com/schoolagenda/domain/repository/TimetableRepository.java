@@ -89,4 +89,67 @@ public interface TimetableRepository extends JpaRepository<Timetable, Long> {
         LIMIT 1
     """)
     Optional<Timetable> findNextStudentClass(Long classId, DayOfWeek day, LocalTime now);
+
+    /**
+     * Busca a aula atual (onde o horário de término é maior ou igual a agora)
+     * ou a próxima aula do dia para um PROFESSOR.
+     */
+    @Query("""
+        SELECT t FROM Timetable t 
+        WHERE t.teacherClass.teacher.id = :teacherId 
+        AND t.dayOfWeek = :day 
+        AND t.endTime >= :now 
+        ORDER BY t.startTime ASC
+        LIMIT 1
+    """)
+    Optional<Timetable> findCurrentOrNextByTeacher(
+            @Param("teacherId") Long teacherId,
+            @Param("day") DayOfWeek day,
+            @Param("now") LocalTime now);
+
+    // Comentado em função da alteração da assinatura do método
+//    @Query("""
+//        SELECT t FROM Timetable t
+//        WHERE t.teacherClass.teacher.id = :teacherId
+//        AND t.dayOfWeek = :day
+//        AND t.endTime >= :now
+//        ORDER BY t.startTime ASC
+//        LIMIT 1
+//    """)
+//    Optional<Timetable> findCurrentOrNextByTeacher(
+//            @Param("teacherId") Long teacherId,
+//            @Param("day") DayOfWeek day,
+//            @Param("now") LocalTime now);
+
+    /**
+     * Busca a aula atual (onde o horário de término é maior ou igual a agora)
+     * ou a próxima aula do dia para uma TURMA (Alunos).
+     */
+    @Query("""
+        SELECT t FROM Timetable t 
+        WHERE t.teacherClass.schoolClass.id = :classId 
+        AND t.dayOfWeek = :day 
+        AND t.endTime >= :now 
+        ORDER BY t.startTime ASC
+        LIMIT 1
+    """)
+    Optional<Timetable> findCurrentOrNextByClass(
+            @Param("classId") Long classId,
+            @Param("day") DayOfWeek day,
+            @Param("now") LocalTime now);
+
+    // Comentado em função da alteração da assinatura do método
+//    @Query("""
+//        SELECT t FROM Timetable t
+//        WHERE t.teacherClass.schoolClass.id = :classId
+//        AND t.dayOfWeek = :day
+//        AND t.endTime >= :now
+//        ORDER BY t.startTime ASC
+//        LIMIT 1
+//    """)
+//    Optional<Timetable> findCurrentOrNextByClass(
+//            @Param("classId") Long classId,
+//            @Param("day") DayOfWeek day,
+//            @Param("now") LocalTime now);
+
 }

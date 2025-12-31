@@ -143,6 +143,20 @@ public class ControllerExceptionHandler {
                         .build());
     }
 
+    // Exceção para erros de negócio para usuário não autorizado (exceção global)
+    @ExceptionHandler(BusinessException.class)
+    ResponseEntity<StandardError> handleBusinessException(
+            final BusinessResourceException ex, final HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
+                StandardError.builder()
+                        .timestamp(LocalDateTime.now())
+                        .status(HttpStatus.UNAUTHORIZED.value())
+                        .error(HttpStatus.UNAUTHORIZED.getReasonPhrase())
+                        .message(ex.getMessage())
+                        .path(request.getRequestURI())
+                        .build());
+    }
+
     // Exceção para parâmetros com formatos (tipos de dados) inválidos
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     ResponseEntity<StandardError> handleMethodArgumentTypeMismatchException(

@@ -7,8 +7,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 public record AttendanceBulkRequest(
-        @NotNull Long subjectId,
-        @NotNull Long schoolClassId,
+        @NotNull Long timetableId, // O sistema já sabe a disciplina e a turma através do horário
         @NotNull LocalDate date,
-        @NotEmpty List<StudentAttendanceRequest> attendances
+        @NotNull List<StudentAttendanceRequest> students
 ) {}
