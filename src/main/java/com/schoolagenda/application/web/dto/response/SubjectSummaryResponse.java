@@ -13,5 +13,8 @@ public record SubjectSummaryResponse(
 //        boolean isApproved // Ex: average >= 6.0
         AcademicStatus status,      // Novo campo
         BigDecimal pointsNeeded,    // Quanto falta para atingir a média (ex: 6.0)
-        boolean canDoRecovery       // Se o aluno tem direito a prova de recuperação
+        boolean canDoRecovery,      // Se o aluno tem direito a prova de recuperação
+        BigDecimal attendancePercentage, // Novo: % de presença
+        long totalAbsences,              // Novo: Total de faltas
+        boolean isApprovedByAttendance   // Novo: Se tem > 75%
 ) {}

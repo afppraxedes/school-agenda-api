@@ -6,7 +6,7 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 @JsonPropertyOrder({
-        "id",
+//        "id",
         // outros campos comuns...
         "createdBy", "lastModifiedBy", "createdAt", "updatedAt"
 })
