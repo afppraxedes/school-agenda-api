@@ -126,7 +126,7 @@ FROM assessments a, users u WHERE u.id BETWEEN 23 AND 40;
 -- 10. ATTENDANCES (Reprovação por falta para Aluno 40)
 INSERT INTO attendances (student_id, subject_id, timetable_id, date, present, note, created_at)
 SELECT
-    st.id, sub.id, ttb.id CURRENT_DATE - i,
+    st.id, sub.id, ttb.id, CURRENT_DATE - i,
     CASE WHEN st.user_id = 40 AND i < 5 THEN false ELSE true END, -- Aluno 40 com muitas faltas
     'Verificar como colocar no script o "Note"', NOW()
 FROM student st, subjects sub, timetables ttb, generate_series(1, 10) i;

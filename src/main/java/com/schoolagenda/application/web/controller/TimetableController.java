@@ -69,4 +69,11 @@ public class TimetableController {
     public ResponseEntity<TimetableResponse> getNext(@AuthenticationPrincipal AgendaUserDetails currentUser) {
         return ResponseEntity.ok(timetableService.getNextClass(currentUser));
     }
+
+    @GetMapping("/current-or-next")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<TimetableResponse> getCurrentOrNext(@AuthenticationPrincipal AgendaUserDetails currentUser) {
+        // Este método chama a lógica que busca no banco se há aula agora ou a próxima
+        return ResponseEntity.ok(timetableService.getCurrentOrNextClass(currentUser));
+    }
 }
