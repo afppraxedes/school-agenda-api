@@ -16,7 +16,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 
 @Service
@@ -71,7 +72,7 @@ public class MessageServiceImpl implements MessageService {
                 .orElseThrow(() -> new ResourceNotFoundException("Mensagem não encontrada"));
 
         if (message.getRecipient().getId().equals(userId) && message.getReadAt() == null) {
-            message.setReadAt(LocalDateTime.now());
+            message.setReadAt(OffsetDateTime.now(ZoneOffset.UTC));
         }
     }
 

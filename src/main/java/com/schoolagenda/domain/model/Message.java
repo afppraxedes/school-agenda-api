@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Entity
 @Table(name = "messages")
@@ -37,7 +38,8 @@ public class Message extends BaseAuditableEntity {
     @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
 
-    private LocalDateTime readAt;
+//    @Column(name = "read_at", columnDefinition = "TIMESTAMP WITH TIME ZONE")
+    private OffsetDateTime readAt;
 
     private boolean archivedBySender;
     private boolean archivedByRecipient;

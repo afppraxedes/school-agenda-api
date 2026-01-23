@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Data
 @Builder
@@ -25,6 +26,6 @@ public class TeacherClassResponse {
     private Long schoolClassId;
     private String schoolClassName;
 
-    private LocalDateTime createdAt;
+    private OffsetDateTime createdAt;
     private String createdBy;
 }

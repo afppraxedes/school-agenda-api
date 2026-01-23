@@ -42,18 +42,26 @@ INSERT INTO school_classes (id, name, description, year, is_active, coordinator_
 (4, '8º Ano C - 2025', 'Turma C', 2025, true, 3, NOW(), NOW()),
 (5, '6º Ano D - 2025', 'Turma D', 2025, true, 3, NOW(), NOW());
 
--- 4. STUDENTS (18 Alunos vinculados aos Users 23-40)
+-- 4. SCHOOL CLASSES (5 Eventos Escolares)
+INSERT INTO school_events (title, description, start_date, end_date, all_day, type, school_class_id, location, created_by, last_modified_by, created_at, updated_at) VALUES
+('Feriado Nacional', 'Não haverá aula devido ao feriado.', '2026-05-01T00:00:00Z', '2026-05-01T23:59:59Z', true, 'HOLIDAY', NULL, 'Escola', 'system', 'system', NOW(), NOW()),
+('Prova de Matemática', 'Conteúdo: Álgebra e Geometria.', '2026-05-10T08:00:00Z', '2026-05-10T10:00:00Z', false, 'EXAM', 1, 'Sala 04', 'system', 'system', NOW(), NOW()),
+('Reunião de Pais', 'Pauta: Entrega de boletins do 1º bimestre.', '2026-05-15T19:00:00Z', '2026-05-15T21:00:00Z', false, 'MEETING', NULL, 'Auditório Principal', 'system', 'system', NOW(), NOW()),
+('Feira de Ciências', 'Apresentação dos projetos dos alunos.', '2026-05-20T09:00:00Z', '2026-05-20T17:00:00Z', true, 'CULTURAL', NULL, 'Pátio Central', 'system', 'system', NOW(), NOW()),
+('Torneio de Futebol', 'Final do campeonato interclasses.', '2026-05-25T14:00:00Z', '2026-05-25T16:00:00Z', false, 'SPORTS', 1, 'Quadra Poliesportiva', 'system', 'system', NOW(), NOW());
+
+-- 5. STUDENTS (18 Alunos vinculados aos Users 23-40)
 INSERT INTO student (id, full_name, birth_date, class_name, registration_date, user_id, school_class_id, created_by, last_modified_by, created_at, updated_at)
 SELECT i-22, 'Student Name '||i, '2010-01-01', 'Class '||i, NOW(), i, (i % 5) + 1, NULL, NULL, NOW(), NOW()
 FROM generate_series(23, 40) i;
 
--- 5. RESPONSABLE STUDENT (Vínculos solicitados)
+-- 6. RESPONSABLE STUDENT (Vínculos solicitados)
 INSERT INTO responsable_student (responsable_id, student_id, created_at, updated_at) VALUES
 (13,1, NOW(), NOW()), (14,2, NOW(), NOW()), (15,3, NOW(), NOW()), -- 1 aluno cada
 (16,4, NOW(), NOW()), (16,5, NOW(), NOW()), (17,6, NOW(), NOW()), (17,7, NOW(), NOW()), (18,8, NOW(), NOW()), (18,9, NOW(), NOW()), (19,10, NOW(), NOW()), (19,11, NOW(), NOW()), (20,12, NOW(), NOW()), (20,13, NOW(), NOW()), (21,14, NOW(), NOW()), (21,15, NOW(), NOW()), -- 2 alunos
 (22,16, NOW(), NOW()), (22,17, NOW(), NOW()), (22,18, NOW(), NOW()); -- 3 alunos
 
--- 6. SUBJECTS (12 Disciplinas vinculadas aos Professores)
+-- 7. SUBJECTS (12 Disciplinas vinculadas aos Professores)
 INSERT INTO subjects (id, name, school_year, teacher_user_id, is_active, created_at, updated_at) VALUES
 (1, 'Matemática', '2025', 4, true, NOW(), NOW()), (2, 'Português', '2025', 5, true, NOW(), NOW()),
 (3, 'História', '2025', 6, true, NOW(), NOW()), (4, 'Geografia', '2025', 7, true, NOW(), NOW()),
@@ -63,7 +71,7 @@ INSERT INTO subjects (id, name, school_year, teacher_user_id, is_active, created
 (11, 'Biologia', '2025', 10, true, NOW(), NOW()), -- Tesla +1
 (12, 'Filosofia', '2025', 12, true, NOW(), NOW()); -- Sócrates +1
 
--- 7. TEACHER CLASSES
+-- 8. TEACHER CLASSES
 INSERT INTO teacher_classes (teacher_id, subject_id, school_class_id, created_by, last_modified_by, created_at, updated_at) VALUES
 (4, 1, 1, NULL, NULL, NOW(), NOW()),
 (5, 2, 1, NULL, NULL, NOW(), NOW()),
@@ -72,7 +80,7 @@ INSERT INTO teacher_classes (teacher_id, subject_id, school_class_id, created_by
 
 -- Exemplo de inserção para os 20 registros com a ordem de auditoria solicitada
 -- Ordem final: created_by, last_modified_by, created_at, updated_at
-
+-- 9. TIMETABLES (20 Horários vinculados às Teacher Classes)
 INSERT INTO timetables (
     teacher_class_id, day_of_week, start_time, end_time, room_name,
     created_by, last_modified_by, created_at, updated_at) VALUES
@@ -97,7 +105,7 @@ INSERT INTO timetables (
 (3, 'WEDNESDAY', '09:00:00', '09:50:00', 'Sala 202', 'system', 'system', NOW(), NOW()),
 (4, 'FRIDAY', '10:00:00', '10:50:00', 'Lab Física', 'system', 'system', NOW(), NOW());
 
--- 8. ASSESSMENTS (4 Bimestrais por disciplina)
+-- 10. ASSESSMENTS (4 Bimestrais por disciplina)
 INSERT INTO assessments (id, title, subject_id, created_by_user_id, max_score, weight, is_published, is_recovery, created_by, last_modified_by, created_at, updated_at)
 SELECT (s.id-1)*4 + i, 'Prova '||i||'º Bimestre', s.id, s.teacher_user_id, 10.0, 1.0, true, false, NULL, NULL, NOW(), NOW()
 FROM subjects s, generate_series(1,4) i;
@@ -108,7 +116,7 @@ FROM subjects s, generate_series(1,4) i;
 -- (3, 5, 9.50, 10.00, 'Ótimo trabalho!', 2, '2025-12-09 01:18:02.659669', FALSE,FALSE, NULL, NULL, NOW(), NOW()),
 -- (1, 5, 8.50, 10.00, 'Bom trabalho!', 2, '2025-12-09 03:01:36.746502', FALSE, FALSE, NULL, NULL, NOW(), NOW());
 
--- 10. GRADES (Lógica 60% / 35% / 5%)
+-- 11. GRADES (Lógica 60% / 35% / 5%)
 INSERT INTO grades (assessment_id, student_user_id, score, max_score, feedback, graded_by_user_id, graded_at, is_absent, is_excused, created_by, last_modified_by, created_at, updated_at)
 SELECT
     a.id,
@@ -135,22 +143,32 @@ FROM student st, subjects sub, timetables ttb, generate_series(1, 10) i;
 -- (1, 1, CURRENT_DATE - INTERVAL '1 day', false, 'Falta sem justificativa', NOW()),
 -- (1, 1, CURRENT_DATE, true, 'Presença normal', NOW());
 
--- Announcements
+-- 12. ANNOUNCEMENTS (2 Anúncios)
 INSERT INTO announcements (title, description, image_path, type, order_position, created_by, last_modified_by, created_at, updated_at, is_active) VALUES
 ('Welcome Back', 'Welcome to the new school year!', 'path/to/image1.jpg', 'BANNER', 1, NULL, NULL, NOW(), NOW(), true),
 ('School Trip', 'Upcoming trip to the museum.', 'path/to/image2.jpg', 'CAROUSEL', 2, NULL, NULL, NOW(), NOW(), true);
 
 -- Conversations
+-- 13. CONVERSATIONS (1 Conversa de Exemplo)
 INSERT INTO conversations (sender_id, recipient_id, student_id, subject, content, attachment_path, sent_at, read_status) VALUES
 (3, 2, 1, 'Homework Question', 'Can you clarify the math homework?', NULL, NOW(), 'UNREAD');
 
--- Events
+-- 14. EVENTS (1 Evento de Exemplo)
 INSERT INTO events (title, description, start_date, end_date, color, created_at, updated_at) VALUES
 ('Parent Meeting', 'Meeting for all parents.', '2023-11-01 18:00:00', '2023-11-01 20:00:00', '#0A2558', NOW(), NOW());
 
--- Notifications
+-- 15. NOTIFICATIONS (1 Notificação de Exemplo)
 INSERT INTO notifications (title, message, user_id, read, created_at, type) VALUES
 ('New Message', 'You have a new message from Responsible User.', 2, false, NOW(), 'MESSAGE');
+
+-- 16. MESSAGES (Mensagens entre Professor e Responsável sobre o Aluno)
+INSERT INTO messages (sender_id, recipient_id, student_id, subject, content, created_by, last_modified_by, created_at, updated_at) VALUES
+(2, 5, 1, 'Comportamento em Aula', 'Olá Julia, o aluno João tem demonstrado muita evolução em Matemática.', 'system', 'system', NOW(), NOW()),
+(5, 2, 1, 'Re: Comportamento em Aula', 'Obrigada pelo feedback, Professor Carlos! Ficamos felizes.','system', 'system', NOW(), NOW()),
+(2, 5, 1, 'Material Extra', 'Enviei uma lista de exercícios extra para o João praticar para a prova.', 'system', 'system', NOW(), NOW()),
+(5, 2, 1, 'Re: Material Extra', 'Recebido! Iremos praticar em casa. Muito obrigado.','system', 'system', NOW(), NOW()),
+(2, 5, 1, 'Ausência na Aula', 'Julia, notei que o João não compareceu à aula hoje. Está tudo bem?','system', 'system', NOW(), NOW()),
+(5, 2, 1, 'Re: Ausência na Aula', 'Ele teve uma consulta médica, mas amanhã levará o atestado.', 'system', 'system', NOW(), NOW());
 
 -- Attendances
 -- Limpa para evitar erros de duplicidade em re-execuções, se necessário
