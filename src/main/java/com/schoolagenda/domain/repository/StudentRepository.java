@@ -42,4 +42,14 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
 
     // Busca o estudante pelo ID do usuário vinculado
     Optional<Student> findByUserId(Long userId);
+
+    /**
+     * Busca o ID da turma vinculada a um usuário (Aluno ou Responsável).
+     * Se for responsável, busca o ID da turma do primeiro dependente encontrado.
+     */
+    @Query("""
+    SELECT s.schoolClass.id FROM Student s 
+    WHERE s.user.id = :userId
+""")
+    Optional<Long> findClassIdByUserId(@Param("userId") Long userId);
 }

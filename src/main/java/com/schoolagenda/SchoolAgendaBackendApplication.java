@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing; // <---
 import java.util.TimeZone;
 
 @SpringBootApplication
-@EnableJpaAuditing // 1. Habilita o Auditing Globalmente
+//@EnableJpaAuditing // 1. Habilita o Auditing Globalmente
 public class SchoolAgendaBackendApplication {
 
 	@PostConstruct

@@ -4,6 +4,7 @@ import com.schoolagenda.application.web.dto.request.NotificationRequest;
 import com.schoolagenda.application.web.dto.request.PushSubscriptionRequest;
 import com.schoolagenda.application.web.dto.response.NotificationResponse;
 import com.schoolagenda.application.web.dto.response.UserResponse;
+import com.schoolagenda.application.web.security.dto.AgendaUserDetails;
 import com.schoolagenda.domain.enums.NotificationType;
 import com.schoolagenda.domain.model.User;
 import com.schoolagenda.domain.repository.NotificationRepository;
@@ -14,8 +15,11 @@ import com.schoolagenda.domain.service.WebPushService;
 import com.schoolagenda.infrastructure.external.webpush.WebPushServiceImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
@@ -197,13 +201,16 @@ public class NotificationController {
 
     // Notification
     @GetMapping("/unread-count")
-    public ResponseEntity<Long> getUnreadCount() {
+    @PreAuthorize("hasAnyAuthority('ADMINISTRATOR', 'DIRECTOR', 'TEACHER', 'STUDENT', 'RESPONSIBLE')")
+    public ResponseEntity<Long> getUnreadCount(@AuthenticationPrincipal AgendaUserDetails currentUser) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 ////        String username = authentication.getName();
 //
-        User userLoad = (User) authentication.getPrincipal();
+//        User userLoad = (User) authentication.getPrincipal();
+//        UserDetails userLoad = (UserDetails) authentication.getPrincipal();
 
-        UserResponse userResponse = userServiceImpl.getUserById(userLoad.getId());
+//        UserResponse userResponse = userServiceImpl.getUserById(userLoad.getId());
+        UserResponse userResponse = userServiceImpl.getUserById(currentUser.getId());
 
         try {
             UserResponse user = userServiceImpl.getUserByEmail(userResponse.getEmail());
