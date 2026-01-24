@@ -11,6 +11,8 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 
 @Entity
 @Table(name = "grades",
@@ -51,7 +53,7 @@ public class Grade extends BaseAuditableEntity {
     private String feedback;
 
     @Column(name = "graded_at")
-    private LocalDateTime gradedAt;
+    private OffsetDateTime gradedAt;
 
     @Column(name = "is_absent")
     private Boolean absent = false;
@@ -129,7 +131,7 @@ public class Grade extends BaseAuditableEntity {
 
         // Define gradedAt se foi avaliado agora
         if (this.gradedAt == null && this.score != null) {
-            this.gradedAt = LocalDateTime.now();
+            this.gradedAt = OffsetDateTime.now(ZoneOffset.UTC);
         }
 
 //        this.updatedAt = LocalDateTime.now();

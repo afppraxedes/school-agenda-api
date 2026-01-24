@@ -1,9 +1,11 @@
 package com.schoolagenda.domain.repository;
 
+import com.schoolagenda.application.web.dto.common.attendance.AttendanceSummary;
 import com.schoolagenda.domain.model.Attendance;
 import com.schoolagenda.domain.model.Timetable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.DayOfWeek;
@@ -32,5 +34,17 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
     // Busca faltas de um aluno em um intervalo de datas (Para relatório de assiduidade)
     @Query("SELECT a FROM Attendance a WHERE a.student.id = :studentId AND a.date BETWEEN :start AND :end")
     List<Attendance> findAttendanceHistory(Long studentId, LocalDate start, LocalDate end);
+
+    @Query("""
+    SELECT new com.schoolagenda.application.web.dto.common.attendance.AttendanceSummary(
+        a.timetable.teacherClass.subject.id, 
+        COUNT(a.id), 
+        CAST(SUM(CASE WHEN a.present = false THEN 1 ELSE 0 END) AS long)
+    )
+    FROM Attendance a
+    WHERE a.student.user.id = :studentUserId
+    GROUP BY a.timetable.teacherClass.subject.id
+""")
+    List<AttendanceSummary> findAttendanceSummariesByStudent(@Param("studentUserId") Long studentUserId);
 
 }

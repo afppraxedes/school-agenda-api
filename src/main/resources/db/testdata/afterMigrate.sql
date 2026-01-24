@@ -117,7 +117,29 @@ FROM subjects s, generate_series(1,4) i;
 -- (1, 5, 8.50, 10.00, 'Bom trabalho!', 2, '2025-12-09 03:01:36.746502', FALSE, FALSE, NULL, NULL, NOW(), NOW());
 
 -- 11. GRADES (Lógica 60% / 35% / 5%)
-INSERT INTO grades (assessment_id, student_user_id, score, max_score, feedback, graded_by_user_id, graded_at, is_absent, is_excused, created_by, last_modified_by, created_at, updated_at)
+-- A INSTRUÇÃO ESTAVA GERANDO UM "PRODUTO CARTESIANO". DESTA FORMA, ESTAVAM SENDO GERADAS 864 NOTAS.
+-- INSERT INTO grades (assessment_id, student_user_id, score, max_score, feedback, graded_by_user_id, graded_at, is_absent, is_excused, created_by, last_modified_by, created_at, updated_at)
+-- SELECT
+--     a.id,
+--     u.id,
+--     CASE
+--         WHEN u.id <= 33 THEN (6.5 + random() * 3.5) -- 60% Aprovados
+--         WHEN u.id <= 39 THEN (4.0 + random() * 2.0) -- 35% Recuperação
+--         ELSE (random() * 3.9)                      -- 5% Reprovados
+--         END,
+--     10.0,
+--     'Feedback automático gerado - verificar como personalizar por faixa de nota',
+--     4, NOW(), false, false, NULL, NULL, NOW(), NOW()
+-- FROM assessments a, users u WHERE u.id BETWEEN 23 AND 40;
+
+-- 11. GRADES (Lógica 60% / 35% / 5%)
+-- CORREÇÃO: GERAR AS NOTAS COM BASE NA COMBINAÇÃO DE ALUNOS E AVALIAÇÕES
+INSERT INTO grades (
+    assessment_id, student_user_id, score, max_score,
+    feedback, graded_by_user_id, graded_at,
+    is_absent, is_excused, created_by, last_modified_by,
+    created_at, updated_at
+)
 SELECT
     a.id,
     u.id,
@@ -127,9 +149,30 @@ SELECT
         ELSE (random() * 3.9)                      -- 5% Reprovados
         END,
     10.0,
-    'Feedback automático gerado - verificar como personalizar por faixa de nota',
-    4, NOW(), false, false, NULL, NULL, NOW(), NOW()
-FROM assessments a, users u WHERE u.id BETWEEN 23 AND 40;
+    'Feedback automático gerado - ' ||
+    CASE
+        WHEN random() > 0.7 THEN 'Excelente!'
+        WHEN random() > 0.4 THEN 'Bom trabalho.'
+        WHEN random() > 0.2 THEN 'Pode melhorar.'
+        ELSE 'Atenção necessária.'
+        END,
+    4,
+    NOW() - (random() * INTERVAL '90 days'),
+    false,
+    false,
+    NULL,
+    NULL,
+    NOW(),
+    NOW()
+FROM users u
+         CROSS JOIN LATERAL (
+    SELECT id
+    FROM assessments
+    ORDER BY random()
+        LIMIT 12 -- 12 avaliações por aluno
+) a
+WHERE u.id BETWEEN 23 AND 40; -- 216 notas no total
+--   AND u.user_type = 'STUDENT';
 
 -- 10. ATTENDANCES (Reprovação por falta para Aluno 40)
 INSERT INTO attendances (student_id, subject_id, timetable_id, date, present, note, created_at)

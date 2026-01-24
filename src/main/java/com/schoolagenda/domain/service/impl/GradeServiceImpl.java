@@ -2,6 +2,7 @@ package com.schoolagenda.domain.service.impl;
 
 import com.schoolagenda.application.web.dto.common.PaginationRequest;
 import com.schoolagenda.application.web.dto.common.PaginationResponse;
+import com.schoolagenda.application.web.dto.common.attendance.AttendanceSummary;
 import com.schoolagenda.application.web.dto.common.grade.GradeFilterRequest;
 import com.schoolagenda.application.web.dto.request.GradeRequest;
 import com.schoolagenda.application.web.dto.response.GradeResponse;
@@ -21,6 +22,7 @@ import com.schoolagenda.domain.service.GradeService;
 import com.schoolagenda.domain.specification.GradeSpecifications;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.AccessDeniedException;
@@ -30,6 +32,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -46,6 +50,7 @@ public class GradeServiceImpl implements GradeService {
     private final StudentRepository studentRepository;
     private final ResponsibleStudentRepository responsibleStudentRepository;
     private final AttendanceService attendanceService;
+    private final AttendanceRepository attendanceRepository;
 
     @Override
     @Transactional
@@ -79,7 +84,7 @@ public class GradeServiceImpl implements GradeService {
         // Atribui quem está lançando a nota (Professor logado)
         User professor = userRepository.getReferenceById(currentUser.getId());
         grade.setGradedBy(professor);
-        grade.setGradedAt(LocalDateTime.now());
+        grade.setGradedAt(OffsetDateTime.now(ZoneOffset.UTC));
 
         // Regra: Se ausente ou justificada, nota deve ser null (Sua lógica atual)
         if (Boolean.TRUE.equals(request.getAbsent()) || Boolean.TRUE.equals(request.getExcused())) {
@@ -203,7 +208,7 @@ public class GradeServiceImpl implements GradeService {
         // Atualiza quem editou por último
         User editor = userRepository.getReferenceById(currentUser.getId());
         grade.setGradedBy(editor);
-        grade.setGradedAt(LocalDateTime.now());
+        grade.setGradedAt(OffsetDateTime.now(ZoneOffset.UTC));
 
         // Regra de ausência/justificativa
         if (Boolean.TRUE.equals(request.getAbsent()) || Boolean.TRUE.equals(request.getExcused())) {
@@ -215,19 +220,6 @@ public class GradeServiceImpl implements GradeService {
 
         return gradeMapper.toResponse(updatedGrade);
     }
-
-//    @Override
-//    @Transactional
-//    public void delete(Long id) {
-//        log.info("Deleting grade ID: {}", id);
-//
-//        if (!gradeRepository.existsById(id)) {
-//            throw new ResourceNotFoundException("Note not found with ID: " + id);
-//        }
-//
-//        gradeRepository.deleteById(id);
-//        log.info("Grade deleted with ID: {}", id);
-//    }
 
     // Novo método adicionado pelo "Gemini"!
     @Override
@@ -260,49 +252,55 @@ public class GradeServiceImpl implements GradeService {
     @Override
     @Transactional
     public GradeResponse bulkCreate(List<GradeRequest> requests, AgendaUserDetails currentUser) {
-        log.info("Creating {} grades in batch", requests.size());
+        log.info("Processando {} notas em lote", requests.size());
 
-        List<Grade> grades = requests.stream()
-                .map(request -> {
-                    Assessment assessment = assessmentRepository.findById(request.getAssessmentId())
-                            .orElseThrow(() -> new ResourceNotFoundException(
-                                    "Assessment not found with ID: " + request.getAssessmentId()));
+        // 1. Validar se o ID do professor logado existe
+        if (currentUser.getId() == null) {
+            throw new ResourceNotFoundException("ID do usuário autenticado não encontrado.");
+        }
+        User editor = userRepository.getReferenceById(currentUser.getId());
 
-                    User student = userRepository.findById(request.getStudentUserId())
-                            .orElseThrow(() -> new ResourceNotFoundException(
-                                    "Student not found with ID: " + request.getStudentUserId()));
+        List<Grade> gradesToSave = requests.stream().map(request -> {
+            // Validação defensiva dos IDs do Request
+            if (request.getAssessmentId() == null || request.getStudentUserId() == null) {
+                throw new BusinessResourceException("AssessmentId e StudentUserId são obrigatórios para cada nota do lote.");
+            }
 
-                    // TODO: Rever esta condicional, pois o atributo "gradedByUserId" foi removido após as
-                    // alterações sugeridas pelo "Gemini"
-//                    User gradedBy = null;
-//                    if (request.getGradedByUserId() != null) {
-//                        gradedBy = userRepository.findById(request.getGradedByUserId())
-//                                .orElseThrow(() -> new ResourceNotFoundException(
-//                                        "User not found with ID: " + request.getGradedByUserId()));
-//                    }
+            // 2. Busca nota existente (UPSERT)
+            // Certifique-se que seu repository usa (Long assessmentId, Long studentUserId)
+            Grade grade = gradeRepository.findByAssessmentIdAndStudentId(
+                            request.getAssessmentId(), request.getStudentUserId())
+                    .orElseGet(() -> {
+                        log.debug("Criando nova nota para estudante {}", request.getStudentUserId());
+                        return gradeMapper.toEntity(request);
+                    });
 
-                    User editor = null; // userRepository.getReferenceById(currentUser.getId());
-                    if (currentUser.getId() != null) {
-                        editor = userRepository.findById(currentUser.getId())
-                                .orElseThrow(() -> new ResourceNotFoundException(
-                                        "User not found with ID: " + currentUser.getId()));
-                    }
+            // 3. Se for atualização, o Mapper preenche os novos valores (score, feedback, etc)
+            if (grade.getId() != null) {
+                gradeMapper.updateEntity(request, grade);
+            }
 
-                    Grade grade = gradeMapper.toEntity(request);
-                    grade.setAssessment(assessment);
-                    grade.setStudent(student);
-                    grade.setGradedBy(editor);
-                    grade.setGradedAt(LocalDateTime.now());
+            // 4. Vinculação Manual das Entidades (Garante que os IDs não sejam nulos)
+            grade.setAssessment(assessmentRepository.getReferenceById(request.getAssessmentId()));
 
-                    return grade;
-                })
-                .toList();
+            // IMPORTANTE: Aqui usamos o ID do User do estudante, conforme seu mapeamento na entidade Grade
+            grade.setStudent(userRepository.getReferenceById(request.getStudentUserId()));
 
-        List<Grade> savedGrades = gradeRepository.saveAll(grades);
-        log.info("{} Grades created in batch", savedGrades.size());
+            grade.setGradedBy(editor);
+            grade.setGradedAt(OffsetDateTime.now(ZoneOffset.UTC));
 
-        // Retorna a primeira nota criada (ou poderia retornar todas)
-        return savedGrades.isEmpty() ? null : gradeMapper.toResponse(savedGrades.get(0));
+            // Aplica regra de ausência
+            if (Boolean.TRUE.equals(request.getAbsent()) || Boolean.TRUE.equals(request.getExcused())) {
+                grade.setScore(null);
+            }
+
+            return grade;
+        }).toList();
+
+        gradeRepository.saveAll(gradesToSave);
+
+        // Em operações de lote, retornar a primeira ou um objeto vazio é comum
+        return null;
     }
 
     @Override
@@ -321,65 +319,40 @@ public class GradeServiceImpl implements GradeService {
     @Override
     @Transactional(readOnly = true)
     public ReportCardResponse getStudentReportCard(Long studentUserId, AgendaUserDetails currentUser) {
-        // 1. Validações de segurança (já implementadas)
         validateReportCardAccess(studentUserId, currentUser);
 
-        // 2. Busca o estudante e suas notas
         Student student = studentRepository.findByUserId(studentUserId)
                 .orElseThrow(() -> new ResourceNotFoundException("Estudante não encontrado"));
 
+        // 1. Queries Otimizadas (Apenas 2 idas ao banco)
         List<Grade> allGrades = gradeRepository.findAllByStudentId(studentUserId);
+        Map<Long, AttendanceSummary> attendanceMap = attendanceRepository.findAttendanceSummariesByStudent(studentUserId)
+                .stream()
+                .collect(Collectors.toMap(AttendanceSummary::subjectId, att -> att));
 
-        // 3. Agrupa por Disciplina
+        // 2. Agrupamento por Disciplina
         Map<Subject, List<Grade>> gradesBySubject = allGrades.stream()
                 .collect(Collectors.groupingBy(g -> g.getAssessment().getSubject()));
 
-        // 4. CHAMADA AO SEU MÉTODO (Passando o studentUserId como 3º parâmetro)
+        // 3. Transformação em Resumos
         List<SubjectSummaryResponse> subjectSummaries = gradesBySubject.entrySet().stream()
-                .map(entry -> calculateSubjectAverage(entry.getKey(), entry.getValue(), studentUserId))
+                .map(entry -> calculateSubjectAverage(entry.getKey(), entry.getValue(), studentUserId,
+                        attendanceMap.getOrDefault(entry.getKey().getId(), AttendanceSummary.empty(entry.getKey().getId()))))
                 .toList();
 
-        // 5. Média Global
+        // 4. Média Global e Status
         BigDecimal globalAverage = calculateGlobalAverage(subjectSummaries);
+        AcademicStatus globalStatus = determineGlobalStatus(subjectSummaries);
 
         return new ReportCardResponse(
                 student.getUser().getId(),
                 student.getFullName(),
                 student.getSchoolClass().getName(),
                 subjectSummaries,
-                globalAverage
+                globalAverage,
+                globalStatus
         );
     }
-
-//    @Override
-//    @Transactional(readOnly = true)
-//    public ReportCardResponse getStudentReportCard(Long studentUserId) {
-//        // 1. Procura o estudante e as suas notas
-//        Student student = studentRepository.findByUserId(studentUserId)
-//                .orElseThrow(() -> new ResourceNotFoundException("Estudante não encontrado"));
-//
-//        List<Grade> allGrades = gradeRepository.findAllByStudentId(studentUserId);
-//
-//        // 2. Agrupa as notas por Disciplina (Subject)
-//        Map<Subject, List<Grade>> gradesBySubject = allGrades.stream()
-//                .collect(Collectors.groupingBy(g -> g.getAssessment().getSubject()));
-//
-//        // 3. Transforma cada grupo numa SubjectSummaryResponse
-//        List<SubjectSummaryResponse> subjectSummaries = gradesBySubject.entrySet().stream()
-//                .map(entry -> calculateSubjectAverage(entry.getKey(), entry.getValue()))
-//                .toList();
-//
-//        // 4. Calcula a média global do aluno
-//        BigDecimal globalAverage = calculateGlobalAverage(subjectSummaries);
-//
-//        return new ReportCardResponse(
-//                student.getUser().getId(),
-//                student.getFullName(),
-//                student.getSchoolClass().getName(),
-//                subjectSummaries,
-//                globalAverage
-//        );
-//    }
 
     private void validateReportCardAccess(Long studentUserId, AgendaUserDetails currentUser) {
         // 1. Se for ADMINISTRADOR ou DIRETOR, o acesso é irrestrito
@@ -390,6 +363,11 @@ public class GradeServiceImpl implements GradeService {
         // 2. Se for PROFESSOR, ele pode ver o boletim (opcional, dependendo da sua regra)
         // Caso queira restringir para apenas professores daquele aluno, adicionar lógica extra aqui.
         if (currentUser.hasRole(UserRole.TEACHER)) {
+            // Verifica se o professor leciona em QUALQUER turma que este aluno pertença
+            boolean hasVoucher = teacherClassRepository.existsTeacherLinkWithStudent(currentUser.getId(), studentUserId);
+            if (!hasVoucher) {
+                throw new AccessDeniedException("Você não tem permissão para ver o boletim deste aluno pois não leciona para a turma dele.");
+            }
             return;
         }
 
@@ -465,139 +443,10 @@ public class GradeServiceImpl implements GradeService {
                 canDoRecovery,
                 attendancePercentage,
                 totalAbsences,
-                isApprovedByAttendance
+                isApprovedByAttendance,
+                subject.getTeacher().getName() // incluso no resumo (eu que incluí esse campo)
         );
     }
-//    private SubjectSummaryResponse calculateSubjectAverage(Subject subject, List<Grade> grades, Long studentId) {
-//        BigDecimal minPassAverage = new BigDecimal("6.0");
-//
-//        // 1. CHAMA O CÁLCULO DE NOTAS (Média Ponderada + Recuperação)
-//        BigDecimal average = performWeightedAverageCalculation(grades);
-//
-//        // 2. BUSCA DADOS DE FREQUÊNCIA NO SERVICE
-//        long totalClasses = attendanceService.countByStudentIdAndSubjectId(studentId, subject.getId());
-//        long totalAbsences = attendanceService.countByStudentIdAndSubjectIdAndPresentFalse(studentId, subject.getId());
-//
-//        // 3. CHAMA O CÁLCULO DE FREQUÊNCIA (%)
-//        BigDecimal attendancePercentage = calculateAttendancePercentage(totalClasses, totalAbsences);
-//
-//        // 4. VALIDAÇÕES DE STATUS E APROVAÇÃO
-//        boolean isApprovedByAttendance = attendancePercentage.compareTo(new BigDecimal("75.0")) >= 0;
-//        AcademicStatus status = determineStatus(average, attendancePercentage, grades.isEmpty());
-//
-//        // 5. CAMPOS AUXILIARES PARA O ALUNO
-//        BigDecimal pointsNeeded = minPassAverage.subtract(average).max(BigDecimal.ZERO);
-//        boolean canDoRecovery = (status == AcademicStatus.RECUPERACAO || status == AcademicStatus.REPROVADO)
-//                && isApprovedByAttendance;
-//
-//        return new SubjectSummaryResponse(
-//                subject.getId(),
-//                subject.getName(),
-//                grades.stream().map(gradeMapper::toDetailResponse).toList(),
-//                average,
-//                status,
-//                pointsNeeded,
-//                canDoRecovery,
-//                attendancePercentage,
-//                totalAbsences,
-//                isApprovedByAttendance
-//        );
-//    }
-
-    // VERSÃO ATUAL DO MÉTODO COM A LÓGICA DE FREQUÊNCIA INCLUÍDA, MAS SEM A LÓGICA DE "PONTOS NECESSÁRIOS"
-//    private SubjectSummaryResponse calculateSubjectAverage(Subject subject, List<Grade> grades, Long studentId) {
-//        // 1. Lógica de Média Ponderada (já implementada anteriormente)
-//        BigDecimal average = performWeightedAverageCalculation(grades);
-//
-//        // 2. BUSCA DE FREQUÊNCIA
-//        long totalClasses = attendanceService.countByStudentIdAndSubjectId(studentId, subject.getId());
-//        long totalAbsences = attendanceService.countByStudentIdAndSubjectIdAndPresentFalse(studentId, subject.getId());
-//
-//        BigDecimal attendancePercentage = BigDecimal.valueOf(100.0);
-//        if (totalClasses > 0) {
-//            long presences = totalClasses - totalAbsences;
-//            attendancePercentage = BigDecimal.valueOf(presences)
-//                    .multiply(BigDecimal.valueOf(100))
-//                    .divide(BigDecimal.valueOf(totalClasses), 2, RoundingMode.HALF_UP);
-//        }
-//
-//        boolean isApprovedByAttendance = attendancePercentage.compareTo(new BigDecimal("75.0")) >= 0;
-//
-//        // 3. Status Acadêmico (Agora considerando nota E falta)
-//        AcademicStatus status = determineStatus(average, attendancePercentage, grades.isEmpty());
-//
-//        return new SubjectSummaryResponse(
-//                subject.getId(),
-//                subject.getName(),
-//                grades.stream().map(gradeMapper::toDetailResponse).toList(),
-//                average,
-//                status,
-//                minPassAverage.subtract(average).max(BigDecimal.ZERO),
-//                average.compareTo(minPassAverage) < 0,
-//                attendancePercentage,
-//                totalAbsences,
-//                isApprovedByAttendance
-//        );
-//    }
-
-    // MÉTODO ANTERIOR COM A LÓGICA DE RECUPERAÇÃO
-//    private SubjectSummaryResponse calculateSubjectAverage(Subject subject, List<Grade> grades) {
-//        BigDecimal minPassAverage = new BigDecimal("6.0");
-//
-//        // 1. Separar notas regulares de notas de recuperação
-//        List<Grade> regularGrades = grades.stream()
-//                .filter(g -> !g.getAssessment().isRecovery())
-//                .collect(Collectors.toList());
-//
-//        Optional<Grade> recoveryGrade = grades.stream()
-//                .filter(g -> g.getAssessment().isRecovery())
-//                .findFirst(); // Assumindo uma recuperação por disciplina/período
-//
-//        // 2. Aplicar a substituição se a recuperação existir e for maior que a menor nota
-//        if (recoveryGrade.isPresent() && recoveryGrade.get().getScore() != null) {
-//            BigDecimal recoveryScore = recoveryGrade.get().getScore();
-//
-//            // Encontra a menor nota regular que seja menor que a nota da recuperação
-//            regularGrades.stream()
-//                    .filter(g -> g.getScore() != null)
-//                    .min(Comparator.comparing(Grade::getScore))
-//                    .ifPresent(lowestGrade -> {
-//                        if (recoveryScore.compareTo(lowestGrade.getScore()) > 0) {
-//                            log.info("Substituindo nota {} pela recuperação {}", lowestGrade.getScore(), recoveryScore);
-//                            lowestGrade.setScore(recoveryScore); // Substituição temporária para cálculo
-//                        }
-//                    });
-//        }
-//
-//        // 3. Cálculo da Média Ponderada com as notas já processadas
-//        BigDecimal totalPoints = BigDecimal.ZERO;
-//        BigDecimal totalWeight = BigDecimal.ZERO;
-//
-//        for (Grade grade : regularGrades) {
-//            if (grade.getScore() != null) {
-//                BigDecimal weight = grade.getAssessment().getWeight();
-//                totalPoints = totalPoints.add(grade.getScore().multiply(weight));
-//                totalWeight = totalWeight.add(weight);
-//            }
-//        }
-//
-//        BigDecimal average = totalWeight.compareTo(BigDecimal.ZERO) > 0
-//                ? totalPoints.divide(totalWeight, 2, RoundingMode.HALF_UP)
-//                : BigDecimal.ZERO;
-//
-//        // 4. Determinação do Status Final (Aproveitando a lógica anterior)
-//        AcademicStatus status = determineStatus(average, grades.isEmpty());
-//
-//        return new SubjectSummaryResponse(
-//                subject.getId(),
-//                subject.getName(),
-//                grades.stream().map(gradeMapper::toDetailResponse).toList(),
-//                average,
-//                status,
-//                minPassAverage.subtract(average).max(BigDecimal.ZERO),
-//                average.compareTo(minPassAverage) < 0
-//        );
-//    }
 
     // Responsável por realizar o cálculo matemático da assiduidade, tratando o cenário onde ainda não houve
     // aulas registradas (evitando divisão por zero).
@@ -615,42 +464,27 @@ public class GradeServiceImpl implements GradeService {
     // Responsável por realizar o cálculo matemático da média ponderada, aplicando a lógica de recuperação.
     // Centraliza a matemática das notas e a lógica de recuperação.
     private BigDecimal performWeightedAverageCalculation(List<Grade> grades) {
-        // 1. Separar notas regulares e aplicar lógica de recuperação (conforme vimos antes)
-        List<Grade> regularGrades = grades.stream()
-                .filter(g -> !g.getAssessment().isRecovery())
-                .collect(Collectors.toList());
+        // Separação limpa usando particionamento
+        Map<Boolean, List<Grade>> partitioned = grades.stream()
+                .collect(Collectors.partitioningBy(g -> g.getAssessment().isRecovery()));
 
-        Optional<Grade> recoveryGrade = grades.stream()
-                .filter(g -> g.getAssessment().isRecovery() && g.getScore() != null)
-                .findFirst();
+        List<Grade> regularGrades = partitioned.get(false);
+        Optional<Grade> recovery = partitioned.get(true).stream()
+                .filter(g -> g.getScore() != null).findFirst();
 
-        // Lógica de substituição da menor nota pela recuperação
-        recoveryGrade.ifPresent(recovery -> {
+        // Lógica de substituição imutável (não altera a entidade, apenas para o cálculo)
+        recovery.ifPresent(rec -> {
             regularGrades.stream()
                     .filter(g -> g.getScore() != null)
                     .min(Comparator.comparing(Grade::getScore))
                     .ifPresent(lowest -> {
-                        if (recovery.getScore().compareTo(lowest.getScore()) > 0) {
-                            lowest.setScore(recovery.getScore());
+                        if (rec.getScore().compareTo(lowest.getScore()) > 0) {
+                            lowest.setScore(rec.getScore());
                         }
                     });
         });
 
-        // 2. Cálculo da Média Ponderada
-        BigDecimal totalPoints = BigDecimal.ZERO;
-        BigDecimal totalWeight = BigDecimal.ZERO;
-
-        for (Grade grade : regularGrades) {
-            if (grade.getScore() != null) {
-                BigDecimal weight = grade.getAssessment().getWeight();
-                totalPoints = totalPoints.add(grade.getScore().multiply(weight));
-                totalWeight = totalWeight.add(weight);
-            }
-        }
-
-        return totalWeight.compareTo(BigDecimal.ZERO) > 0
-                ? totalPoints.divide(totalWeight, 2, RoundingMode.HALF_UP)
-                : BigDecimal.ZERO;
+        return calculateFinalWeightedMean(regularGrades);
     }
 
     // NOVA VERSÃO DO MÉTODO COM A LÓGICA DE RECUPERAÇÃO REVISADA
@@ -667,92 +501,6 @@ public class GradeServiceImpl implements GradeService {
         return AcademicStatus.REPROVADO;
     }
 
-//    private AcademicStatus determineStatus(BigDecimal average, boolean noGrades) {
-//        if (noGrades) return AcademicStatus.EM_CURSO;
-//        if (average.compareTo(new BigDecimal("6.0")) >= 0) return AcademicStatus.APROVADO;
-//        if (average.compareTo(new BigDecimal("4.0")) >= 0) return AcademicStatus.RECUPERACAO;
-//        return AcademicStatus.REPROVADO;
-//    }
-
-    // MÉTODO ATUA COM O "ENUM DE STATUS" DE APROVAÇÃO
-//    private SubjectSummaryResponse calculateSubjectAverage(Subject subject, List<Grade> grades) {
-//        BigDecimal minPassAverage = new BigDecimal("6.0");
-//        BigDecimal minRecoveryAverage = new BigDecimal("4.0");
-//
-//        // 1. Cálculo da Média Ponderada (já implementado anteriormente)
-//        BigDecimal totalPoints = BigDecimal.ZERO;
-//        BigDecimal totalWeight = BigDecimal.ZERO;
-//
-//        for (Grade grade : grades) {
-//            if (grade.getScore() != null) {
-//                BigDecimal weight = grade.getAssessment().getWeight();
-//                totalPoints = totalPoints.add(grade.getScore().multiply(weight));
-//                totalWeight = totalWeight.add(weight);
-//            }
-//        }
-//
-//        BigDecimal average = totalWeight.compareTo(BigDecimal.ZERO) > 0
-//                ? totalPoints.divide(totalWeight, 2, RoundingMode.HALF_UP)
-//                : BigDecimal.ZERO;
-//
-//        // 2. Lógica de Aprovação Automática
-//        AcademicStatus status;
-//        BigDecimal pointsNeeded = BigDecimal.ZERO;
-//        boolean canDoRecovery = false;
-//
-//        if (average.compareTo(minPassAverage) >= 0) {
-//            status = AcademicStatus.APROVADO;
-//        } else if (average.compareTo(minRecoveryAverage) >= 0) {
-//            status = AcademicStatus.RECUPERACAO;
-//            pointsNeeded = minPassAverage.subtract(average);
-//            canDoRecovery = true;
-//        } else {
-//            status = AcademicStatus.REPROVADO;
-//            pointsNeeded = minPassAverage.subtract(average);
-//        }
-//
-//        // Se não houver notas lançadas ainda, o status é EM_CURSO
-//        if (grades.isEmpty()) {
-//            status = AcademicStatus.EM_CURSO;
-//        }
-//
-//        return new SubjectSummaryResponse(
-//                subject.getId(),
-//                subject.getName(),
-//                grades.stream().map(gradeMapper::toDetailResponse).toList(),
-//                average,
-//                status,
-//                pointsNeeded,
-//                canDoRecovery
-//        );
-//    }
-
-    // MÉTODO ANTERIOR SEM O "ENUM DE STATUS" DE APROVAÇÃO
-//    private SubjectSummaryResponse calculateSubjectAverage(Subject subject, List<Grade> grades) {
-//        BigDecimal totalPoints = BigDecimal.ZERO;
-//        BigDecimal totalWeight = BigDecimal.ZERO;
-//
-//        for (Grade grade : grades) {
-//            if (grade.getScore() != null) {
-//                BigDecimal weight = grade.getAssessment().getWeight(); // Assumindo que Assessment tem weight
-//                totalPoints = totalPoints.add(grade.getScore().multiply(weight));
-//                totalWeight = totalWeight.add(weight);
-//            }
-//        }
-//
-//        BigDecimal average = totalWeight.compareTo(BigDecimal.ZERO) > 0
-//                ? totalPoints.divide(totalWeight, 2, RoundingMode.HALF_UP)
-//                : BigDecimal.ZERO;
-//
-//        return new SubjectSummaryResponse(
-//                subject.getId(),
-//                subject.getName(),
-//                grades.stream().map(gradeMapper::toDetailResponse).toList(),
-//                average,
-//                average.compareTo(new BigDecimal("6.0")) >= 0 // Regra de aprovação
-//        );
-//    }
-
     /**
      * Valida se o usuário logado (Responsável) possui vínculo com o aluno solicitado.
      * Lança AccessDeniedException caso o vínculo não exista.
@@ -767,26 +515,6 @@ public class GradeServiceImpl implements GradeService {
             throw new AccessDeniedException("Você não possui permissão para visualizar os dados deste estudante.");
         }
     }
-
-//    @Override
-//    @Transactional(readOnly = true)
-//    public ReportCardResponse getStudentReportCard(Long studentUserId, AgendaUserDetails currentUser) {
-//        // SEGURANÇA: Se for RESPONSÁVEL, valida o vínculo
-//        if (currentUser.hasRole(UserRole.RESPONSIBLE)) {
-//            validateRelationship(currentUser.getId(), studentUserId);
-//        }
-//
-//        // SEGURANÇA: Se for STUDENT, garante que ele só veja o dele
-//        if (currentUser.hasRole(UserRole.STUDENT) && !currentUser.getId().equals(studentUserId)) {
-//            throw new AccessDeniedException("Você só pode visualizar o seu próprio boletim.");
-//        }
-//
-//        // ... Restante da lógica de cálculo que enviamos anteriormente
-//    }
-
-//    private void validateGradeRequest(GradeRequest request) {
-//        validateGradeRequest(request, null);
-//    }
 
     private void validateGradeRequest(GradeRequest request, Long excludeId) {
         // Valida se a nota não excede o máximo da avaliação
@@ -803,17 +531,6 @@ public class GradeServiceImpl implements GradeService {
                                 request.getScore(), assessment.getMaxScore()));
             }
         }
-//        if (request.getScore() != null) {
-//            Assessment assessment = assessmentRepository.findById(request.getAssessmentId())
-//                    .orElseThrow(() -> new ResourceNotFoundException(
-//                            "Avaliação não encontrada com ID: " + request.getAssessmentId()));
-//
-//            if (assessment.getMaxScore() != null && request.getScore() > assessment.getMaxScore()) {
-//                throw new IllegalArgumentException(
-//                        String.format("A nota (%.2f) não pode ser maior que a nota máxima da avaliação (%.2f)",
-//                                request.getScore(), assessment.getMaxScore()));
-//            }
-//        }
     }
 
     private void validateTeacherPermission(Long teacherId, Assessment assessment, Student student) {
@@ -830,28 +547,6 @@ public class GradeServiceImpl implements GradeService {
             throw new AccessDeniedException("Você não tem permissão para lançar notas para esta turma/disciplina.");
         }
     }
-//    private void validateTeacherPermission(Long teacherId, Long subjectId) {
-//        List<Long> teacherSubjects = teacherClassRepository.findSubjectIdsByTeacherId(teacherId);
-//        if (!teacherSubjects.contains(subjectId)) {
-//            throw new AccessDeniedException("Você não tem permissão para lançar notas nesta disciplina.");
-//        }
-//    }
-
-    // ========== MÉTODOS PAGINADOS ==========
-    // TODO: Método anterior, sem o "RBAC" que o "Gemini" sugeriu
-//    @Transactional(readOnly = true)
-//    public PaginationResponse<GradeResponse> search(PaginationRequest pageRequest,
-//                                                    GradeFilterRequest filter) {
-//        log.debug("Buscando notas paginadas: {}", filter);
-//
-//        validateFilter(filter);
-//        Specification<Grade> spec = buildSpecification(filter);
-//
-//        Page<Grade> page = gradeRepository.findAll(spec, pageRequest.toPageable());
-//        logSearchMetrics(page, filter);
-//
-//        return PaginationResponse.of(page.map(gradeMapper::toResponse));
-//    }
 
     @Override
     @Transactional(readOnly = true)
@@ -942,28 +637,81 @@ public class GradeServiceImpl implements GradeService {
         return PaginationResponse.of(page.map(gradeMapper::toResponse));
     }
 
-    // CALCULAR ESTATÍSTICA
-//    @Transactional(readOnly = true)
-//    public GradeStatistics calculateStatistics(Long assessmentId) {
-//        Specification<Grade> spec = GradeSpecifications.byAssessment(assessmentId)
-//                .and(GradeSpecifications.isGraded());
-//
-//        List<Grade> grades = gradeRepository.findAll(spec);
-//
-//        // Calcula média, maior, menor, etc.
-//        return GradeStatistics.from(grades);
-//    }
-
-    // ========== MÉTODOS LEGACY (se necessário) ==========
-
-//    @Transactional(readOnly = true)
-//    public List<GradeResponse> findAll() {
-//        return gradeRepository.findAll().stream()
-//                .map(gradeMapper::toResponse)
-//                .toList();
-//    }
-
     // ========== MÉTODOS PRIVADOS AUXILIARES ==========
+
+    /**
+     * Realiza o cálculo matemático da média ponderada final.
+     * Soma (nota * peso) / soma(pesos)
+     */
+    private BigDecimal calculateFinalWeightedMean(List<Grade> grades) {
+        BigDecimal totalPoints = BigDecimal.ZERO;
+        BigDecimal totalWeight = BigDecimal.ZERO;
+
+        for (Grade grade : grades) {
+            if (grade.getScore() != null) {
+                BigDecimal weight = grade.getAssessment().getWeight();
+
+                // totalPoints += (score * weight)
+                totalPoints = totalPoints.add(grade.getScore().multiply(weight));
+
+                // totalWeight += weight
+                totalWeight = totalWeight.add(weight);
+            }
+        }
+
+        // Evita divisão por zero se não houver notas ou pesos configurados
+        if (totalWeight.compareTo(BigDecimal.ZERO) <= 0) {
+            return BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+        }
+
+        // Média = Pontos Totais / Peso Total
+        return totalPoints.divide(totalWeight, 2, RoundingMode.HALF_UP);
+    }
+
+    private SubjectSummaryResponse calculateSubjectAverage(Subject subject, List<Grade> grades, Long studentId, AttendanceSummary att) {
+        BigDecimal minPassAverage = new BigDecimal("6.0");
+
+        // Cálculo da média ponderada (já incluindo lógica de recuperação)
+        BigDecimal average = performWeightedAverageCalculation(grades);
+
+        // Cálculo da porcentagem de frequência
+        BigDecimal attendancePercentage = calculateAttendancePercentage(att.totalClasses(), att.totalAbsences());
+        boolean isApprovedByAttendance = attendancePercentage.compareTo(new BigDecimal("75.0")) >= 0;
+
+        // Determinação do Status Acadêmico (Nota + Presença)
+        AcademicStatus status = determineStatus(average, attendancePercentage, grades.isEmpty());
+
+        // Auxiliares para o Front-end
+        BigDecimal pointsNeeded = minPassAverage.subtract(average).max(BigDecimal.ZERO);
+        boolean canDoRecovery = (status == AcademicStatus.RECUPERACAO || status == AcademicStatus.REPROVADO) && isApprovedByAttendance;
+
+        return new SubjectSummaryResponse(
+                subject.getId(),
+                subject.getName(),
+                grades.stream().map(gradeMapper::toDetailResponse).toList(),
+                average,
+                status,
+                pointsNeeded,
+                canDoRecovery,
+                attendancePercentage,
+                att.totalAbsences(),
+                isApprovedByAttendance,
+                "Professor da Disciplina" // Aqui você poderia buscar o nome do professor via TeacherClass se desejar
+        );
+    }
+
+    private AcademicStatus determineGlobalStatus(List<SubjectSummaryResponse> subjects) {
+        if (subjects.isEmpty()) return AcademicStatus.EM_CURSO;
+
+        // Se estiver reprovado em qualquer matéria, o status global é afetado
+        boolean hasFail = subjects.stream().anyMatch(s -> s.status() == AcademicStatus.REPROVADO);
+        boolean hasRecovery = subjects.stream().anyMatch(s -> s.status() == AcademicStatus.RECUPERACAO);
+
+        if (hasFail) return AcademicStatus.REPROVADO;
+        if (hasRecovery) return AcademicStatus.RECUPERACAO;
+
+        return AcademicStatus.APROVADO;
+    }
 
     private void validateFilter(GradeFilterRequest filter) {
         if (filter == null) return;

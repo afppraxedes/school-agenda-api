@@ -61,4 +61,18 @@ public interface TeacherClassRepository extends JpaRepository<TeacherClass, Long
             @Param("subjectId") Long subjectId,
             @Param("schoolClassId") Long schoolClassId);
 
+    /**
+     * Verifica se o professor leciona em QUALQUER disciplina para a turma do aluno.
+     * Útil para autorizar a visualização do boletim completo.
+     */
+    @Query("""
+        SELECT COUNT(tc) > 0 
+        FROM TeacherClass tc 
+        JOIN Student s ON s.schoolClass.id = tc.schoolClass.id 
+        WHERE tc.teacher.id = :teacherUserId 
+        AND s.user.id = :studentUserId
+    """)
+    boolean existsTeacherLinkWithStudent(
+            @Param("teacherUserId") Long teacherUserId,
+            @Param("studentUserId") Long studentUserId);
 }
