@@ -138,6 +138,18 @@ public interface TimetableRepository extends JpaRepository<Timetable, Long> {
             @Param("day") DayOfWeek day,
             @Param("now") LocalTime now);
 
+    @Query("""
+        SELECT t 
+        FROM Timetable t
+        JOIN Student s ON s.schoolClass.id = t.teacherClass.schoolClass.id
+        WHERE s.user.id = :studentUserId
+        AND t.dayOfWeek = :dayOfWeek
+        ORDER BY t.startTime ASC
+    """)
+    List<Timetable> findTodaySchedule(
+            @Param("studentUserId") Long studentUserId,
+            @Param("dayOfWeek") java.time.DayOfWeek dayOfWeek);
+
     // Comentado em função da alteração da assinatura do método
 //    @Query("""
 //        SELECT t FROM Timetable t

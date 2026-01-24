@@ -76,4 +76,15 @@ public class TimetableController {
         // Este método chama a lógica que busca no banco se há aula agora ou a próxima
         return ResponseEntity.ok(timetableService.getCurrentOrNextClass(currentUser));
     }
+
+    @GetMapping("/today")
+    @PreAuthorize("hasAnyAuthority('STUDENT', 'RESPONSIBLE')")
+    public ResponseEntity<List<TimetableResponse>> getTodaySchedule(
+            @AuthenticationPrincipal AgendaUserDetails currentUser) {
+
+        // O Service já contém a lógica de buscar o DayOfWeek.now()
+        List<TimetableResponse> schedule = timetableService.getTodayScheduleForStudent(currentUser.getId());
+
+        return ResponseEntity.ok(schedule);
+    }
 }

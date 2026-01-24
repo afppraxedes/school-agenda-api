@@ -41,6 +41,8 @@ public class Message extends BaseAuditableEntity {
 //    @Column(name = "read_at", columnDefinition = "TIMESTAMP WITH TIME ZONE")
     private OffsetDateTime readAt;
 
+    private OffsetDateTime deletedAt;
+
     private boolean archivedBySender;
     private boolean archivedByRecipient;
 }

@@ -24,17 +24,16 @@ import com.schoolagenda.domain.repository.TeacherClassRepository;
 import com.schoolagenda.domain.repository.TimetableRepository;
 import com.schoolagenda.domain.service.TimetableService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.ByteArrayOutputStream;
 import java.time.*;
 import java.time.format.TextStyle;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Optional;
+import java.util.*;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class TimetableServiceImpl implements TimetableService {
@@ -220,6 +219,26 @@ public class TimetableServiceImpl implements TimetableService {
 
         return timetable.map(timetableMapper::toResponse)
                 .orElseThrow(() -> new ResourceNotFoundException("Nenhuma aula encontrada para o restante do dia."));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<TimetableResponse> getTodayScheduleForStudent(Long userId) {
+        // Pegamos o dia da semana atual do sistema
+        DayOfWeek today = LocalDate.now().getDayOfWeek();
+
+        // Log para depuração no console
+        log.info("Buscando horário de hoje ({}) para o usuário ID: {}", today, userId);
+
+        // Se for sábado ou domingo, retornamos lista vazia (ou você pode lançar uma exceção customizada)
+        if (today == DayOfWeek.SATURDAY || today == DayOfWeek.SUNDAY) {
+            return Collections.emptyList();
+        }
+
+        return timetableRepository.findTodaySchedule(userId, today)
+                .stream()
+                .map(timetableMapper::toResponse)
+                .toList();
     }
 
     // Implementação anteiror do método getCurrentOrNextClass.

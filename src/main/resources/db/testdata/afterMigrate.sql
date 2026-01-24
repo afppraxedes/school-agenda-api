@@ -48,7 +48,9 @@ INSERT INTO school_events (title, description, start_date, end_date, all_day, ty
 ('Prova de Matemática', 'Conteúdo: Álgebra e Geometria.', '2026-05-10T08:00:00Z', '2026-05-10T10:00:00Z', false, 'EXAM', 1, 'Sala 04', 'system', 'system', NOW(), NOW()),
 ('Reunião de Pais', 'Pauta: Entrega de boletins do 1º bimestre.', '2026-05-15T19:00:00Z', '2026-05-15T21:00:00Z', false, 'MEETING', NULL, 'Auditório Principal', 'system', 'system', NOW(), NOW()),
 ('Feira de Ciências', 'Apresentação dos projetos dos alunos.', '2026-05-20T09:00:00Z', '2026-05-20T17:00:00Z', true, 'CULTURAL', NULL, 'Pátio Central', 'system', 'system', NOW(), NOW()),
-('Torneio de Futebol', 'Final do campeonato interclasses.', '2026-05-25T14:00:00Z', '2026-05-25T16:00:00Z', false, 'SPORTS', 1, 'Quadra Poliesportiva', 'system', 'system', NOW(), NOW());
+('Torneio de Futebol', 'Final do campeonato interclasses.', '2026-05-25T14:00:00Z', '2026-05-25T16:00:00Z', false, 'SPORTS', 1, 'Quadra Poliesportiva', 'system', 'system', NOW(), NOW()),
+-- APENAS PARA TESTAR (Evento no fim de semana)
+('Prova de Matemática', 'Conteúdo: Álgebra Linear', NOW() + INTERVAL '2 days', NOW() + INTERVAL '2 days', false, 'EXAM', 1, 'Sala 04', 'system', 'system', NOW(), NOW());
 
 -- 5. STUDENTS (18 Alunos vinculados aos Users 23-40)
 INSERT INTO student (id, full_name, birth_date, class_name, registration_date, user_id, school_class_id, created_by, last_modified_by, created_at, updated_at)
@@ -103,7 +105,9 @@ INSERT INTO timetables (
 (1, 'THURSDAY', '11:00:00', '11:50:00', 'Sala 101', 'system', 'system', NOW(), NOW()),
 (2, 'TUESDAY', '10:00:00', '10:50:00', 'Sala 101', 'system', 'system', NOW(), NOW()),
 (3, 'WEDNESDAY', '09:00:00', '09:50:00', 'Sala 202', 'system', 'system', NOW(), NOW()),
-(4, 'FRIDAY', '10:00:00', '10:50:00', 'Lab Física', 'system', 'system', NOW(), NOW());
+(4, 'FRIDAY', '10:00:00', '10:50:00', 'Lab Física', 'system', 'system', NOW(), NOW()),
+-- APENAS PARA TESTAR (O DIA ESTÁ COMO SÁBADO)
+(4, 'SATURDAY', '10:00:00', '10:50:00', 'Lab Física', 'system', 'system', NOW(), NOW());
 
 -- 10. ASSESSMENTS (4 Bimestrais por disciplina)
 INSERT INTO assessments (id, title, subject_id, created_by_user_id, max_score, weight, is_published, is_recovery, created_by, last_modified_by, created_at, updated_at)
@@ -205,13 +209,15 @@ INSERT INTO notifications (title, message, user_id, read, created_at, type) VALU
 ('New Message', 'You have a new message from Responsible User.', 2, false, NOW(), 'MESSAGE');
 
 -- 16. MESSAGES (Mensagens entre Professor e Responsável sobre o Aluno)
-INSERT INTO messages (sender_id, recipient_id, student_id, subject, content, created_by, last_modified_by, created_at, updated_at) VALUES
-(2, 5, 1, 'Comportamento em Aula', 'Olá Julia, o aluno João tem demonstrado muita evolução em Matemática.', 'system', 'system', NOW(), NOW()),
-(5, 2, 1, 'Re: Comportamento em Aula', 'Obrigada pelo feedback, Professor Carlos! Ficamos felizes.','system', 'system', NOW(), NOW()),
-(2, 5, 1, 'Material Extra', 'Enviei uma lista de exercícios extra para o João praticar para a prova.', 'system', 'system', NOW(), NOW()),
-(5, 2, 1, 'Re: Material Extra', 'Recebido! Iremos praticar em casa. Muito obrigado.','system', 'system', NOW(), NOW()),
-(2, 5, 1, 'Ausência na Aula', 'Julia, notei que o João não compareceu à aula hoje. Está tudo bem?','system', 'system', NOW(), NOW()),
-(5, 2, 1, 'Re: Ausência na Aula', 'Ele teve uma consulta médica, mas amanhã levará o atestado.', 'system', 'system', NOW(), NOW());
+INSERT INTO messages (sender_id, recipient_id, student_id, subject, content, read_at, deleted_at, archived_by_sender, archived_by_recipient, created_by, last_modified_by, created_at, updated_at) VALUES
+(2, 5, 1, 'Comportamento em Aula', 'Olá Julia, o aluno João tem demonstrado muita evolução em Matemática.', NULL, NULL, FALSE, FALSE, 'system', 'system', NOW(), NOW()),
+(5, 2, 1, 'Re: Comportamento em Aula', 'Obrigada pelo feedback, Professor Carlos! Ficamos felizes.', NULL, NULL, FALSE, FALSE, 'system', 'system', NOW(), NOW()),
+(2, 5, 1, 'Material Extra', 'Enviei uma lista de exercícios extra para o João praticar para a prova.', NULL, NULL,  FALSE, FALSE,'system', 'system', NOW(), NOW()),
+(5, 2, 1, 'Re: Material Extra', 'Recebido! Iremos praticar em casa. Muito obrigado.', NULL, NULL, FALSE, FALSE, 'system', 'system', NOW(), NOW()),
+(2, 5, 1, 'Ausência na Aula', 'Julia, notei que o João não compareceu à aula hoje. Está tudo bem?', NULL, NULL, FALSE, FALSE,'system', 'system', NOW(), NOW()),
+(5, 2, 1, 'Re: Ausência na Aula', 'Ele teve uma consulta médica, mas amanhã levará o atestado.', NULL, NULL, FALSE, FALSE, 'system', 'system', NOW(), NOW()),
+-- MENSSGEM APENAS PARA TESTAR NA INICIALIZAÇÃO DO DASHBOARD DO ALUNO NO FRONT-END
+(1, 2, 5, 'Bem-vindo ao Portal', 'Olá aluno, este é o seu novo dashboard!', NULL, NULL, FALSE, FALSE, 'system', 'system', NOW(), NOW());
 
 -- Attendances
 -- Limpa para evitar erros de duplicidade em re-execuções, se necessário
