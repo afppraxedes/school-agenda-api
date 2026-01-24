@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Data
 @NoArgsConstructor
@@ -28,8 +29,9 @@ public class GradeResponse extends BaseAuditableResponse {
     private Boolean absent;
     private Boolean excused;
 
-    @JsonFormat(pattern = "dd/MM/yyyy HH:mm")
-    private LocalDateTime gradedAt;
+    // @JsonFormat(pattern = "dd/MM/yyyy HH:mm")
+//    private LocalDateTime gradedAt;
+    private OffsetDateTime gradedAt;
 
 //    @JsonFormat(pattern = "dd/MM/yyyy HH:mm")
 //    private LocalDateTime createdAt;

@@ -52,10 +52,19 @@ public class GradeController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @PreAuthorize("hasAnyAuthority('TEACHER', 'ADMINISTRATOR', 'DIRECTOR')")
+//    @PreAuthorize("hasAnyAuthority('TEACHER', 'ADMINISTRATOR', 'DIRECTOR')")
+//    @PostMapping("/bulk")
+//    @Operation(summary = "Criar múltiplas notas em lote")
+//    public ResponseEntity<GradeResponse> bulkCreate(@Valid @RequestBody List<GradeRequest> requests, AgendaUserDetails currentUser) {
+//        GradeResponse response = gradeService.bulkCreate(requests, currentUser);
+//        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+//    }
     @PostMapping("/bulk")
-    @Operation(summary = "Criar múltiplas notas em lote")
-    public ResponseEntity<GradeResponse> bulkCreate(@Valid @RequestBody List<GradeRequest> requests, AgendaUserDetails currentUser) {
+    @PreAuthorize("hasAnyAuthority('TEACHER', 'ADMINISTRATOR', 'DIRECTOR')")
+    public ResponseEntity<GradeResponse> bulkCreate(
+            @Valid @RequestBody List<GradeRequest> requests,
+            @AuthenticationPrincipal AgendaUserDetails currentUser) { // <--- Adicione esta anotação!
+
         GradeResponse response = gradeService.bulkCreate(requests, currentUser);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
