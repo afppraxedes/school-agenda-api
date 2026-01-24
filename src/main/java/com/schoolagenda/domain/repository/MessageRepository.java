@@ -26,4 +26,13 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
     boolean isTeacherOfStudent(
             @Param("teacherUserId") Long teacherUserId,
             @Param("studentId") Long studentId);
+
+    @Query("""
+        SELECT COUNT(m) 
+        FROM Message m 
+        WHERE m.recipient.id = :userId 
+        AND m.readAt IS NULL
+        AND m.deletedAt IS NULL
+    """)
+    long countUnreadMessages(@Param("userId") Long userId);
 }

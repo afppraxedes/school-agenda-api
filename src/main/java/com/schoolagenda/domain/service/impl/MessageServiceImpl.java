@@ -85,9 +85,14 @@ public class MessageServiceImpl implements MessageService {
                 .toList();
     }
 
+//    @Override
+//    @Transactional(readOnly = true)
+//    public long countUnreadMessages(Long userId) {
+//        return messageRepository.countByRecipientIdAndReadAtIsNull(userId);
+//    }
     @Override
     @Transactional(readOnly = true)
     public long countUnreadMessages(Long userId) {
-        return messageRepository.countByRecipientIdAndReadAtIsNull(userId);
+        return messageRepository.countUnreadMessages(userId);
     }
 }

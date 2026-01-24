@@ -17,7 +17,7 @@ import java.time.OffsetDateTime;
 @JsonPropertyOrder({
         "id", "senderId", "senderName", "recipientId", "recipientName",
         "studentId", "studentName", "subject", "content",
-        "createdAt", "readAt"
+        "createdAt", "readAt", "deletedAt"
 })
 @OrderedResponse
 public class MessageResponse extends BaseAuditableResponse {
@@ -32,4 +32,5 @@ public class MessageResponse extends BaseAuditableResponse {
     public String content;
     public OffsetDateTime createdAt;
     public OffsetDateTime readAt;
+    private OffsetDateTime deletedAt;
 }
