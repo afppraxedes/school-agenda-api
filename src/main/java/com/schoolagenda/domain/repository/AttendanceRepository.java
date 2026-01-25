@@ -41,10 +41,15 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
         COUNT(a.id), 
         CAST(SUM(CASE WHEN a.present = false THEN 1 ELSE 0 END) AS long)
     )
-    FROM Attendance a
-    WHERE a.student.user.id = :studentUserId
-    GROUP BY a.timetable.teacherClass.subject.id
-""")
+        FROM Attendance a
+        WHERE a.student.user.id = :studentUserId
+        GROUP BY a.timetable.teacherClass.subject.id
+    """)
     List<AttendanceSummary> findAttendanceSummariesByStudent(@Param("studentUserId") Long studentUserId);
 
+    @Query("SELECT COUNT(a) FROM Attendance a WHERE a.student.id = :studentId AND a.present = true")
+    long countPresentDays(Long studentId);
+
+    @Query("SELECT COUNT(a) FROM Attendance a WHERE a.student.id = :studentId")
+    long countTotalDays(Long studentId);
 }

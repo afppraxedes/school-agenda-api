@@ -150,6 +150,23 @@ public interface TimetableRepository extends JpaRepository<Timetable, Long> {
             @Param("studentUserId") Long studentUserId,
             @Param("dayOfWeek") java.time.DayOfWeek dayOfWeek);
 
+    @Query("""
+        SELECT t FROM Timetable t
+        JOIN t.teacherClass tc
+        WHERE tc.schoolClass.id = :classId
+        AND t.dayOfWeek = :dayOfWeek
+        ORDER BY t.startTime ASC
+    """)
+    List<Timetable> findByClassAndDay(Long classId, DayOfWeek dayOfWeek);
+
+    @Query("""
+        SELECT t FROM Timetable t 
+        WHERE t.teacherClass.schoolClass.id = :classId 
+        AND t.dayOfWeek = :dayOfWeek
+        ORDER BY t.startTime ASC
+    """)
+    List<Timetable> findByClassIdAndDayOfWeek(Long classId, DayOfWeek dayOfWeek);
+
     // Comentado em função da alteração da assinatura do método
 //    @Query("""
 //        SELECT t FROM Timetable t

@@ -1,6 +1,7 @@
 package com.schoolagenda.domain.repository;
 
 import com.schoolagenda.domain.model.SchoolEvent;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -30,4 +31,12 @@ public interface SchoolEventRepository extends JpaRepository<SchoolEvent, Long> 
 
     // Busca todos os eventos por período (para Admins)
     List<SchoolEvent> findAllByStartDateBetweenOrderByStartDateAsc(OffsetDateTime start, OffsetDateTime end);
+
+    @Query("""
+        SELECT e FROM SchoolEvent e 
+        WHERE (e.schoolClass.id = :classId OR e.schoolClass IS NULL)
+        AND e.startDate >= CURRENT_TIMESTAMP
+        ORDER BY e.startDate ASC
+    """)
+    List<SchoolEvent> findUpcomingEvents(Long classId, Pageable pageable);
 }

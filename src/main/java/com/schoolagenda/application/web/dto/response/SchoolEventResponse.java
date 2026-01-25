@@ -3,10 +3,7 @@ package com.schoolagenda.application.web.dto.response;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.schoolagenda.application.web.dto.response.base.BaseAuditableResponse;
 import com.schoolagenda.domain.enums.EventType;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.OffsetDateTime;
 
@@ -34,4 +31,12 @@ public class SchoolEventResponse extends BaseAuditableResponse {
     private String schoolClassName;
     private String location;
 
+    // TODO: remover esse construtor depois deos testes, pois o lombok ja cria os outros e verificar se precisará
+    // de mais alguns atributos!
+    public SchoolEventResponse(String title, OffsetDateTime startDate, String string, String location) {
+        this.title = title;
+        this.startDate = startDate;
+        this.description = string;
+        this.location = location;
+    }
 }

@@ -35,12 +35,12 @@ public class SecurityConfig {
     private final UserDetailsService userDetailsService; // ⬅️ INJETE O SERVICE EXISTENTE
 
     private static final String[] PUBLIC_ENDPOINTS = {
-            "/api/auth/**",           // ⬅️ TODOS endpoints de auth (v1 e sem versão)
-            "/api/v1/auth/**",        // ⬅️ Para consistência
+            "/api/v1/auth/**",  // Verifique se o seu AuthController usa /api/v1
+            "/api/auth/**",     // Para consistência
             "/h2-console/**",
             "/swagger-ui.html",
             "/swagger-ui/**",
-            "/v3/api-docs/**",
+            "/v3/api-docs/**", // Recomendado para SpringDoc OpenAPI 2 (Spring Boot 3)
             "/api-docs/**",
             "/swagger-resources/**",
             "/webjars/**",
@@ -83,8 +83,9 @@ public class SecurityConfig {
         ));
 
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("*"));
+//        configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setExposedHeaders(Arrays.asList("Authorization"));
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept", "X-Requested-With"));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
 

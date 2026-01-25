@@ -5,6 +5,6 @@ import com.schoolagenda.application.web.security.dto.AgendaUserDetails;
 
 public interface DashboardService {
 
-    StudentDashboardResponse getStudentDashboard(AgendaUserDetails currentUser);
+    StudentDashboardResponse getStudentDashboard(Long studentId);
 
 }
