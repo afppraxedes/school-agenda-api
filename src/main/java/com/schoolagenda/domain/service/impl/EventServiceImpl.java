@@ -2,12 +2,17 @@ package com.schoolagenda.domain.service.impl;
 
 import com.schoolagenda.application.web.dto.request.EventRequest;
 import com.schoolagenda.application.web.dto.response.EventResponse;
+import com.schoolagenda.application.web.dto.response.SchoolEventResponse;
 import com.schoolagenda.application.web.dto.response.UserResponse;
+import com.schoolagenda.domain.exception.ResourceNotFoundException;
 import com.schoolagenda.domain.model.Event;
 import com.schoolagenda.domain.model.User;
 import com.schoolagenda.domain.repository.EventRepository;
+import com.schoolagenda.domain.repository.SchoolEventRepository;
+import com.schoolagenda.domain.repository.StudentRepository;
 import com.schoolagenda.domain.service.EventService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,8 +26,15 @@ import java.util.stream.Collectors;
 @Service
 public class EventServiceImpl implements EventService {
 
-    @Autowired
-    private EventRepository eventRepository;
+    private final EventRepository eventRepository;
+    private final StudentRepository studentRepository;
+    private final SchoolEventRepository schoolEventRepository;
+
+    public EventServiceImpl(EventRepository eventRepository, StudentRepository studentRepository, SchoolEventRepository schoolEventRepository) {
+        this.eventRepository = eventRepository;
+        this.studentRepository = studentRepository;
+        this.schoolEventRepository = schoolEventRepository;
+    }
 
     @Override
     @Transactional
@@ -253,5 +265,21 @@ public class EventServiceImpl implements EventService {
                 event.getUpdatedAt(),
                 status
         );
+    }
+
+    public List<SchoolEventResponse> findUpcomingByStudent(Long studentId) {
+        var student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Estudante não encontrado"));
+
+        // Busca os próximos 5 eventos da turma ou da escola (feriados)
+        return schoolEventRepository.findUpcomingEvents(student.getSchoolClass().getId(), PageRequest.of(0, 5))
+                .stream()
+                .map(e -> new SchoolEventResponse(
+                        e.getTitle(),
+                        e.getStartDate(),
+                        e.getType().toString(),
+                        e.getLocation()
+                ))
+                .toList();
     }
 }

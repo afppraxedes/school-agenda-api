@@ -2,6 +2,8 @@ package com.schoolagenda.domain.service;
 
 import com.schoolagenda.application.web.dto.request.EventRequest;
 import com.schoolagenda.application.web.dto.response.EventResponse;
+import com.schoolagenda.application.web.dto.response.SchoolClassResponse;
+import com.schoolagenda.application.web.dto.response.SchoolEventResponse;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -54,4 +56,6 @@ public interface EventService {
 
     // Validate event dates
     boolean validateEventDates(LocalDateTime startDate, LocalDateTime endDate);
+
+    List<SchoolEventResponse> findUpcomingByStudent(Long studentId);
 }

@@ -2,10 +2,7 @@ package com.schoolagenda.application.web.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.schoolagenda.application.web.dto.response.base.BaseAuditableResponse;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.DayOfWeek;
 import java.time.LocalTime;

@@ -25,6 +25,6 @@ public class DashboardController {
     public ResponseEntity<StudentDashboardResponse> getStudentDashboard(
             @AuthenticationPrincipal AgendaUserDetails currentUser) {
 
-        return ResponseEntity.ok(dashboardService.getStudentDashboard(currentUser));
+        return ResponseEntity.ok(dashboardService.getStudentDashboard(currentUser.getId()));
     }
 }

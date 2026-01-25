@@ -73,7 +73,44 @@ INSERT INTO subjects (id, name, school_year, teacher_user_id, is_active, created
 (11, 'Biologia', '2025', 10, true, NOW(), NOW()), -- Tesla +1
 (12, 'Filosofia', '2025', 12, true, NOW(), NOW()); -- Sócrates +1
 
--- 8. TEACHER CLASSES
+-- 8. EVALUATIONS (6 Avaliações para o Estudante ID 1 ao longo dos últimos meses)
+-- Inserir Avaliações para o Estudante ID 1
+-- Agosto/2025
+-- INSERT INTO evaluations (grade, title, student_id, subject_id, created_at)
+-- VALUES (7.0, 'Avaliação Inicial', 1, 1, '2025-08-15 10:00:00');
+--
+-- -- Setembro/2025
+-- INSERT INTO evaluations (grade, title, student_id, subject_id, created_at)
+-- VALUES (8.5, 'Trabalho de Pesquisa', 1, 2, '2025-09-20 14:30:00');
+--
+-- -- Outubro/2025
+-- INSERT INTO evaluations (grade, title, student_id, subject_id, created_at)
+-- VALUES (6.0, 'Prova Intermédia', 1, 3, '2025-10-10 08:00:00');
+--
+-- -- Novembro/2025
+-- INSERT INTO evaluations (grade, title, student_id, subject_id, created_at)
+-- VALUES (9.5, 'Projeto Prático', 1, 4, '2025-11-25 16:00:00');
+--
+-- -- Dezembro/2025
+-- INSERT INTO evaluations (grade, title, student_id, subject_id, created_at)
+-- VALUES (8.0, 'Exame Final Semestre', 1, 1, '2025-12-15 09:00:00');
+--
+-- -- Janeiro/2026 (Mês Atual)
+-- INSERT INTO evaluations (grade, title, student_id, subject_id, created_at)
+-- VALUES (10.0, 'Atividade de Lógica e IA', 1, 2, '2026-01-24 11:00:00');
+-- 8. EVALUATIONS (6 Avaliações para o Estudante ID 1 ao longo dos últimos meses)
+-- Limpando possíveis dados residuais para o ID 1 para evitar duplicidade no teste
+DELETE FROM evaluations WHERE student_id = 1;
+
+INSERT INTO evaluations (grade, title, student_id, subject_id, created_at) VALUES
+(7.0, 'Avaliação Inicial', 1, 1, '2025-08-15 10:00:00'),
+(8.5, 'Trabalho de Pesquisa', 1, 2, '2025-09-20 14:30:00'),
+(6.0, 'Prova Intermédia', 1, 3, '2025-10-10 08:00:00'),
+(9.5, 'Projeto Prático', 1, 4, '2025-11-25 16:00:00'),
+(8.0, 'Exame Final Semestre', 1, 1, '2025-12-15 09:00:00'),
+(10.0, 'Atividade de Lógica e IA', 1, 2, '2026-01-24 11:00:00');
+
+-- 9. TEACHER CLASSES
 INSERT INTO teacher_classes (teacher_id, subject_id, school_class_id, created_by, last_modified_by, created_at, updated_at) VALUES
 (4, 1, 1, NULL, NULL, NOW(), NOW()),
 (5, 2, 1, NULL, NULL, NOW(), NOW()),
@@ -82,7 +119,7 @@ INSERT INTO teacher_classes (teacher_id, subject_id, school_class_id, created_by
 
 -- Exemplo de inserção para os 20 registros com a ordem de auditoria solicitada
 -- Ordem final: created_by, last_modified_by, created_at, updated_at
--- 9. TIMETABLES (20 Horários vinculados às Teacher Classes)
+-- 10. TIMETABLES (20 Horários vinculados às Teacher Classes)
 INSERT INTO timetables (
     teacher_class_id, day_of_week, start_time, end_time, room_name,
     created_by, last_modified_by, created_at, updated_at) VALUES
@@ -109,7 +146,7 @@ INSERT INTO timetables (
 -- APENAS PARA TESTAR (O DIA ESTÁ COMO SÁBADO)
 (4, 'SATURDAY', '10:00:00', '10:50:00', 'Lab Física', 'system', 'system', NOW(), NOW());
 
--- 10. ASSESSMENTS (4 Bimestrais por disciplina)
+-- 11. ASSESSMENTS (4 Bimestrais por disciplina)
 INSERT INTO assessments (id, title, subject_id, created_by_user_id, max_score, weight, is_published, is_recovery, created_by, last_modified_by, created_at, updated_at)
 SELECT (s.id-1)*4 + i, 'Prova '||i||'º Bimestre', s.id, s.teacher_user_id, 10.0, 1.0, true, false, NULL, NULL, NOW(), NOW()
 FROM subjects s, generate_series(1,4) i;
@@ -136,7 +173,7 @@ FROM subjects s, generate_series(1,4) i;
 --     4, NOW(), false, false, NULL, NULL, NOW(), NOW()
 -- FROM assessments a, users u WHERE u.id BETWEEN 23 AND 40;
 
--- 11. GRADES (Lógica 60% / 35% / 5%)
+-- 12. GRADES (Lógica 60% / 35% / 5%)
 -- CORREÇÃO: GERAR AS NOTAS COM BASE NA COMBINAÇÃO DE ALUNOS E AVALIAÇÕES
 INSERT INTO grades (
     assessment_id, student_user_id, score, max_score,
@@ -178,41 +215,56 @@ FROM users u
 WHERE u.id BETWEEN 23 AND 40; -- 216 notas no total
 --   AND u.user_type = 'STUDENT';
 
--- 10. ATTENDANCES (Reprovação por falta para Aluno 40)
+-- 10. ATTENDANCES (Presenças - Reprovação por falta para Aluno 40)
+-- Gera 30 dias de presença para o Aluno 1 (90% de presença)
+-- Aluno 1: 31 dias de histórico (Este está correto)
+INSERT INTO attendances (student_id, subject_id, timetable_id, date, present, note, created_at)
+SELECT 1, (i % 4) + 1, (i % 20) + 1, CURRENT_DATE - i,
+       CASE WHEN i % 10 = 0 THEN false ELSE true END,
+       'Registro automático de frequência', NOW()
+FROM generate_series(0, 30) i;
+
+-- Demais Alunos: Apenas 1 registro por dia para evitar o produto cartesiano
 INSERT INTO attendances (student_id, subject_id, timetable_id, date, present, note, created_at)
 SELECT
-    st.id, sub.id, ttb.id, CURRENT_DATE - i,
-    CASE WHEN st.user_id = 40 AND i < 5 THEN false ELSE true END, -- Aluno 40 com muitas faltas
-    'Verificar como colocar no script o "Note"', NOW()
-FROM student st, subjects sub, timetables ttb, generate_series(1, 10) i;
+    st.id,
+    1, -- Fixamos uma disciplina/horário apenas para o teste de frequência
+    1,
+    CURRENT_DATE - i,
+    CASE WHEN st.user_id = 40 AND i < 5 THEN false ELSE true END,
+    'Frequência regular', NOW()
+FROM student st, generate_series(1, 10) i
+WHERE st.id != 1;
+
+
 -- INSERT INTO attendances (student_id, subject_id, date, present, note, created_at) VALUES
 -- (1, 1, CURRENT_DATE - INTERVAL '2 days', true, 'Presença normal', NOW()),
 -- (1, 1, CURRENT_DATE - INTERVAL '1 day', false, 'Falta sem justificativa', NOW()),
 -- (1, 1, CURRENT_DATE, true, 'Presença normal', NOW());
 
--- 12. ANNOUNCEMENTS (2 Anúncios)
+-- 13. ANNOUNCEMENTS (2 Anúncios)
 INSERT INTO announcements (title, description, image_path, type, order_position, created_by, last_modified_by, created_at, updated_at, is_active) VALUES
 ('Welcome Back', 'Welcome to the new school year!', 'path/to/image1.jpg', 'BANNER', 1, NULL, NULL, NOW(), NOW(), true),
 ('School Trip', 'Upcoming trip to the museum.', 'path/to/image2.jpg', 'CAROUSEL', 2, NULL, NULL, NOW(), NOW(), true);
 
 -- Conversations
--- 13. CONVERSATIONS (1 Conversa de Exemplo)
+-- 14. CONVERSATIONS (1 Conversa de Exemplo)
 INSERT INTO conversations (sender_id, recipient_id, student_id, subject, content, attachment_path, sent_at, read_status) VALUES
 (3, 2, 1, 'Homework Question', 'Can you clarify the math homework?', NULL, NOW(), 'UNREAD');
 
--- 14. EVENTS (1 Evento de Exemplo)
+-- 15. EVENTS (1 Evento de Exemplo)
 INSERT INTO events (title, description, start_date, end_date, color, created_at, updated_at) VALUES
 ('Parent Meeting', 'Meeting for all parents.', '2023-11-01 18:00:00', '2023-11-01 20:00:00', '#0A2558', NOW(), NOW());
 
--- 15. NOTIFICATIONS (1 Notificação de Exemplo)
+-- 16. NOTIFICATIONS (1 Notificação de Exemplo)
 INSERT INTO notifications (title, message, user_id, read, created_at, type) VALUES
 ('New Message', 'You have a new message from Responsible User.', 2, false, NOW(), 'MESSAGE');
 
--- 16. MESSAGES (Mensagens entre Professor e Responsável sobre o Aluno)
+-- 17. MESSAGES (Mensagens entre Professor e Responsável sobre o Aluno)
 INSERT INTO messages (sender_id, recipient_id, student_id, subject, content, read_at, deleted_at, archived_by_sender, archived_by_recipient, created_by, last_modified_by, created_at, updated_at) VALUES
-(2, 5, 1, 'Comportamento em Aula', 'Olá Julia, o aluno João tem demonstrado muita evolução em Matemática.', NULL, NULL, FALSE, FALSE, 'system', 'system', NOW(), NOW()),
-(5, 2, 1, 'Re: Comportamento em Aula', 'Obrigada pelo feedback, Professor Carlos! Ficamos felizes.', NULL, NULL, FALSE, FALSE, 'system', 'system', NOW(), NOW()),
-(2, 5, 1, 'Material Extra', 'Enviei uma lista de exercícios extra para o João praticar para a prova.', NULL, NULL,  FALSE, FALSE,'system', 'system', NOW(), NOW()),
+(2, 23, 1, 'Boas-vindas', 'Olá Aluno, seja bem-vindo ao portal!', NULL, NULL, FALSE, FALSE, 'system', 'system', NOW(), NOW()),
+(5, 23, 1, 'Material de Apoio', 'Acabei de liberar o PDF da aula de amanhã.', NULL, NULL, FALSE, FALSE, 'system', 'system', NOW(), NOW()),
+(2, 23, 1, 'Aviso Importante', 'Lembre-se de trazer o jaleco para o laboratório.', NULL, NULL,  FALSE, FALSE,'system', 'system', NOW(), NOW()),
 (5, 2, 1, 'Re: Material Extra', 'Recebido! Iremos praticar em casa. Muito obrigado.', NULL, NULL, FALSE, FALSE, 'system', 'system', NOW(), NOW()),
 (2, 5, 1, 'Ausência na Aula', 'Julia, notei que o João não compareceu à aula hoje. Está tudo bem?', NULL, NULL, FALSE, FALSE,'system', 'system', NOW(), NOW()),
 (5, 2, 1, 'Re: Ausência na Aula', 'Ele teve uma consulta médica, mas amanhã levará o atestado.', NULL, NULL, FALSE, FALSE, 'system', 'system', NOW(), NOW()),
