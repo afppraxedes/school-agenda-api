@@ -261,15 +261,15 @@ INSERT INTO notifications (title, message, user_id, read, created_at, type) VALU
 ('New Message', 'You have a new message from Responsible User.', 2, false, NOW(), 'MESSAGE');
 
 -- 17. MESSAGES (Mensagens entre Professor e Responsável sobre o Aluno)
-INSERT INTO messages (sender_id, recipient_id, student_id, subject, content, read_at, deleted_at, archived_by_sender, archived_by_recipient, created_by, last_modified_by, created_at, updated_at) VALUES
-(2, 23, 1, 'Boas-vindas', 'Olá Aluno, seja bem-vindo ao portal!', NULL, NULL, FALSE, FALSE, 'system', 'system', NOW(), NOW()),
-(5, 23, 1, 'Material de Apoio', 'Acabei de liberar o PDF da aula de amanhã.', NULL, NULL, FALSE, FALSE, 'system', 'system', NOW(), NOW()),
-(2, 23, 1, 'Aviso Importante', 'Lembre-se de trazer o jaleco para o laboratório.', NULL, NULL,  FALSE, FALSE,'system', 'system', NOW(), NOW()),
-(5, 2, 1, 'Re: Material Extra', 'Recebido! Iremos praticar em casa. Muito obrigado.', NULL, NULL, FALSE, FALSE, 'system', 'system', NOW(), NOW()),
-(2, 5, 1, 'Ausência na Aula', 'Julia, notei que o João não compareceu à aula hoje. Está tudo bem?', NULL, NULL, FALSE, FALSE,'system', 'system', NOW(), NOW()),
-(5, 2, 1, 'Re: Ausência na Aula', 'Ele teve uma consulta médica, mas amanhã levará o atestado.', NULL, NULL, FALSE, FALSE, 'system', 'system', NOW(), NOW()),
+INSERT INTO messages (sender_id, recipient_id, student_id, subject, content, attachment_url, attachment_name, read_at, deleted_at, archived_by_sender, archived_by_recipient, created_by, last_modified_by, created_at, updated_at) VALUES
+(2, 23, 1, 'Boas-vindas', 'Olá Aluno, seja bem-vindo ao portal!', NULL, NULL, NULL, NULL, FALSE, FALSE, 'system', 'system', NOW(), NOW()),
+(5, 23, 1, 'Material de Apoio', 'Acabei de liberar o PDF da aula de amanhã.', NULL, NULL, NULL, NULL, FALSE, FALSE, 'system', 'system', NOW(), NOW()),
+(2, 23, 1, 'Aviso Importante', 'Lembre-se de trazer o jaleco para o laboratório.', NULL, NULL, NULL, NULL,  FALSE, FALSE,'system', 'system', NOW(), NOW()),
+(5, 2, 1, 'Re: Material Extra', 'Recebido! Iremos praticar em casa. Muito obrigado.', NULL, NULL, NULL, NULL, FALSE, FALSE, 'system', 'system', NOW(), NOW()),
+(2, 5, 1, 'Ausência na Aula', 'Julia, notei que o João não compareceu à aula hoje. Está tudo bem?', NULL, NULL, NULL, NULL, FALSE, FALSE,'system', 'system', NOW(), NOW()),
+(5, 2, 1, 'Re: Ausência na Aula', 'Ele teve uma consulta médica, mas amanhã levará o atestado.', NULL, NULL, NULL, NULL, FALSE, FALSE, 'system', 'system', NOW(), NOW()),
 -- MENSSGEM APENAS PARA TESTAR NA INICIALIZAÇÃO DO DASHBOARD DO ALUNO NO FRONT-END
-(1, 2, 5, 'Bem-vindo ao Portal', 'Olá aluno, este é o seu novo dashboard!', NULL, NULL, FALSE, FALSE, 'system', 'system', NOW(), NOW());
+(1, 2, 5, 'Bem-vindo ao Portal', 'Olá aluno, este é o seu novo dashboard!', NULL, NULL, NULL, NULL, FALSE, FALSE, 'system', 'system', NOW(), NOW());
 
 -- Attendances
 -- Limpa para evitar erros de duplicidade em re-execuções, se necessário

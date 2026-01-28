@@ -41,6 +41,8 @@ public interface UserService {
     boolean emailExistsForOtherUser(String email, Long userId);
     boolean usernameExistsForOtherUser(String username, Long userId);
 
+    List<UserResponse> findAllByProfile(String profile);
+
     // Count Methods
     long countUsersByRole(UserRole role);
     long getTotalUsersCount();

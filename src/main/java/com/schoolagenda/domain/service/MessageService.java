@@ -15,9 +15,12 @@ import java.util.List;
 public interface MessageService {
 
     MessageResponse sendMessage(MessageRequest request, Long senderId);
+    void deleteMessage(Long id);
     List<MessageResponse> getInbox(Long userId);
     void markAsRead(Long messageId, Long userId);
     List<MessageResponse> getSentMessages(Long userId);
     long countUnreadMessages(Long userId);
+    MessageResponse findById(Long id);
+    MessageResponse saveWithAttachment(MessageRequest request, String fileUrl, String originalFilename);
 
 }

@@ -53,10 +53,7 @@
 package com.schoolagenda.application.web.dto.response;
 
 import com.schoolagenda.domain.enums.UserRole;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.Set;
 
@@ -72,4 +69,9 @@ public class UserResponse {
     private Set<UserRole> roles;
     private String pushSubscription;
     private String profileType;
+
+    public UserResponse(Long id, String name) {
+        this.id = id;
+        this.name = name;
+    }
 }
