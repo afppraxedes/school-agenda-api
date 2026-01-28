@@ -8,5 +8,7 @@ public record MessageRequest(
         @NotNull Long recipientId,
         Long studentId, // Opcional: Contexto do aluno (ex: Professor falando com o Pai sobre o Aluno X)
         @NotBlank @Size(max = 200) String subject,
-        @NotBlank String content
+        @NotBlank String content,
+        String attachmentUrl,  // Novo campo
+        String attachmentName
 ) {}
