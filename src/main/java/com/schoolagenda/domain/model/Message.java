@@ -38,6 +38,12 @@ public class Message extends BaseAuditableEntity {
     @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
 
+    @Column(name = "attachment_url")
+    private String attachmentUrl;
+
+    @Column(name = "attachment_name")
+    private String attachmentName; // Opcional: para exibir "Exercicio.pdf" na UI
+
 //    @Column(name = "read_at", columnDefinition = "TIMESTAMP WITH TIME ZONE")
     private OffsetDateTime readAt;
 

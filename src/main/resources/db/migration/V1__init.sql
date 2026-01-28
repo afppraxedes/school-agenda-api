@@ -191,6 +191,8 @@ CREATE TABLE messages (
     student_id BIGINT,
     subject VARCHAR(200) NOT NULL,
     content TEXT NOT NULL,
+    attachment_url TEXT,
+    attachment_name VARCHAR(255),
 --     read_at TIMESTAMP,
     read_at TIMESTAMP WITH TIME ZONE DEFAULT NULL,
     deleted_at TIMESTAMP WITH TIME ZONE DEFAULT NULL,
@@ -210,6 +212,8 @@ CREATE TABLE messages (
     CONSTRAINT fk_message_recipient FOREIGN KEY (recipient_id) REFERENCES users(id),
     CONSTRAINT fk_message_student FOREIGN KEY (student_id) REFERENCES student(id)
 );
+/* Opcional: Índice para otimizar buscas se o volume de mensagens crescer */
+CREATE INDEX idx_messages_attachment ON messages(attachment_url) WHERE attachment_url IS NOT NULL;
 
 -- ============================================
 -- TABELA: subjects (Disciplinas)

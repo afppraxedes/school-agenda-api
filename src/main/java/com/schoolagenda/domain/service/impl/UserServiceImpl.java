@@ -394,6 +394,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -687,6 +688,23 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with username: " + username));
         return updateUser(user.getId(), request);
+    }
+
+    @Override
+    // Versão alternativa mais segura:
+    public List<UserResponse> findAllByProfile(String profile) {
+        // Valida se o perfil existe no enum
+        UserRole role = Arrays.stream(UserRole.values())
+                .filter(r -> r.getDescription().equalsIgnoreCase(profile) ||
+                        r.name().equalsIgnoreCase(profile))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Perfil inválido: " + profile));
+
+        List<User> users = userRepository.findAllByRolesContainingOrderByNameAsc(role);
+
+        return users.stream()
+                .map(user -> new UserResponse(user.getId(), user.getName()))
+                .collect(Collectors.toList());
     }
 
     private String getCurrentUsername() {

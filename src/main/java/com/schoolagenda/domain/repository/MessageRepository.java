@@ -1,5 +1,6 @@
 package com.schoolagenda.domain.repository;
 
+import com.schoolagenda.application.web.dto.response.MessageResponse;
 import com.schoolagenda.domain.model.Message;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -7,9 +8,13 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface MessageRepository extends JpaRepository<Message, Long> {
+
+    // Busca uma mensagem específica garantindo que o destinatário seja o usuário logado
+    Optional<Message> findByIdAndRecipientId(Long id, Long recipientId);
 
     List<Message> findByRecipientIdAndArchivedByRecipientFalseOrderByCreatedAtDesc(Long recipientId);
 

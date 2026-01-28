@@ -3,7 +3,10 @@ package com.schoolagenda.application.web.controller;
 
 import com.schoolagenda.application.web.dto.request.TeacherClassRequest;
 import com.schoolagenda.application.web.dto.response.TeacherClassResponse;
+import com.schoolagenda.application.web.dto.response.UserResponse;
+import com.schoolagenda.domain.enums.UserRole;
 import com.schoolagenda.domain.service.TeacherClassService;
+import com.schoolagenda.domain.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,9 +20,11 @@ import java.util.List;
 public class TeacherClassController {
 
     private final TeacherClassService teacherClassService;
+    private final UserService userService;
 
-    public TeacherClassController(TeacherClassService teacherClassService) {
+    public TeacherClassController(TeacherClassService teacherClassService, UserService userService) {
         this.teacherClassService = teacherClassService;
+        this.userService = userService;
     }
 
     @PostMapping
@@ -111,5 +116,11 @@ public class TeacherClassController {
     public ResponseEntity<List<Long>> findStudentIdsByResponsibleId(@RequestParam Long responsibleId) {
         List<Long> responsibleIds = teacherClassService.findStudentIdsByResponsibleId(responsibleId);;
         return ResponseEntity.ok(responsibleIds);
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping
+    public ResponseEntity<List<UserResponse>> getTeachers() {
+        return ResponseEntity.ok(userService.findAllByProfile(UserRole.TEACHER.name()));
     }
 }
