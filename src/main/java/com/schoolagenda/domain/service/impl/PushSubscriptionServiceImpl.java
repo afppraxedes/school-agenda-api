@@ -166,4 +166,9 @@ public class PushSubscriptionServiceImpl implements PushSubscriptionService {
             throw new RuntimeException("Failed to unsubscribe by endpoint: " + e.getMessage());
         }
     }
+
+    public boolean isUserSubscribed(String email) {
+        // Busca o usuário e verifica se existe uma entrada na tabela de push_notifications
+        return pushSubscriptionRepository.existsByUserEmail(email);
+    }
 }

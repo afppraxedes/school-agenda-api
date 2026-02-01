@@ -169,4 +169,16 @@ public class PushSubscriptionController {
             ));
         }
     }
+
+    @GetMapping("/status")
+    public ResponseEntity<Map<String, Boolean>> getSubscriptionStatus(Authentication authentication) {
+        // 1. Obtém o username/email do principal autenticado
+        String email = authentication.getName();
+
+        // 2. Verifica a existência na camada de serviço
+        boolean isSubscribed = pushNotificationServiceImpl.isUserSubscribed(email);
+
+        // 3. Retorna o JSON: {"subscribed": true/false}
+        return ResponseEntity.ok(Map.of("subscribed", isSubscribed));
+    }
 }
