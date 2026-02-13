@@ -30,6 +30,8 @@ public class DashboardServiceImpl implements DashboardService {
     private final ScheduleService scheduleService;
     private final EventService eventService;
     private final StudentRepository studentRepository;
+
+    
     // Removi os serviços que ainda não existem para o código compilar
 
 //    @Transactional(readOnly = true)
