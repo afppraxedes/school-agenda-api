@@ -2,6 +2,7 @@ package com.schoolagenda.domain.service;
 
 import com.schoolagenda.application.web.dto.request.MessageRequest;
 import com.schoolagenda.application.web.dto.response.MessageResponse;
+import com.schoolagenda.application.web.dto.response.RecipienteResponse;
 import com.schoolagenda.domain.enums.UserRole;
 import com.schoolagenda.domain.exception.BusinessException;
 import com.schoolagenda.domain.exception.ResourceNotFoundException;
@@ -22,5 +23,6 @@ public interface MessageService {
     long countUnreadMessages(Long userId);
     MessageResponse findById(Long id);
     MessageResponse saveWithAttachment(MessageRequest request, String fileUrl, String originalFilename);
+    List<RecipienteResponse> getPossibleRecipientsForTeacher();
 
 }

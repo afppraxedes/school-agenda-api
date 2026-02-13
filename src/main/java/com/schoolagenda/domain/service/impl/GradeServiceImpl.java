@@ -19,6 +19,7 @@ import com.schoolagenda.domain.model.*;
 import com.schoolagenda.domain.repository.*;
 import com.schoolagenda.domain.service.AttendanceService;
 import com.schoolagenda.domain.service.GradeService;
+import com.schoolagenda.domain.service.StudentService;
 import com.schoolagenda.domain.specification.GradeSpecifications;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -51,6 +52,7 @@ public class GradeServiceImpl implements GradeService {
     private final ResponsibleStudentRepository responsibleStudentRepository;
     private final AttendanceService attendanceService;
     private final AttendanceRepository attendanceRepository;
+    private final StudentService studentService;
 
     @Override
     @Transactional
@@ -298,6 +300,17 @@ public class GradeServiceImpl implements GradeService {
         }).toList();
 
         gradeRepository.saveAll(gradesToSave);
+
+        // Identifica alunos únicos afetados no lote
+        Set<Long> affectedStudentUserIds = requests.stream()
+                .map(GradeRequest::getStudentUserId)
+                .collect(Collectors.toSet());
+
+        // Dispara atualização da média para cada um
+        affectedStudentUserIds.forEach(userId -> {
+            BigDecimal newAverage = gradeRepository.findAverageByStudentUserId(userId);
+            studentService.updateGlobalAverage(userId, newAverage);
+        });
 
         // Em operações de lote, retornar a primeira ou um objeto vazio é comum
         return null;
@@ -639,6 +652,12 @@ public class GradeServiceImpl implements GradeService {
 
     // ========== MÉTODOS PRIVADOS AUXILIARES ==========
 
+    private void updateStudentGlobalAverage(Long userId) {
+        Double average = gradeRepository.calculateAverageByStudentUserId(userId);
+
+        // Supondo que você tenha um campo globalAverage na tabela/entidade Student ou em um DashboardDTO
+        studentRepository.updateGlobalAverage(userId, BigDecimal.valueOf(average != null ? average : 0.0));
+    }
     /**
      * Realiza o cálculo matemático da média ponderada final.
      * Soma (nota * peso) / soma(pesos)

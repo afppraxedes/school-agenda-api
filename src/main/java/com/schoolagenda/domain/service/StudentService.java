@@ -2,9 +2,11 @@
 package com.schoolagenda.domain.service;
 
 import com.schoolagenda.application.web.dto.request.StudentRequest;
+import com.schoolagenda.application.web.dto.response.StudentDashboardResponse;
 import com.schoolagenda.application.web.dto.response.StudentResponse;
 import com.schoolagenda.domain.model.Student;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,6 +26,10 @@ public interface StudentService {
     List<String> findAllClassNames();
     long countByClassName(String className);
     List<StudentResponse> findLatestStudents(int limit);
+
+    void updateGlobalAverage(Long userId, BigDecimal rawAverage);
+
+//    StudentDashboardResponse getDashboardData(Long userId);
 
     // Utility methods
 //    StudentResponse convertToResponse(Student student);

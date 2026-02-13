@@ -1,8 +1,11 @@
 package com.schoolagenda.application.web.dto.response;
 
+import lombok.Builder;
+
 import java.math.BigDecimal;
 import java.util.List;
 
+@Builder
 public record StudentDashboardResponse(
         // Resumo Acadêmico
 //        BigDecimal globalAverage,
@@ -20,6 +23,8 @@ public record StudentDashboardResponse(
 //
 //        List<MonthlyAverageDTO> performanceHistory
 
+        //Long classId,
+        Long teacherClassId,
         BigDecimal globalAverage,
         BigDecimal globalAttendance,
         List<SchoolEventResponse> upcomingEvents, // Já existente no seu projeto

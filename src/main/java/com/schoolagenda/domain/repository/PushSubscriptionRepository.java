@@ -18,4 +18,6 @@ public interface PushSubscriptionRepository extends JpaRepository<PushSubscripti
 
     // Método para contar subscriptions por usuário
     long countByUserId(Long userId);
+
+    boolean existsByUserEmail(String email);
 }

@@ -3,10 +3,12 @@ package com.schoolagenda.domain.repository;
 
 import com.schoolagenda.domain.model.Student;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -52,4 +54,8 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
     WHERE s.user.id = :userId
 """)
     Optional<Long> findClassIdByUserId(@Param("userId") Long userId);
+
+    @Modifying
+    @Query("UPDATE Student s SET s.globalAverage = :average WHERE s.user.id = :userId")
+    void updateGlobalAverage(@Param("userId") Long userId, @Param("average") BigDecimal average);
 }

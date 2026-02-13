@@ -3,6 +3,7 @@ package com.schoolagenda.domain.service.impl;
 import com.schoolagenda.application.web.dto.response.*;
 import com.schoolagenda.application.web.security.dto.AgendaUserDetails;
 import com.schoolagenda.domain.exception.ResourceNotFoundException;
+import com.schoolagenda.domain.model.SchoolClass;
 import com.schoolagenda.domain.model.Student;
 import com.schoolagenda.domain.repository.AttendanceRepository;
 import com.schoolagenda.domain.repository.EvaluationRepository;
@@ -29,6 +30,8 @@ public class DashboardServiceImpl implements DashboardService {
     private final ScheduleService scheduleService;
     private final EventService eventService;
     private final StudentRepository studentRepository;
+
+    
     // Removi os serviços que ainda não existem para o código compilar
 
 //    @Transactional(readOnly = true)
@@ -107,10 +110,15 @@ public class DashboardServiceImpl implements DashboardService {
                 .orElseThrow(() -> new EntityNotFoundException("Estudante não encontrado"));
         Long studentId = student.getId();
 
+        Long teacherClassId = student.getSchoolClass().getId(); // ID da turma do aluno
+        // generateTimetablePdf
+//        SchoolClass schoolClass = schoolClassRepository.findById(schoolClassId)
+//                .orElseThrow(() -> new ResourceNotFoundException("Turma não encontrada"));
+
         // 1. Médias e Frequência (Queries do Repository)
         Double avg = evaluationRepository.calculateAverageByStudent(studentId);
-        BigDecimal globalAverage = BigDecimal.valueOf(avg != null ? avg : 0.0);
-
+        BigDecimal globalAverage = BigDecimal.valueOf(avg != null ? avg : 0.0)
+                .setScale(2, RoundingMode.HALF_UP); // Transforma 8.166... em 8.17
 //        Integer att = attendanceRepository.calculatePercentageByStudent(studentId);
 //        BigDecimal globalAttendance = BigDecimal.valueOf(att != null ? att : 0.0);
 
@@ -119,7 +127,7 @@ public class DashboardServiceImpl implements DashboardService {
 
         // Cálculo seguro no Java para evitar divisão por zero
         BigDecimal globalAttendance = (total > 0)
-                ? BigDecimal.valueOf((present * 100.0) / total)
+                ? BigDecimal.valueOf((present * 100.0) / total).setScale(2, RoundingMode.HALF_UP)
                 : BigDecimal.ZERO;
 
         // 2. Histórico para o Chart.js
@@ -133,6 +141,7 @@ public class DashboardServiceImpl implements DashboardService {
         long unreadMessages = messageService.countUnreadMessages(userId);
 
         return new StudentDashboardResponse(
+                teacherClassId,
                 globalAverage,
                 globalAttendance,
                 upcomingEvents,

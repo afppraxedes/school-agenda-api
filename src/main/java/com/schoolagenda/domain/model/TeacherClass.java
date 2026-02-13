@@ -7,7 +7,6 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "teacher_classes")
-// 4. Herda da classe base para obter os campos created_by, updated_at, etc.
 public class TeacherClass extends BaseAuditableEntity {
 
     // TODO: FOI ALTERADA A TABELA, MAS NÃO FOI ALTERADA A ENTIDADE, REQUEST, RESPONSE E MAPPER! PEDIR AO "GEMINI" PARA CORRIGIR!

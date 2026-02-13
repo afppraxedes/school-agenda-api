@@ -1,7 +1,9 @@
 // src/main/java/com/schoolagenda/domain/service/TeacherClassService.java
 package com.schoolagenda.domain.service;
 
+import com.schoolagenda.application.web.dto.GradeStudentDTO;
 import com.schoolagenda.application.web.dto.request.TeacherClassRequest;
+import com.schoolagenda.application.web.dto.response.ActiveClassResponse;
 import com.schoolagenda.application.web.dto.response.TeacherClassResponse;
 
 import java.util.List;
@@ -43,5 +45,9 @@ public interface TeacherClassService {
 
     List<Long> findStudentIdsByResponsibleId(Long responsibleId);
 
-    public List<Long> findSubjectIdsByTeacherId(Long teacherId);
+    List<Long> findSubjectIdsByTeacherId(Long teacherId);
+
+    List<ActiveClassResponse> findClassesByTeacherEmail(String email);
+
+    List<GradeStudentDTO> getStudentsGrades(Long teacherClassId);
 }

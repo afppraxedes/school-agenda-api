@@ -1,8 +1,10 @@
-//package com.schoolagenda.application.service;
 package com.schoolagenda.domain.service;
 
+import com.schoolagenda.application.web.dto.response.RefreshTokenResponse;
 import com.schoolagenda.application.web.security.dto.AgendaUserDetails;
 import com.schoolagenda.application.web.security.util.JwtService;
+import com.schoolagenda.domain.exception.TokenRefreshException;
+import com.schoolagenda.domain.model.RefreshToken;
 import com.schoolagenda.domain.model.User;
 import com.schoolagenda.domain.enums.UserRole;
 import com.schoolagenda.domain.repository.UserRepository;
@@ -28,9 +30,8 @@ public class AuthenticationService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
-//    private final JWTUtils jwtUtils;
     private final AuthenticationManager authenticationManager;
-    private final RefreshTokenService refreshTokenService; // ✅ Adicione esta dependência
+    private final RefreshTokenService refreshTokenService;
 
     @Transactional
     public AuthenticationResponse register(RegisterRequest request) {
@@ -61,7 +62,7 @@ public class AuthenticationService {
                 .type("Bearer")
                 // TODO: refatorar o atributo "token" para "accessToken". Após, terá que ser alterado
                 // tamém na aba "Tests" no Postman para a obtenção do "Token"!
-                .token(accessToken)
+                .accessToken(accessToken)
                 .refreshToken(refreshToken.getToken()) // ✅ Usa o token salvo no banco
                 .build();
     }
@@ -90,7 +91,7 @@ public class AuthenticationService {
                     .type("Bearer")
                     // TODO: refatorar o atributo "token" para "accessToken". Após, terá que ser alterado
                     // tamém na aba "Tests" no Postman para a obtenção do "Token"!
-                    .token(accessToken)
+                    .accessToken(accessToken)
                     .refreshToken(refreshToken.getToken()) // ✅ Usa o token salvo no banco
                     .build();
 
@@ -98,66 +99,23 @@ public class AuthenticationService {
             throw new RuntimeException("Invalid email or password");
         }
     }
+
+    @Transactional
+    public RefreshTokenResponse processRefreshToken(String requestRefreshToken) {
+        return refreshTokenService.findByToken(requestRefreshToken)
+                .map(refreshTokenService::verifyExpiration)
+                .map(RefreshToken::getUser)
+                .map(user -> {
+                    // Gera o novo Access Token baseado no usuário dono do Refresh Token
+                    String newAccessToken = jwtService.generateToken(AgendaUserDetails.create(user));
+
+                    log.info("🔄 Access Token renovado com sucesso para: {}", user.getEmail());
+
+                    return RefreshTokenResponse.builder()
+                            .accessToken(newAccessToken)
+                            .refreshToken(requestRefreshToken) // Mantemos a rotação simples (reutiliza o UUID)
+                            .build();
+                })
+                .orElseThrow(() -> new TokenRefreshException("Refresh token não encontrado no sistema."));
+    }
 }
-
-      // TODO: FLUXO ABAIXO CORRETO, MAS NÃO SALVANDO O "REFRESH TOKEN"
-//    private final UserRepository userRepository;
-//    private final PasswordEncoder passwordEncoder;
-//    private final JwtService jwtService;
-//    private final AuthenticationManager authenticationManager;
-
-//    @Transactional
-//    public AuthenticationResponse register(RegisterRequest request) {
-//        // Verifica se usuário já existe
-//        if (userRepository.existsByEmail(request.getEmail())) {
-//            throw new RuntimeException("User already exists with email: " + request.getEmail());
-//        }
-//
-//        var user = User.builder()
-//                .name(request.getName())
-//                .email(request.getEmail())
-//                .username(request.getEmail()) // Usa email como username
-//                .password(passwordEncoder.encode(request.getPassword()))
-//                .roles(Set.of(UserRole.DIRECTOR)) // Default role
-//                .build();
-//
-//        var savedUser = userRepository.save(user);
-//
-//        // ✅ AGORA: Pode passar User diretamente para JwtService
-//        var accessToken = jwtService.generateToken(savedUser);
-//        var refreshToken = jwtService.generateRefreshToken(savedUser);
-//
-//        return AuthenticationResponse.builder()
-//                .type("Bearer")
-//                .token(accessToken)
-//                .refreshToken(refreshToken)
-//                .build();
-//    }
-//
-//    public AuthenticationResponse authenticate(AuthenticationRequest request) {
-//        try {
-//            authenticationManager.authenticate(
-//                    new UsernamePasswordAuthenticationToken(
-//                            request.getEmail(),
-//                            request.getPassword()
-//                    )
-//            );
-//
-//            var user = userRepository.findByEmail(request.getEmail())
-//                    .orElseThrow(() -> new RuntimeException("User not found"));
-//
-//            // ✅ AGORA: Pode passar User diretamente
-//            var accessToken = jwtService.generateToken(user);
-//            var refreshToken = jwtService.generateRefreshToken(user);
-//
-//            return AuthenticationResponse.builder()
-//                    .type("Bearer")
-//                    .token(accessToken)
-//                    .refreshToken(refreshToken)
-//                    .build();
-//
-//        } catch (BadCredentialsException e) {
-//            throw new RuntimeException("Invalid email or password");
-//        }
-//    }
-//}

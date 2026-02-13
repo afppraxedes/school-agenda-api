@@ -35,6 +35,10 @@ public class Assessment extends BaseAuditableEntity {
     @JoinColumn(name = "subject_id", nullable = false)
     private Subject subject;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "teacher_class_id", nullable = false)
+    private TeacherClass teacherClass;
+
 //    @ManyToOne(fetch = FetchType.LAZY)
 //    @JoinColumn(name = "created_by_user_id")
 //    private User createdBy;
