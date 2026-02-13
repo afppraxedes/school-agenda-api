@@ -1,6 +1,8 @@
 package com.schoolagenda.domain.service.impl;
 
+import com.schoolagenda.application.web.dto.GradeStudentDTO;
 import com.schoolagenda.application.web.dto.request.TeacherClassRequest;
+import com.schoolagenda.application.web.dto.response.ActiveClassResponse;
 import com.schoolagenda.application.web.dto.response.TeacherClassResponse;
 import com.schoolagenda.application.web.mapper.TeacherClassMapper;
 import com.schoolagenda.domain.exception.ResourceNotFoundException;
@@ -17,7 +19,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class TeacherClassServiceImpl implements TeacherClassService {
@@ -208,6 +213,52 @@ public class TeacherClassServiceImpl implements TeacherClassService {
     @Transactional(readOnly = true)
     public List<Long> findSubjectIdsByTeacherId(Long teacherId) {
         return teacherClassRepository.findSubjectIdsByTeacherId(teacherId);
+    }
+
+    public List<ActiveClassResponse> findClassesByTeacherEmail(String email) {
+        return teacherClassRepository.findByTeacherEmail(email)
+                .stream()
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Recupera a lista de alunos e aplica a regra de negócio para médias parciais.
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public List<GradeStudentDTO> getStudentsGrades(Long teacherClassId) {
+        List<GradeStudentDTO> students = teacherClassRepository.findStudentsGradesByTeacherClassId(teacherClassId);
+
+        // Regra de Negócio: Validação ou processamento adicional pode ser feito aqui
+        // Exemplo: Log de auditoria ou verificação de status da turma
+
+        return students;
+    }
+
+    /**
+     * Método auxiliar para calcular a média parcial com precisão BigDecimal.
+     * Útil se você decidir processar métricas antes de enviar ao Controller.
+     */
+    public BigDecimal calculatePartialAverage(BigDecimal g1, BigDecimal g2) {
+        if (g1 == null || g2 == null) {
+            return BigDecimal.ZERO;
+        }
+        return g1.add(g2)
+                .divide(BigDecimal.valueOf(2), 2, RoundingMode.HALF_UP);
+    }
+
+    private ActiveClassResponse convertToDto(TeacherClass teacherClass) {
+        ActiveClassResponse dto = new ActiveClassResponse();
+        dto.setId(teacherClass.getId().toString());
+        dto.setName(teacherClass.getSchoolClass().getName()); // Acessando a Turma vinculada
+        dto.setSubject(teacherClass.getSubject().getName());  // Acessando a Disciplina vinculada
+
+        // MOCK: studentCount adicionado ao backlog para implementação com DB real
+        dto.setStudentCount(25);
+        dto.setNextLesson("Segunda-feira, 08:00");
+
+        return dto;
     }
 
     /**

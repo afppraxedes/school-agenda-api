@@ -82,6 +82,7 @@ CREATE TABLE student (
     class_name VARCHAR(255) NOT NULL,
     profile_photo VARCHAR(255),
     registration_date TIMESTAMP(6),
+    global_average DECIMAL(5, 2) DEFAULT 0.00,
     user_id BIGINT UNIQUE,
     school_class_id BIGINT NOT NULL,
     created_by VARCHAR(150) DEFAULT NULL,
@@ -344,6 +345,7 @@ CREATE TABLE assessments (
     description TEXT,
     subject_id BIGINT NOT NULL,
     created_by_user_id BIGINT,
+    teacher_class_id BIGINT,
     due_date DATE,
     max_score NUMERIC(5,2) DEFAULT 10.00,
     weight DECIMAL(5,2) DEFAULT 1.0,
@@ -363,6 +365,10 @@ CREATE TABLE assessments (
         FOREIGN KEY (created_by_user_id)
         REFERENCES users(id)
         ON DELETE SET NULL,
+
+    CONSTRAINT fk_assessment_teacher_class
+        FOREIGN KEY (teacher_class_id)
+        REFERENCES teacher_classes (id),
 
     CONSTRAINT chk_max_score_positive
         CHECK (max_score > 0)

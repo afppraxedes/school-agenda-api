@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.schoolagenda.application.web.dto.request.MessageRequest;
 import com.schoolagenda.application.web.dto.response.MessageResponse;
+import com.schoolagenda.application.web.dto.response.RecipienteResponse;
 import com.schoolagenda.application.web.security.dto.AgendaUserDetails;
 import com.schoolagenda.domain.model.User;
 import com.schoolagenda.domain.service.MessageService;
@@ -50,7 +51,8 @@ public class MessageController {
     }
 
     @GetMapping("/inbox")
-    @PreAuthorize("isAuthenticated()")
+//    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyAuthority('ADMINISTRATOR', 'DIRECTOR', 'TEACHER', 'RESPONSIBLE', 'STUDENT')")
     public ResponseEntity<List<MessageResponse>> getInbox(
             @AuthenticationPrincipal AgendaUserDetails currentUser) {
         return ResponseEntity.ok(messageService.getInbox(currentUser.getId()));
@@ -103,6 +105,13 @@ public class MessageController {
         response.put("name", fileName);
 
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/recipients")
+    @PreAuthorize("hasAuthority('TEACHER')")
+    public ResponseEntity<List<RecipienteResponse>> getPossibleRecipients() {
+        List<RecipienteResponse> recipients = messageService.getPossibleRecipientsForTeacher();
+        return ResponseEntity.ok(recipients);
     }
 
 //    @PostMapping(value = "/send-with-attachment", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

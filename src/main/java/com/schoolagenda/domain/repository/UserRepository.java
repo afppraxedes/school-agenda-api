@@ -85,6 +85,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
@@ -127,4 +128,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     long countByRole(@Param("role") UserRole role);
 
     List<User> findAllByRolesContainingOrderByNameAsc(UserRole role);
+
+    @Query("SELECT u FROM User u JOIN u.roles r WHERE r IN :roles ORDER BY u.name ASC")
+    List<User> findAllByRolesIn(@Param("roles") Set<UserRole> roles);
 }

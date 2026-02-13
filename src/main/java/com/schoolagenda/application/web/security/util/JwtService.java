@@ -54,15 +54,19 @@ public class JwtService {
         }
     }
 
+    // Alteração no generateToken para usar o AgendaUserDetails de forma robusta
     public String generateToken(AgendaUserDetails userDetails) {
+        Map<String, Object> extraClaims = new HashMap<>();
+        extraClaims.put("id", userDetails.getId());
+        extraClaims.put("name", userDetails.getName());
+        extraClaims.put("authorities", userDetails.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toList()));
+
         return Jwts.builder()
+                .claims(extraClaims)
                 .subject(userDetails.getUsername())
-                .claim("id", userDetails.getId())
-                .claim("name", userDetails.getName())
-                .claim("authorities", userDetails.getAuthorities().stream()
-                        .map(GrantedAuthority::getAuthority)
-                        .collect(Collectors.toList()))
-                .issuedAt(new Date())
+                .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(secretKey)
                 .compact();

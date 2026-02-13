@@ -1,6 +1,7 @@
 // src/main/java/com/schoolagenda/domain/repository/TeacherClassRepository.java
 package com.schoolagenda.domain.repository;
 
+import com.schoolagenda.application.web.dto.GradeStudentDTO;
 import com.schoolagenda.domain.model.TeacherClass;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -75,4 +76,31 @@ public interface TeacherClassRepository extends JpaRepository<TeacherClass, Long
     boolean existsTeacherLinkWithStudent(
             @Param("teacherUserId") Long teacherUserId,
             @Param("studentUserId") Long studentUserId);
+
+    // Removido o filtro 'active'
+    @Query("SELECT tc FROM TeacherClass tc WHERE tc.teacher.email = :email")
+    List<TeacherClass> findByTeacherEmail(@Param("email") String email);
+
+    /**
+     * Busca otimizada de alunos e notas utilizando projeção para DTO (Record).
+     * Esta consulta resolve o problema de N+1 e garante alta performance no dashboard docente.
+     */
+    @Query("""
+        SELECT new com.schoolagenda.application.web.dto.GradeStudentDTO(
+            s.user.id, 
+            s.fullName, 
+            g.score, 
+            g.feedback
+        )
+        FROM Student s
+        LEFT JOIN Grade g ON g.student.id = s.user.id 
+            AND g.assessment.teacherClass.id = :teacherClassId
+        WHERE s.schoolClass.id = (
+            SELECT tc.schoolClass.id 
+            FROM TeacherClass tc 
+            WHERE tc.id = :teacherClassId
+        )
+        ORDER BY s.fullName ASC
+    """)
+    List<GradeStudentDTO> findStudentsGradesByTeacherClassId(@Param("teacherClassId") Long teacherClassId);
 }

@@ -32,7 +32,7 @@ import lombok.Builder;
 @Builder
 public record AuthenticationResponse(
         String type,        // "Bearer"
-        String token,       // access token JWT
+        String accessToken,       // access token JWT
         String refreshToken // refresh token (opcional)
 ) {
     // Método estático para construção
@@ -40,7 +40,7 @@ public record AuthenticationResponse(
                                             Long expiresIn, AgendaUserDetails userDetails) {
         return AuthenticationResponse.builder()
                 .type("Bearer")
-                .token(token)
+                .accessToken(token)
                 .refreshToken(refreshToken)
 //                .expiresIn(expiresIn)
 //                .issuedAt(Instant.now())

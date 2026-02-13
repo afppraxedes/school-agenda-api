@@ -53,7 +53,7 @@ public class AuthService {
 
             return AuthenticationResponse.builder()
                     .type("Bearer")
-                    .token(accessToken)
+                    .accessToken(accessToken)
                     .refreshToken("")
                     .build();
 

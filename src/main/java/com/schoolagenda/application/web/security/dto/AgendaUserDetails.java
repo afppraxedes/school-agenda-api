@@ -47,6 +47,7 @@ public class AgendaUserDetails implements UserDetails {
         return new AgendaUserDetails(id, name, email, password, authorities);
     }
 
+    // TODO: Alterar a nomenclatura de "hasRole" para "hasAuthority" para refletir melhor a lógica de autorização!
     public boolean hasRole(UserRole role) {
         String roleName = role.name(); // ⬅️ role.name()
         return authorities.stream()

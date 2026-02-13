@@ -53,8 +53,26 @@ INSERT INTO school_events (title, description, start_date, end_date, all_day, ty
 ('Prova de Matemática', 'Conteúdo: Álgebra Linear', NOW() + INTERVAL '2 days', NOW() + INTERVAL '2 days', false, 'EXAM', 1, 'Sala 04', 'system', 'system', NOW(), NOW());
 
 -- 5. STUDENTS (18 Alunos vinculados aos Users 23-40)
-INSERT INTO student (id, full_name, birth_date, class_name, registration_date, user_id, school_class_id, created_by, last_modified_by, created_at, updated_at)
-SELECT i-22, 'Student Name '||i, '2010-01-01', 'Class '||i, NOW(), i, (i % 5) + 1, NULL, NULL, NOW(), NOW()
+-- INSERT INTO student (id, full_name, birth_date, class_name, registration_date, global_average, user_id, school_class_id, created_by, last_modified_by, created_at, updated_at)
+-- SELECT
+--     i,
+--     'Student Name '||i,
+--     '2010-01-01',
+--     'Class '||(i % 5 + 1),
+--     NOW(),
+--     CASE WHEN i = 23 THEN 8.17 ELSE 7.42 END,
+--     i,
+--     (i % 5) + 1,
+--     NULL,
+--     NULL,
+--     NOW(),
+--     NOW()
+-- FROM generate_series(23, 40) i;
+INSERT INTO student (id, full_name, birth_date, class_name, registration_date, global_average, user_id, school_class_id, created_by, last_modified_by, created_at, updated_at)
+SELECT i-22, 'Student Name '||i, '2010-01-01', 'Class '||i, NOW(),
+       7.42,
+       -- CASE WHEN i = 23 THEN 8.17 ELSE 7.42 END,
+       i, (i % 5) + 1, NULL, NULL, NOW(), NOW()
 FROM generate_series(23, 40) i;
 
 -- 6. RESPONSABLE STUDENT (Vínculos solicitados)
@@ -65,13 +83,18 @@ INSERT INTO responsable_student (responsable_id, student_id, created_at, updated
 
 -- 7. SUBJECTS (12 Disciplinas vinculadas aos Professores)
 INSERT INTO subjects (id, name, school_year, teacher_user_id, is_active, created_at, updated_at) VALUES
-(1, 'Matemática', '2025', 4, true, NOW(), NOW()), (2, 'Português', '2025', 5, true, NOW(), NOW()),
-(3, 'História', '2025', 6, true, NOW(), NOW()), (4, 'Geografia', '2025', 7, true, NOW(), NOW()),
-(5, 'Ciências', '2025', 8, true, NOW(), NOW()), (6, 'Inglês', '2025', 9, true, NOW(), NOW()),
-(7, 'Física', '2025', 10, true, NOW(), NOW()), (8, 'Química', '2025', 11, true, NOW(), NOW()),
-(9, 'Artes', '2025', 12, true, NOW(), NOW()), (10, 'Ed. Física', '2025', 8, true, NOW(), NOW()), -- Einstein +1
+(1, 'Matemática', '2025', 4, true, NOW(), NOW()),
+(2, 'Português', '2025', 5, true, NOW(), NOW()),
+(3, 'História', '2025', 6, true, NOW(), NOW()),
+(4, 'Geografia', '2025', 7, true, NOW(), NOW()),
+(5, 'Ciências', '2025', 4, true, NOW(), NOW()),
+(6, 'Inglês', '2025', 9, true, NOW(), NOW()),
+(7, 'Física', '2025', 10, true, NOW(), NOW()),
+(8, 'Química', '2025', 11, true, NOW(), NOW()),
+(9, 'Artes', '2025', 12, true, NOW(), NOW()),
+(10, 'Ed. Física', '2025', 8, true, NOW(), NOW()), -- Einstein +1
 (11, 'Biologia', '2025', 10, true, NOW(), NOW()), -- Tesla +1
-(12, 'Filosofia', '2025', 12, true, NOW(), NOW()); -- Sócrates +1
+(12, 'Filosofia', '2025', 4, true, NOW(), NOW()); -- Sócrates +1
 
 -- 8. EVALUATIONS (6 Avaliações para o Estudante ID 1 ao longo dos últimos meses)
 -- Inserir Avaliações para o Estudante ID 1
@@ -102,6 +125,10 @@ INSERT INTO subjects (id, name, school_year, teacher_user_id, is_active, created
 -- Limpando possíveis dados residuais para o ID 1 para evitar duplicidade no teste
 DELETE FROM evaluations WHERE student_id = 1;
 
+-- 8. EVALUATIONS (6 Avaliações para o Estudante ID 1 (usuário 23) ao longo dos últimos meses)
+-- NOTA: neste momento, estamos inserindo apenas para o Estudante ID 1 para garantir que os dados estejam
+-- alinhados com os testes de dashboard. Para uma base de teste mais completa, seria ideal inserir avaliações
+-- para outros alunos também.
 INSERT INTO evaluations (grade, title, student_id, subject_id, created_at) VALUES
 (7.0, 'Avaliação Inicial', 1, 1, '2025-08-15 10:00:00'),
 (8.5, 'Trabalho de Pesquisa', 1, 2, '2025-09-20 14:30:00'),
@@ -147,8 +174,19 @@ INSERT INTO timetables (
 (4, 'SATURDAY', '10:00:00', '10:50:00', 'Lab Física', 'system', 'system', NOW(), NOW());
 
 -- 11. ASSESSMENTS (4 Bimestrais por disciplina)
-INSERT INTO assessments (id, title, subject_id, created_by_user_id, max_score, weight, is_published, is_recovery, created_by, last_modified_by, created_at, updated_at)
-SELECT (s.id-1)*4 + i, 'Prova '||i||'º Bimestre', s.id, s.teacher_user_id, 10.0, 1.0, true, false, NULL, NULL, NOW(), NOW()
+-- Avaliações para o Teacher Class 4 (Professor ID 4)
+-- INSERT INTO assessments (id, title, subject_id, created_by_user_id, teacher_class_id, max_score, weight, is_published, is_recovery, created_by, last_modified_by, created_at, updated_at)
+-- SELECT (s.id-1)*8 + i, 'Prova '||i||'º Bimestre', s.id, 4, 4, 10.0, 1.0, true, false, NULL, NULL, NOW(), NOW()
+-- FROM subjects s, generate_series(1,4) i
+-- WHERE s.teacher_user_id = 4;
+--
+-- -- Avaliações para o Teacher Class 5 (Professor ID 4 em outra turma/disciplina)
+-- INSERT INTO assessments (id, title, subject_id, created_by_user_id, teacher_class_id, max_score, weight, is_published, is_recovery, created_by, last_modified_by, created_at, updated_at)
+-- SELECT (s.id-1)*8 + 4 + i, 'Prova '||i||'º Bimestre', s.id, 4, 5, 10.0, 1.0, true, false, NULL, NULL, NOW(), NOW()
+-- FROM subjects s, generate_series(1,4) i
+-- WHERE s.teacher_user_id = 4;
+INSERT INTO assessments (id, title, subject_id, created_by_user_id, teacher_class_id, max_score, weight, is_published, is_recovery, created_by, last_modified_by, created_at, updated_at)
+SELECT (s.id-1)*4 + i, 'Prova '||i||'º Bimestre', s.id, s.teacher_user_id, 1, 10.0, 1.0, true, false, NULL, NULL, NOW(), NOW()
 FROM subjects s, generate_series(1,4) i;
 
 -- -- Grade

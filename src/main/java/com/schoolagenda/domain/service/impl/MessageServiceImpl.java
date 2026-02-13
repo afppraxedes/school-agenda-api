@@ -3,6 +3,7 @@ package com.schoolagenda.domain.service.impl;
 import com.schoolagenda.application.web.dto.request.MessageRequest;
 import com.schoolagenda.application.web.dto.response.AssessmentResponse;
 import com.schoolagenda.application.web.dto.response.MessageResponse;
+import com.schoolagenda.application.web.dto.response.RecipienteResponse;
 import com.schoolagenda.application.web.dto.response.UserResponse;
 import com.schoolagenda.application.web.mapper.MessageMapper;
 import com.schoolagenda.domain.enums.UserRole;
@@ -28,6 +29,7 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -246,6 +248,19 @@ public class MessageServiceImpl implements MessageService {
 
         // 5. Retorna o DTO formatado
         return messageMapper.toResponse(savedMessage);
+    }
+
+    public List<RecipienteResponse> getPossibleRecipientsForTeacher() {
+        // Define as roles permitidas para o professor enviar mensagens
+        Set<UserRole> allowedRoles = Set.of(UserRole.STUDENT, UserRole.RESPONSIBLE);
+
+        return userRepository.findAllByRolesIn(allowedRoles).stream()
+                .map(user -> new RecipienteResponse(
+                        user.getId(),
+                        user.getName(),
+                        user.getRoles().iterator().next().toString() // Pega a role principal para exibir no label
+                ))
+                .collect(Collectors.toList());
     }
 
 //    private MessageResponse convertToResponse(Message msg) {

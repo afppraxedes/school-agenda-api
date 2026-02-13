@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -35,6 +36,9 @@ public class Student extends BaseAuditableEntity {
 
     @Column(name = "registration_date")
     private LocalDateTime registrationDate;
+
+    @Column(name = "global_average", precision = 5, scale = 2)
+    private BigDecimal globalAverage = BigDecimal.ZERO;
 
     @OneToOne
     @JoinColumn(name = "user_id")

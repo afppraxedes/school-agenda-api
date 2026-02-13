@@ -2,6 +2,7 @@
 package com.schoolagenda.domain.service.impl;
 
 import com.schoolagenda.application.web.dto.request.StudentRequest;
+import com.schoolagenda.application.web.dto.response.StudentDashboardResponse;
 import com.schoolagenda.application.web.dto.response.StudentResponse;
 import com.schoolagenda.application.web.mapper.StudentMapper;
 import com.schoolagenda.domain.exception.ResourceNotFoundException;
@@ -10,7 +11,10 @@ import com.schoolagenda.domain.repository.SchoolClassRepository;
 import com.schoolagenda.domain.repository.StudentRepository;
 import com.schoolagenda.domain.service.StudentService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -117,6 +121,32 @@ public class StudentServiceImpl implements StudentService {
                 .map(studentMapper::toResponse)
                 .collect(Collectors.toList());
     }
+
+    @Transactional
+    public void updateGlobalAverage(Long userId, BigDecimal rawAverage) {
+        // Garante que a média tenha apenas 2 casas decimais antes de persistir
+        BigDecimal finalAverage = (rawAverage != null)
+                ? rawAverage.setScale(2, RoundingMode.HALF_UP)
+                : BigDecimal.ZERO;
+
+        studentRepository.updateGlobalAverage(userId, finalAverage);
+    }
+
+    // TODO: Implementar o "contrato" no controller para o endpoint "/dashboard" e depois implementar a lógica de obtenção dos dados necessários para o dashboard do estudante, como a média global e os próximos eventos (provas, trabalhos, etc.) relacionados à classe do estudante.
+//    @Transactional(readOnly = true)
+//    public StudentDashboardResponse getDashboardData(Long userId) {
+//        // Busca o estudante pelo ID do Usuário logado (ID 23)
+//        Student student = studentRepository.findByUserId(userId)
+//                .orElseThrow(() -> new ResourceNotFoundException("Estudante não encontrado para o usuário: " + userId));
+//
+//        // Montagem do DTO de Resposta para o Dashboard
+//        return StudentDashboardResponse.builder()
+//                .globalAverage(student.getGlobalAverage()) // Aqui enviamos o 8.17
+//                // .upcomingEvents(assessmentService.findNextAssessments(student.getSchoolClass().getId()))
+//                .studentName(student.getFullName())
+//                .className(student.getClassName())
+//                .build();
+//    }
 
 //    @Override
 //    public StudentResponse convertToResponse(Student student) {

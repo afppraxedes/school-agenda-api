@@ -1,6 +1,7 @@
 // src/main/java/com/schoolagenda/application/web/controller/TeacherClassController.java
 package com.schoolagenda.application.web.controller;
 
+import com.schoolagenda.application.web.dto.GradeStudentDTO;
 import com.schoolagenda.application.web.dto.request.TeacherClassRequest;
 import com.schoolagenda.application.web.dto.response.TeacherClassResponse;
 import com.schoolagenda.application.web.dto.response.UserResponse;
@@ -28,6 +29,7 @@ public class TeacherClassController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyAuthority('ADMINISTRATOR', 'DIRECTOR', 'TEACHER')")
     public ResponseEntity<TeacherClassResponse> createTeacherClass(
             @Valid @RequestBody TeacherClassRequest request) {
         TeacherClassResponse response = teacherClassService.createTeacherClass(request);
@@ -35,6 +37,7 @@ public class TeacherClassController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('ADMINISTRATOR', 'DIRECTOR', 'TEACHER')")
     public ResponseEntity<TeacherClassResponse> updateTeacherClass(
             @PathVariable Long id, @Valid @RequestBody TeacherClassRequest request) {
         TeacherClassResponse response = teacherClassService.updateTeacherClass(id, request);
@@ -42,6 +45,7 @@ public class TeacherClassController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('ADMINISTRATOR', 'DIRECTOR', 'TEACHER')")
     public ResponseEntity<Void> deleteTeacherClass(@PathVariable Long id) {
         teacherClassService.deleteTeacherClass(id);
         return ResponseEntity.noContent().build();
@@ -49,6 +53,7 @@ public class TeacherClassController {
 
     @DeleteMapping("/by-params")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAnyAuthority('ADMINISTRATOR', 'DIRECTOR', 'TEACHER')")
     public ResponseEntity<Void> deleteTeacherClassByParams(
             @RequestParam Long teacherId,
             @RequestParam Long subjectId,
@@ -59,12 +64,14 @@ public class TeacherClassController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('ADMINISTRATOR', 'DIRECTOR', 'TEACHER')")
     public ResponseEntity<TeacherClassResponse> getTeacherClassById(@PathVariable Long id) {
         TeacherClassResponse response = teacherClassService.getTeacherClassById(id);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/teacher/{teacherId}")
+    @PreAuthorize("hasAnyAuthority('ADMINISTRATOR', 'DIRECTOR', 'TEACHER')")
     public ResponseEntity<List<TeacherClassResponse>> getClassesByTeacher(
             @PathVariable Long teacherId) {
         List<TeacherClassResponse> responses = teacherClassService.getClassesByTeacher(teacherId);
@@ -72,6 +79,7 @@ public class TeacherClassController {
     }
 
     @GetMapping("/class/{schoolClassId}")
+    @PreAuthorize("hasAnyAuthority('ADMINISTRATOR', 'DIRECTOR', 'TEACHER')")
     public ResponseEntity<List<TeacherClassResponse>> getTeachersByClass(
             @PathVariable Long schoolClassId) {
         List<TeacherClassResponse> responses = teacherClassService.getTeachersByClass(schoolClassId);
@@ -79,6 +87,7 @@ public class TeacherClassController {
     }
 
     @GetMapping("/teacher/{teacherId}/subject/{subjectId}/schoolClass/{schoolClassId}")
+    @PreAuthorize("hasAnyAuthority('ADMINISTRATOR', 'DIRECTOR', 'TEACHER')")
     public ResponseEntity<TeacherClassResponse> getTeacherClass(
             @PathVariable Long teacherId, @PathVariable Long subjectId, @PathVariable Long schoolClassId) {
         TeacherClassResponse response = teacherClassService.getTeacherClass(teacherId, subjectId, schoolClassId);
@@ -86,6 +95,7 @@ public class TeacherClassController {
     }
 
     @GetMapping("/teacher/{teacherId}/subject/{subjectId}/schoolClass/{schoolClassId}/exists")
+    @PreAuthorize("hasAnyAuthority('ADMINISTRATOR', 'DIRECTOR', 'TEACHER')")
     public ResponseEntity<Boolean> teacherClassExists(
             @PathVariable Long teacherId, @PathVariable Long subjectId, @PathVariable Long schoolClassId) {
         boolean exists = teacherClassService.teacherClassExists(teacherId, subjectId, schoolClassId);
@@ -93,12 +103,14 @@ public class TeacherClassController {
     }
 
     @GetMapping("/teacher/{teacherId}/class-count")
+    @PreAuthorize("hasAnyAuthority('ADMINISTRATOR', 'DIRECTOR', 'TEACHER')")
     public ResponseEntity<Long> getClassCountByTeacher(@PathVariable Long teacherId) {
         long count = teacherClassService.getClassCountByTeacher(teacherId);
         return ResponseEntity.ok(count);
     }
 
     @GetMapping("/classes/distinct")
+    @PreAuthorize("hasAnyAuthority('ADMINISTRATOR', 'DIRECTOR', 'TEACHER')")
     public ResponseEntity<List<Long>> getAllDistinctSchoolClassIds() {
         List<Long> classNames = teacherClassService.getAllDistinctSchoolClassIds();
         return ResponseEntity.ok(classNames);
@@ -122,5 +134,17 @@ public class TeacherClassController {
     @GetMapping
     public ResponseEntity<List<UserResponse>> getTeachers() {
         return ResponseEntity.ok(userService.findAllByProfile(UserRole.TEACHER.name()));
+    }
+
+    @GetMapping("/{id}/students-grades")
+    @PreAuthorize("hasAuthority('TEACHER')")
+    public ResponseEntity<List<GradeStudentDTO>> getStudentsGrades(@PathVariable Long id) {
+        List<GradeStudentDTO> result = teacherClassService.getStudentsGrades(id);
+
+        if (result.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+
+        return ResponseEntity.ok(result);
     }
 }

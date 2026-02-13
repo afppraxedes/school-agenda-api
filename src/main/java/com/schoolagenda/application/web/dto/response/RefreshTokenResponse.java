@@ -1,5 +1,10 @@
 package com.schoolagenda.application.web.dto.response;
 
-// Response do "RefreshToken"
-public record RefreshTokenResponse(String refreshToken) {
+import lombok.Builder;
+
+@Builder
+public record RefreshTokenResponse(
+        String accessToken,
+        String refreshToken
+) {
 }

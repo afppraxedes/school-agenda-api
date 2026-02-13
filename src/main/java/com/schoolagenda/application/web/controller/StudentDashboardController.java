@@ -12,11 +12,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+// TODO: colocar a "uri" como "/api/v1/dashboard/student" para ficar mais claro que é o dashboard do aluno!
 @RestController
 @RequestMapping("/api/v1/dashboard") // Aqui definimos o caminho que o Angular vai chamar
 @RequiredArgsConstructor
 @Tag(name = "Dashboard", description = "Endpoints para o painel principal")
-public class DashboardController {
+public class StudentDashboardController {
 
     private final DashboardService dashboardService;
 
@@ -27,4 +28,6 @@ public class DashboardController {
 
         return ResponseEntity.ok(dashboardService.getStudentDashboard(currentUser.getId()));
     }
+
+
 }

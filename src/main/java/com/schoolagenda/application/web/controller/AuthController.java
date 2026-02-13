@@ -50,10 +50,10 @@
 package com.schoolagenda.application.web.controller;
 
 import com.schoolagenda.application.web.dto.request.AuthenticationRequest;
+import com.schoolagenda.application.web.dto.request.RefreshTokenRequest;
 import com.schoolagenda.application.web.dto.request.RegisterRequest;
-import com.schoolagenda.application.web.dto.request.TokenRefreshRequest;
 import com.schoolagenda.application.web.dto.response.AuthenticationResponse;
-import com.schoolagenda.application.web.dto.response.TokenRefreshResponse;
+import com.schoolagenda.application.web.dto.response.RefreshTokenResponse;
 import com.schoolagenda.domain.service.AuthenticationService;
 import com.schoolagenda.domain.service.RefreshTokenService;
 import jakarta.validation.Valid;
@@ -82,9 +82,15 @@ public class AuthController {
         return ResponseEntity.ok(authenticationService.authenticate(request));
     }
 
+//    @PostMapping("/refresh-token")
+//    public ResponseEntity<TokenRefreshResponse> refreshToken(@Valid @RequestBody TokenRefreshRequest request) {
+//        return ResponseEntity.ok(refreshTokenService.refreshToken(request));
+//    }
+
     @PostMapping("/refresh-token")
-    public ResponseEntity<TokenRefreshResponse> refreshToken(@Valid @RequestBody TokenRefreshRequest request) {
-        return ResponseEntity.ok(refreshTokenService.refreshToken(request));
+    public ResponseEntity<RefreshTokenResponse> refreshToken(@Valid @RequestBody RefreshTokenRequest request) {
+        RefreshTokenResponse response = authenticationService.processRefreshToken(request.refreshToken());
+        return ResponseEntity.ok(response);
     }
 }
 

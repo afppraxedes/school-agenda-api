@@ -50,10 +50,29 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         try {
-            final String jwt = authHeader.substring(7);
+//            final String jwt = authHeader.substring(7);
+//
+//            if (!jwtService.validateToken(jwt)) {
+//                log.error("Token validation failed for path: {}", requestPath);
+//                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid token");
+//                return;
+//            }
+
+            // 1. Extração com limpeza de espaços
+            final String jwt = authHeader.substring(7).trim();
+
+            // DEBUG CRÍTICO: Veja no console o que realmente foi extraído
+            // Se aparecer um UUID aqui, você está enviando o token errado no Postman
+            log.debug("Extracted JWT for validation: [{}]", jwt.length() > 10 ? jwt.substring(0, 10) + "..." : jwt);
+
+            if (jwt.isEmpty()) {
+                log.error("❌ JWT string is empty after 'Bearer ' prefix");
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token is empty");
+                return;
+            }
 
             if (!jwtService.validateToken(jwt)) {
-                log.error("Token validation failed for path: {}", requestPath);
+                log.error("❌ Token validation failed for path: {}", requestPath);
                 response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid token");
                 return;
             }
