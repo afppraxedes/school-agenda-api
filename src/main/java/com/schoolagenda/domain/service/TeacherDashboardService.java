@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+// TODO: Transformar para interface e implementar no pacote impl, seguindo o padrão dos outros serviços.
 @Service
 public class TeacherDashboardService {
 

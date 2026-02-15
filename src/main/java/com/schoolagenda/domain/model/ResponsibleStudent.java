@@ -5,7 +5,7 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "responsable_student")
+@Table(name = "responsible_student")
 // 4. Herda da classe base para obter os campos created_by, updated_at, etc.
 public class ResponsibleStudent /*extends BaseAuditableEntity*/ {
 
@@ -14,7 +14,7 @@ public class ResponsibleStudent /*extends BaseAuditableEntity*/ {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "responsable_id", nullable = false)
+    @JoinColumn(name = "responsible_id", nullable = false)
     private User responsible;
 
     @ManyToOne(fetch = FetchType.LAZY)

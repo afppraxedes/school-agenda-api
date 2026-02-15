@@ -40,4 +40,8 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
         AND m.deletedAt IS NULL
     """)
     long countUnreadMessages(@Param("userId") Long userId);
+
+    // Método utilizado no ResponsibleDashboardService
+    @Query("SELECT COUNT(m) FROM Message m WHERE m.recipient.id = :recipientId AND m.readAt IS NULL")
+    long countUnreadMessagesByRecipientId(@Param("recipientId") Long recipientId);
 }

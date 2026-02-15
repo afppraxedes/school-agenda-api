@@ -2,6 +2,7 @@
 package com.schoolagenda.domain.service;
 
 import com.schoolagenda.application.web.dto.request.ResponsibleStudentRequest;
+import com.schoolagenda.application.web.dto.response.ResponsibleDashboardResponse;
 import com.schoolagenda.application.web.dto.response.ResponsibleStudentResponse;
 
 import java.util.List;

@@ -1,10 +1,13 @@
 package com.schoolagenda.domain.service.impl;
 
+import com.schoolagenda.application.web.dto.StudentSummaryDTO;
 import com.schoolagenda.application.web.dto.request.ResponsibleStudentRequest;
+import com.schoolagenda.application.web.dto.response.ResponsibleDashboardResponse;
 import com.schoolagenda.application.web.dto.response.ResponsibleStudentResponse;
 import com.schoolagenda.domain.model.ResponsibleStudent;
 import com.schoolagenda.domain.model.Student;
 import com.schoolagenda.domain.model.User;
+import com.schoolagenda.domain.repository.MessageRepository;
 import com.schoolagenda.domain.repository.ResponsibleStudentRepository;
 import com.schoolagenda.domain.repository.StudentRepository;
 import com.schoolagenda.domain.repository.UserRepository;
@@ -13,20 +16,22 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.RoundingMode;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 public class ResponsibleStudentServiceImpl implements ResponsibleStudentService {
 
-    @Autowired
-    private ResponsibleStudentRepository responsibleStudentRepository;
+    private final ResponsibleStudentRepository responsibleStudentRepository;
+    private final UserRepository userRepository;
+    private final StudentRepository studentRepository;
 
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private StudentRepository studentRepository;
+    public ResponsibleStudentServiceImpl(ResponsibleStudentRepository responsibleStudentRepository, UserRepository userRepository, StudentRepository studentRepository, MessageRepository messageRepository) {
+        this.responsibleStudentRepository = responsibleStudentRepository;
+        this.userRepository = userRepository;
+        this.studentRepository = studentRepository;
+    }
 
     @Override
     @Transactional
@@ -137,6 +142,7 @@ public class ResponsibleStudentServiceImpl implements ResponsibleStudentService 
 //                relationship.getStudent().getName(),
                 relationship.getStudent().getFullName(),
                 relationship.getStudent().getClassName(), // Assuming Student entity has getClassName()
+                relationship.getStudent().getGlobalAverage().setScale(2, RoundingMode.HALF_UP),
                 relationship.getCreatedAt(),
                 relationship.getUpdatedAt()
         );

@@ -47,4 +47,11 @@ public interface ResponsibleStudentRepository extends JpaRepository<ResponsibleS
     boolean existsByResponsibleIdAndStudentUserId(
             @Param("responsibleUserId") Long responsibleUserId,
             @Param("studentUserId") Long studentUserId);
+
+    // Busca os vínculos carregando a entidade Student e User (Responsável) em uma única query
+    @Query("SELECT rs FROM ResponsibleStudent rs " +
+            "JOIN FETCH rs.student s " +
+            "JOIN FETCH rs.responsible r " +
+            "WHERE r.id = :responsibleUserId")
+    List<ResponsibleStudent> findAllByResponsibleUserId(@Param("responsibleUserId") Long responsibleUserId);
 }

@@ -75,11 +75,27 @@ SELECT i-22, 'Student Name '||i, '2010-01-01', 'Class '||i, NOW(),
        i, (i % 5) + 1, NULL, NULL, NOW(), NOW()
 FROM generate_series(23, 40) i;
 
--- 6. RESPONSABLE STUDENT (Vínculos solicitados)
-INSERT INTO responsable_student (responsable_id, student_id, created_at, updated_at) VALUES
-(13,1, NOW(), NOW()), (14,2, NOW(), NOW()), (15,3, NOW(), NOW()), -- 1 aluno cada
-(16,4, NOW(), NOW()), (16,5, NOW(), NOW()), (17,6, NOW(), NOW()), (17,7, NOW(), NOW()), (18,8, NOW(), NOW()), (18,9, NOW(), NOW()), (19,10, NOW(), NOW()), (19,11, NOW(), NOW()), (20,12, NOW(), NOW()), (20,13, NOW(), NOW()), (21,14, NOW(), NOW()), (21,15, NOW(), NOW()), -- 2 alunos
-(22,16, NOW(), NOW()), (22,17, NOW(), NOW()), (22,18, NOW(), NOW()); -- 3 alunos
+-- 6. RESPONSIBLE STUDENT (Vínculos solicitados)
+INSERT INTO responsible_student (responsible_id, student_id, created_at, updated_at) VALUES
+(13,1, NOW(), NOW()),
+(14,2, NOW(), NOW()),
+(15,3, NOW(), NOW()), -- 1 aluno cada
+(16,4, NOW(), NOW()),
+(16,5, NOW(), NOW()),
+(17,6, NOW(), NOW()),
+(17,7, NOW(), NOW()),
+(18,8, NOW(), NOW()),
+(18,9, NOW(), NOW()),
+(19,10, NOW(), NOW()),
+(19,11, NOW(), NOW()),
+(20,12, NOW(), NOW()),
+(20,13, NOW(), NOW()),
+(21,14, NOW(), NOW()),
+(21,15, NOW(), NOW()), -- 2 alunos
+(22,16, NOW(), NOW()),
+(22,17, NOW(), NOW()),
+(22,18, NOW(), NOW()); -- 3 alunos
+
 
 -- 7. SUBJECTS (12 Disciplinas vinculadas aos Professores)
 INSERT INTO subjects (id, name, school_year, teacher_user_id, is_active, created_at, updated_at) VALUES
