@@ -3,8 +3,14 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 
 public record GradeStudentDTO(
-        Long userId,
+        Long studentId,
         String name,
-        BigDecimal score,
+        BigDecimal grade1,
+        BigDecimal grade2,
+        BigDecimal grade3,
+        BigDecimal grade4,
+        BigDecimal average,
         String feedback
+//        Boolean isAbsent,
+//        Boolean isExcused
 ) {}

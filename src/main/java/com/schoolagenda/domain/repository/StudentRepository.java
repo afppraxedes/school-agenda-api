@@ -58,4 +58,13 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
     @Modifying
     @Query("UPDATE Student s SET s.globalAverage = :average WHERE s.user.id = :userId")
     void updateGlobalAverage(@Param("userId") Long userId, @Param("average") BigDecimal average);
+
+    List<Student> findBySchoolClassId(Long schoolClassId);
+
+//    @Query("SELECT s FROM Student s WHERE s.user.id = :responsibleId")
+//    List<Student> findByResponsibleId(@Param("responsibleId") Long responsibleId);
+
+    @Query("SELECT s FROM Student s WHERE s.user.id IN " +
+            "(SELECT r.student.user.id FROM ResponsibleStudent r WHERE r.responsible.id = :responsibleId)")
+    List<Student> findByResponsibleUserId(@Param("responsibleId") Long responsibleId);
 }

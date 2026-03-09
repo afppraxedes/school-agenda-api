@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Data
 @Builder
@@ -17,10 +18,12 @@ public class NotificationResponse {
     private Long id;
     private String title;
     private String message;
+    private String url;
+    private String icon;
     private Long userId;
     private String userName;
     private boolean read;
-    private LocalDateTime createdAt;
+    private OffsetDateTime notifiedAt;
     private NotificationType type;
     private String userRole;
 

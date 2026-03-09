@@ -1,10 +1,12 @@
 package com.schoolagenda.application.web.mapper;
 
+import com.schoolagenda.application.web.dto.GradeStudentDTO;
 import com.schoolagenda.application.web.dto.request.GradeRequest;
 import com.schoolagenda.application.web.dto.response.GradeDetailResponse;
 import com.schoolagenda.application.web.dto.response.GradeResponse;
 import com.schoolagenda.domain.model.Grade;
 import com.schoolagenda.domain.model.SchoolClass;
+import com.schoolagenda.domain.model.Student;
 import com.schoolagenda.domain.model.User;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
@@ -18,6 +20,14 @@ import java.math.RoundingMode;
         nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE,
         uses = {AssessmentMapper.class, UserMapper.class})
 public interface GradeMapper {
+
+    // Mapeamento para GradeStudentDTO - inclui média e notas para cada bimestre
+//    @Mapping(target = "average", source = "globalAverage")
+//    @Mapping(target = "grade1", expression = "java(defaultValue(student.getGrade1()))")
+//    @Mapping(target = "grade2", expression = "java(defaultValue(student.getGrade2()))")
+//    @Mapping(target = "grade3", expression = "java(defaultValue(student.getGrade3()))")
+//    @Mapping(target = "grade4", expression = "java(defaultValue(student.getGrade4()))")
+//    GradeStudentDTO toGradeDTO(Student student);
 
     // Para criação - ignore todos os campos gerenciados automaticamente
     @Mapping(target = "id", ignore = true)
@@ -50,12 +60,16 @@ public interface GradeMapper {
 
     @Named("gradeScaleBigDecimal")
     default BigDecimal gradeScaleBigDecimal(BigDecimal value) {
-        return scaleBigDecimal(value);
+        return defaultValue(value);
     }
 
     // Método privado auxiliar (não precisa de @Named)
-    private BigDecimal scaleBigDecimal(BigDecimal value) {
-        if (value == null) return null;
-        return value.setScale(2, RoundingMode.HALF_UP);
+//    private BigDecimal scaleBigDecimal(BigDecimal value) {
+//        if (value == null) return null;
+//        return value.setScale(2, RoundingMode.HALF_UP);
+//    }
+
+    default BigDecimal defaultValue(BigDecimal value) {
+        return value != null ? value : BigDecimal.ZERO.setScale(2);
     }
 }

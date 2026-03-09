@@ -44,6 +44,8 @@ public class Message extends BaseAuditableEntity {
     @Column(name = "attachment_name")
     private String attachmentName; // Opcional: para exibir "Exercicio.pdf" na UI
 
+    private String type;  // 'comunicado', 'mensagem', 'aviso' - para diferenciar tipos de mensagens
+
 //    @Column(name = "read_at", columnDefinition = "TIMESTAMP WITH TIME ZONE")
     private OffsetDateTime readAt;
 

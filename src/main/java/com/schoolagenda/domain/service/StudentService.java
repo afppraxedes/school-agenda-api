@@ -3,6 +3,7 @@ package com.schoolagenda.domain.service;
 
 import com.schoolagenda.application.web.dto.request.StudentRequest;
 import com.schoolagenda.application.web.dto.response.StudentDashboardResponse;
+import com.schoolagenda.application.web.dto.response.StudentDetailResponse;
 import com.schoolagenda.application.web.dto.response.StudentResponse;
 import com.schoolagenda.domain.model.Student;
 
@@ -28,6 +29,8 @@ public interface StudentService {
     List<StudentResponse> findLatestStudents(int limit);
 
     void updateGlobalAverage(Long userId, BigDecimal rawAverage);
+
+    StudentDetailResponse getStudentById(Long id);
 
 //    StudentDashboardResponse getDashboardData(Long userId);
 

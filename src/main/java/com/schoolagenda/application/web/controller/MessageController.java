@@ -3,6 +3,7 @@ package com.schoolagenda.application.web.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.schoolagenda.application.web.dto.request.MessageRequest;
+import com.schoolagenda.application.web.dto.response.CommunicationResponse;
 import com.schoolagenda.application.web.dto.response.MessageResponse;
 import com.schoolagenda.application.web.dto.response.RecipienteResponse;
 import com.schoolagenda.application.web.security.dto.AgendaUserDetails;
@@ -108,7 +109,8 @@ public class MessageController {
     }
 
     @GetMapping("/recipients")
-    @PreAuthorize("hasAuthority('TEACHER')")
+//    @PreAuthorize("hasAuthority('TEACHER')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<RecipienteResponse>> getPossibleRecipients() {
         List<RecipienteResponse> recipients = messageService.getPossibleRecipientsForTeacher();
         return ResponseEntity.ok(recipients);
@@ -188,35 +190,41 @@ public class MessageController {
 //        return ResponseEntity.ok(response);
 //    }
 
-//    @PreAuthorize("isAuthenticated()")
-//    @PostMapping(value = "/send-with-attachment", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-//    public ResponseEntity<MessageResponse> sendWithAttachment(
-//            @RequestPart("message") String messageJson, // Recebemos como String pura
-//            @RequestPart(value = "file", required = false) MultipartFile file
-//    ) {
-//        try {
-//            // Conversão manual do JSON usando o Jackson que você já tem no projeto
-//            ObjectMapper objectMapper = new ObjectMapper();
-//            // Registra suporte a Java 8 dates (importante para LocalDateTime)
-//            objectMapper.registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
-//
-//            MessageRequest request = objectMapper.readValue(messageJson, MessageRequest.class);
-//
-//            // Segue sua lógica original
-//            String fileName = (file != null) ? file.getOriginalFilename() : null;
-//            String fileUrl = null;
-//
-//            if (file != null && !file.isEmpty()) {
-//                fileUrl = s3Service.uploadFile(UUID.randomUUID() + "_" + fileName, file);
-//            }
-//
-//            MessageResponse response = messageService.saveWithAttachment(request, fileUrl, fileName);
-//            return ResponseEntity.ok(response);
-//
-//        } catch (JsonProcessingException e) {
-//            throw new RuntimeException("Erro ao converter JSON da mensagem", e);
-//        }
-//    }
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping(value = "/send-with-attachment", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<MessageResponse> sendWithAttachment(
+            @RequestPart("message") String messageJson, // Recebemos como String pura
+            @RequestPart(value = "file", required = false) MultipartFile file
+    ) {
+        try {
+            // Conversão manual do JSON usando o Jackson que você já tem no projeto
+            ObjectMapper objectMapper = new ObjectMapper();
+            // Registra suporte a Java 8 dates (importante para LocalDateTime)
+            objectMapper.registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
+
+            MessageRequest request = objectMapper.readValue(messageJson, MessageRequest.class);
+
+            // Segue sua lógica original
+            String fileName = (file != null) ? file.getOriginalFilename() : null;
+            String fileUrl = null;
+
+            if (file != null && !file.isEmpty()) {
+                fileUrl = s3Service.uploadFile(UUID.randomUUID() + "_" + fileName, file);
+            }
+
+            MessageResponse response = messageService.saveWithAttachment(request, fileUrl, fileName);
+            return ResponseEntity.ok(response);
+
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Erro ao converter JSON da mensagem", e);
+        }
+    }
+
+    @GetMapping("/{id}/communications")
+    @PreAuthorize("hasAnyAuthority('STUDENT', 'RESPONSIBLE', 'TEACHER')")
+    public ResponseEntity<List<CommunicationResponse>> getStudentCommunications(@PathVariable Long id) {
+        return ResponseEntity.ok(messageService.getStudentMural(id));
+    }
 
 //    @PreAuthorize("isAuthenticated()")
 //    @PostMapping(value = "/send-with-attachment", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

@@ -2,6 +2,7 @@ package com.schoolagenda.domain.repository;
 
 import com.schoolagenda.domain.model.PushSubscription;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 import java.util.Optional;
@@ -20,4 +21,10 @@ public interface PushSubscriptionRepository extends JpaRepository<PushSubscripti
     long countByUserId(Long userId);
 
     boolean existsByUserEmail(String email);
+
+    // Verifica se existe pelo menos um dispositivo cadastrado para o ID do usuário
+    boolean existsByUserId(Long userId);
+
+    @Query("SELECT COUNT(DISTINCT ps.user.id) FROM PushSubscription ps")
+    long countUniqueActiveSubscriptions();
 }

@@ -11,4 +11,9 @@ public interface PushSubscriptionService {
      void unsubscribeAll(User user);
     // Remove subscription por endpoint (sem verificar usuário - para admin)
     void unsubscribeByEndpoint(String endpoint);
+    boolean isUserSubscribedById(Long userId);
+    long countActiveSubscriptions();
+    void sendPushToUser(Long userId, String title, String message);
+
+//    void sendPushToUser(Long id, String s, String s1);
 }

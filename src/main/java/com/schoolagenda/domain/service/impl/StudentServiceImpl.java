@@ -3,6 +3,7 @@ package com.schoolagenda.domain.service.impl;
 
 import com.schoolagenda.application.web.dto.request.StudentRequest;
 import com.schoolagenda.application.web.dto.response.StudentDashboardResponse;
+import com.schoolagenda.application.web.dto.response.StudentDetailResponse;
 import com.schoolagenda.application.web.dto.response.StudentResponse;
 import com.schoolagenda.application.web.mapper.StudentMapper;
 import com.schoolagenda.domain.exception.ResourceNotFoundException;
@@ -34,6 +35,7 @@ public class StudentServiceImpl implements StudentService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<StudentResponse> findAll() {
         return studentRepository.findAll()
                 .stream()
@@ -42,12 +44,14 @@ public class StudentServiceImpl implements StudentService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<StudentResponse> findById(Long id) {
         return studentRepository.findById(id)
                 .map(studentMapper::toResponse);
     }
 
     @Override
+    @Transactional
     public StudentResponse create(StudentRequest studentRequest) {
 
         schoolClassRepository.findById(studentRequest.getSchoolClass().getId())
@@ -60,6 +64,7 @@ public class StudentServiceImpl implements StudentService {
     }
 
     @Override
+    @Transactional
     public StudentResponse update(Long id, StudentRequest studentRequest) {
         return studentRepository.findById(id)
                 .map(existingStudent -> {
@@ -80,6 +85,7 @@ public class StudentServiceImpl implements StudentService {
     }
 
     @Override
+    @Transactional
     public void delete(Long id) {
         if (!studentRepository.existsById(id)) {
             throw new RuntimeException("Student not found with id: " + id);
@@ -88,6 +94,7 @@ public class StudentServiceImpl implements StudentService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<StudentResponse> findByClassName(String className) {
         return studentRepository.findByClassName(className)
                 .stream()
@@ -96,6 +103,7 @@ public class StudentServiceImpl implements StudentService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<StudentResponse> findByFullNameContaining(String name) {
         return studentRepository.findByFullNameContainingIgnoreCase(name)
                 .stream()
@@ -104,16 +112,19 @@ public class StudentServiceImpl implements StudentService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<String> findAllClassNames() {
         return studentRepository.findAllDistinctClassNames();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public long countByClassName(String className) {
         return studentRepository.countByClassName(className);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<StudentResponse> findLatestStudents(int limit) {
         return studentRepository.findTop10ByOrderByRegistrationDateDesc()
                 .stream()
@@ -122,7 +133,8 @@ public class StudentServiceImpl implements StudentService {
                 .collect(Collectors.toList());
     }
 
-    @Transactional
+    @Override
+    @Transactional(readOnly = true)
     public void updateGlobalAverage(Long userId, BigDecimal rawAverage) {
         // Garante que a média tenha apenas 2 casas decimais antes de persistir
         BigDecimal finalAverage = (rawAverage != null)
@@ -130,6 +142,26 @@ public class StudentServiceImpl implements StudentService {
                 : BigDecimal.ZERO;
 
         studentRepository.updateGlobalAverage(userId, finalAverage);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public StudentDetailResponse getStudentById(Long id) {
+        Student student = studentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Estudante não encontrado com o ID: " + id));
+
+        return convertToDetailResponse(student);
+    }
+
+    private StudentDetailResponse convertToDetailResponse(Student student) {
+        return StudentDetailResponse.builder()
+                .id(student.getId())
+                .name(student.getFullName())
+                .className(student.getClassName())
+                .globalAverage(student.getGlobalAverage())
+                // TODO: adicionar o campo atendance no Student e descomentar a linha abaixo para incluir a frequência do estudante no dashboard
+//                .attendance(student.getAttendance()) // Supondo que exista este campo
+                .build();
     }
 
     // TODO: Implementar o "contrato" no controller para o endpoint "/dashboard" e depois implementar a lógica de obtenção dos dados necessários para o dashboard do estudante, como a média global e os próximos eventos (provas, trabalhos, etc.) relacionados à classe do estudante.

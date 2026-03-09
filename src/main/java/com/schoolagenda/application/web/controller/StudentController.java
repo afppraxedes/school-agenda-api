@@ -2,6 +2,7 @@
 package com.schoolagenda.application.web.controller;
 
 import com.schoolagenda.application.web.dto.request.StudentRequest;
+import com.schoolagenda.application.web.dto.response.StudentDetailResponse;
 import com.schoolagenda.application.web.dto.response.StudentResponse;
 import com.schoolagenda.domain.service.StudentService;
 import jakarta.validation.Valid;
@@ -61,13 +62,14 @@ public class StudentController {
         return ResponseEntity.ok(students);
     }
 
-    @GetMapping("/{id}")
-    @PreAuthorize("hasAnyAuthority('DIRECTOR', 'TEACHER', 'RESPONSIBLE')")
-    public ResponseEntity<StudentResponse> getStudentById(@PathVariable Long id) {
-        return studentService.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
+    // TODO: Os métodos "findById" e "getStudentById" estão com o mesmo endpoint, verificar qual é o mais adequado para manter!
+//    @GetMapping("/{id}")
+//    @PreAuthorize("hasAnyAuthority('DIRECTOR', 'TEACHER', 'RESPONSIBLE')")
+//    public ResponseEntity<StudentResponse> getStudentById(@PathVariable Long id) {
+//        return studentService.findById(id)
+//                .map(ResponseEntity::ok)
+//                .orElse(ResponseEntity.notFound().build());
+//    }
 
     @GetMapping("/class/{className}")
     @PreAuthorize("hasAnyAuthority('DIRECTOR', 'TEACHER', 'RESPONSIBLE')")
@@ -102,5 +104,11 @@ public class StudentController {
     public ResponseEntity<List<StudentResponse>> getLatestStudents(@RequestParam(defaultValue = "10") int limit) {
         List<StudentResponse> students = studentService.findLatestStudents(limit);
         return ResponseEntity.ok(students);
+    }
+
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('TEACHER', 'RESPONSIBLE', 'ADMINISTRATOR')")
+    public ResponseEntity<StudentDetailResponse> getStudentById(@PathVariable Long id) {
+        return ResponseEntity.ok(studentService.getStudentById(id));
     }
 }

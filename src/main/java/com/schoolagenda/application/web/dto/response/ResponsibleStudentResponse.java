@@ -1,6 +1,7 @@
 // src/main/java/com/schoolagenda/application/web/dto/ResponsibleStudentResponse.java
 package com.schoolagenda.application.web.dto.response;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 public class ResponsibleStudentResponse {
@@ -12,6 +13,7 @@ public class ResponsibleStudentResponse {
     private Long studentId;
     private String studentName;
     private String studentClass;
+    private BigDecimal globalAverage;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -20,7 +22,8 @@ public class ResponsibleStudentResponse {
 
     public ResponsibleStudentResponse(Long id, Long responsibleId, String responsibleName,
                                       String responsibleEmail, Long studentId, String studentName,
-                                      String studentClass, LocalDateTime createdAt, LocalDateTime updatedAt) {
+                                      String studentClass, BigDecimal globalAverage,
+                                      LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
         this.responsibleId = responsibleId;
         this.responsibleName = responsibleName;
@@ -28,6 +31,7 @@ public class ResponsibleStudentResponse {
         this.studentId = studentId;
         this.studentName = studentName;
         this.studentClass = studentClass;
+        this.globalAverage = globalAverage;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
     }
@@ -53,6 +57,9 @@ public class ResponsibleStudentResponse {
 
     public String getStudentClass() { return studentClass; }
     public void setStudentClass(String studentClass) { this.studentClass = studentClass; }
+
+    public BigDecimal getGlobalAverage() { return globalAverage; }
+    public void setGlobalAverage(BigDecimal globalAverage) { this.globalAverage = globalAverage; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

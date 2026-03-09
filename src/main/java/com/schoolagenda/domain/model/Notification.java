@@ -1,14 +1,19 @@
 package com.schoolagenda.domain.model;
 
 import com.schoolagenda.domain.enums.NotificationType;
+import com.schoolagenda.domain.model.base.BaseAuditableEntity;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Entity
-// TODO: COLOCAR O NOME DAS TABELAS NO SINGULAR QUANDO FOR UTILIZAR O "MYSQL" (notifications)
 @Table(name = "notifications")
-// 4. Herda da classe base para obter os campos created_by, updated_at, etc.
-public class Notification /*extends BaseAuditableEntity*/ {
+@Getter @Setter
+@NoArgsConstructor
+public class Notification extends BaseAuditableEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,48 +25,31 @@ public class Notification /*extends BaseAuditableEntity*/ {
     @Column(nullable = false, length = 1000)
     private String message;
 
+    @Column(name = "action_url")
+    private String url; // URL para redirecionamento ao clicar (ex: /messages/view/1)
+
+    @Column(name = "icon_url")
+    private String icon; // Ícone específico da notificação
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
 
+    @Column(name = "is_read")
     private boolean read = false;
 
-    private LocalDateTime createdAt;
+    @Column(name = "notified_at", nullable = false)
+    private OffsetDateTime notifiedAt;
 
     @Enumerated(EnumType.STRING)
+    @Column(length = 30)
     private NotificationType type;
 
-    public Notification() {
-        this.createdAt = LocalDateTime.now();
-    }
-
-    public Notification(String title, String message, User user, NotificationType type) {
-        this();
+    public Notification(String title, String message, User user, NotificationType type, String url) {
         this.title = title;
         this.message = message;
         this.user = user;
         this.type = type;
+        this.url = url;
     }
-
-    // Getters and Setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-
-    public String getTitle() { return title; }
-    public void setTitle(String title) { this.title = title; }
-
-    public String getMessage() { return message; }
-    public void setMessage(String message) { this.message = message; }
-
-    public User getUser() { return user; }
-    public void setUser(User user) { this.user = user; }
-
-    public boolean isRead() { return read; }
-    public void setRead(boolean read) { this.read = read; }
-
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
-
-    public NotificationType getType() { return type; }
-    public void setType(NotificationType type) { this.type = type; }
 }

@@ -13,5 +13,6 @@ public interface NotificationService {
     NotificationRequest sendNotification(NotificationRequest notificationRequest);
     void markAsRead(Long notificationId);
     Long getUnreadCount(Long userId);
-    public void broadcastNotification(String title, String message, NotificationType type);
+    void broadcastNotification(String title, String message, NotificationType type, String url);
+    void broadcastToClass(String title, String message, String className, NotificationType type, String url);
 }

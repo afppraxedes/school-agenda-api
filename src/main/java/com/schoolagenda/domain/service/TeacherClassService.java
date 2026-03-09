@@ -2,10 +2,17 @@
 package com.schoolagenda.domain.service;
 
 import com.schoolagenda.application.web.dto.GradeStudentDTO;
+import com.schoolagenda.application.web.dto.ReportCardGradeDTO;
+import com.schoolagenda.application.web.dto.request.SaveGradeRequest;
+import com.schoolagenda.application.web.dto.request.SingleStudentGradesRequest;
 import com.schoolagenda.application.web.dto.request.TeacherClassRequest;
 import com.schoolagenda.application.web.dto.response.ActiveClassResponse;
+import com.schoolagenda.application.web.dto.response.PerformanceHistoryResponse;
 import com.schoolagenda.application.web.dto.response.TeacherClassResponse;
+import com.schoolagenda.domain.model.Assessment;
+import com.schoolagenda.domain.model.User;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public interface TeacherClassService {
@@ -50,4 +57,18 @@ public interface TeacherClassService {
     List<ActiveClassResponse> findClassesByTeacherEmail(String email);
 
     List<GradeStudentDTO> getStudentsGrades(Long teacherClassId);
+
+//    void updateGrades(List<SaveGradeRequest> grades);
+
+    void saveAllGrades(List<SaveGradeRequest> grades);
+//    void updateStudentGrades(SingleStudentGradesRequest request);
+//    void saveOrUpdateGrade(User studentUser, Assessment assessment, BigDecimal score,
+//                       String feedback, Boolean absent, Boolean excused, User teacher);
+    void updateStudentGrades(SingleStudentGradesRequest request);
+    void saveAllStudentGrades(List<SingleStudentGradesRequest> requests);
+    Double calculateStudentGlobalAverage(Long studentId);
+
+    PerformanceHistoryResponse getStudentHistory(Long studentId);
+//    byte[] generateReportCardPDF(Long studentId);
+    List<ReportCardGradeDTO> listGradesByStudent(Long studentId);
 }

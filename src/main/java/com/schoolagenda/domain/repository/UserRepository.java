@@ -131,4 +131,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Query("SELECT u FROM User u JOIN u.roles r WHERE r IN :roles ORDER BY u.name ASC")
     List<User> findAllByRolesIn(@Param("roles") Set<UserRole> roles);
+
+    @Query("SELECT DISTINCT u FROM User u " +
+            "JOIN ResponsibleStudent rs ON rs.responsible.id = u.id " +
+            "JOIN rs.student s " +
+            "JOIN s.schoolClass sc " + // Join com a tabela de turmas real
+            "WHERE sc.name = :className") // Comparamos com o nome exato (ex: '7º Ano B - 2025')
+    List<User> findResponsiblesByClassName(@Param("className") String className);
 }

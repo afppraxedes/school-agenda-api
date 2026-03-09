@@ -6,10 +6,12 @@ import com.schoolagenda.application.web.dto.response.TeacherAlertResponse;
 import com.schoolagenda.application.web.dto.response.TeacherDashboardResponse;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+// TODO: Transformar para interface e implementar no pacote impl, seguindo o padrão dos outros serviços.
 @Service
 public class TeacherDashboardService {
 
@@ -42,7 +44,8 @@ public class TeacherDashboardService {
         // 4. Mock para o gráfico
         PerformanceHistoryResponse history = new PerformanceHistoryResponse();
         history.setLabels(List.of("Turma A", "Turma B", "Turma C"));
-        history.setValues(List.of(8.0, 7.5, 9.0));
+        List<BigDecimal> values = List.of(BigDecimal.valueOf(8.0), BigDecimal.valueOf(7.5), BigDecimal.valueOf(9.0));
+        history.setValues(values);
         dashboard.setPerformanceHistory(history);
 
         return dashboard;

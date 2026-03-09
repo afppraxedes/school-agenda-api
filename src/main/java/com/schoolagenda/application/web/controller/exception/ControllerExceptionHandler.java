@@ -146,7 +146,7 @@ public class ControllerExceptionHandler {
     // Exceção para erros de negócio para usuário não autorizado (exceção global)
     @ExceptionHandler(BusinessException.class)
     ResponseEntity<StandardError> handleBusinessException(
-            final BusinessResourceException ex, final HttpServletRequest request) {
+            final BusinessException ex, final HttpServletRequest request) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
                 StandardError.builder()
                         .timestamp(LocalDateTime.now())

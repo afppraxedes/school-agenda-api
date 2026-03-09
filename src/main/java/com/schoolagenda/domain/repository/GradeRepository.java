@@ -58,4 +58,35 @@ public interface GradeRepository extends JpaRepository<Grade, Long>,
 
     @Query("SELECT AVG(g.score) FROM Grade g WHERE g.student.id = :userId")
     BigDecimal findAverageByStudentUserId(@Param("userId") Long userId);
+
+    // Busca as 2 últimas notas do aluno em uma disciplina específica
+    @Query("SELECT g FROM Grade g WHERE g.student.id = :userId AND g.assessment.subject.id = :subjectId ORDER BY g.gradedAt DESC")
+    List<Grade> findTop2ByStudentIdAndSubjectId(@Param("userId") Long userId, @Param("subjectId") Long subjectId);
+
+    // Média Ponderada: SUM(Nota * Peso) / SUM(Pesos)
+    /**
+     * Média Ponderada: SUM(Nota * Peso) / SUM(Pesos)
+     * Filtramos 'score IS NOT NULL' para não distorcer a média com avaliações pendentes.
+     */
+    @Query("SELECT SUM(g.score * a.weight) / SUM(a.weight) " +
+            "FROM Grade g JOIN g.assessment a " +
+            "WHERE g.student.id = :userId AND g.score IS NOT NULL")
+    BigDecimal calculateWeightedAverage(@Param("userId") Long userId);
+
+    /**
+     * Busca as 4 notas do aluno ordenadas pela data da avaliação.
+     */
+    @Query("SELECT g FROM Grade g WHERE g.student.id = :userId " +
+            "AND g.assessment.subject.id = :subjectId " +
+            "ORDER BY g.assessment.dueDate ASC")
+    List<Grade> findTop4ByStudentIdAndSubjectId(@Param("userId") Long userId, @Param("subjectId") Long subjectId);
+
+    // Método solicitado para o histórico (Evolution Chart)
+    @Query("SELECT g FROM Grade g WHERE g.student.id = :studentId " +
+            "ORDER BY g.assessment.dueDate ASC")
+    List<Grade> findTop4ByStudentIdOrderByDate(@Param("studentId") Long studentId);
+
+    @Query("SELECT g FROM Grade g WHERE g.student.id = :studentId " +
+            "ORDER BY g.assessment.dueDate ASC")
+    List<Grade> findAllByStudentIdOrderByDate(@Param("studentId") Long studentId);
 }
