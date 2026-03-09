@@ -1,38 +1,24 @@
 package com.schoolagenda.application.web.dto.request;
 
-//public class PushSubscriptionDTO {
-//    private String subscription;
-//
-//    public PushSubscriptionDTO() {}
-//
-//    public PushSubscriptionDTO(String subscription) {
-//        this.subscription = subscription;
-//    }
-//
-//    public String getSubscription() { return subscription; }
-//    public void setSubscription(String subscription) { this.subscription = subscription; }
-//}
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
-public class PushSubscriptionRequest {
-    private String endpoint;
-    private KeysDTO keys;
+public record PushSubscriptionRequest(
+        @NotBlank(message = "O endpoint é obrigatório")
+        String endpoint,
 
-    // Getters e Setters
-    public String getEndpoint() { return endpoint; }
-    public void setEndpoint(String endpoint) { this.endpoint = endpoint; }
+        Long expirationTime, // opcional, pode ser null
 
-    public KeysDTO getKeys() { return keys; }
-    public void setKeys(KeysDTO keys) { this.keys = keys; }
+        @NotNull(message = "As chaves de criptografia são obrigatórias")
+        @Valid
+        KeysDTO keys
+) {
+    public record KeysDTO(
+            @NotBlank(message = "A chave p256dh é obrigatória")
+            String p256dh,
 
-    public static class KeysDTO {
-        private String p256dh;
-        private String auth;
-
-        // Getters e Setters
-        public String getP256dh() { return p256dh; }
-        public void setP256dh(String p256dh) { this.p256dh = p256dh; }
-
-        public String getAuth() { return auth; }
-        public void setAuth(String auth) { this.auth = auth; }
-    }
+            @NotBlank(message = "O auth secret é obrigatório")
+            String auth
+    ) {}
 }

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <style>
+        body { font-family: 'Helvetica', sans-serif; padding: 20px; }
+        .header { text-align: center; border-bottom: 2px solid #333; margin-bottom: 20px; }
+        .student-info { margin-bottom: 30px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
+        th { background-color: #f2f2f2; }
+        .status-aprovado { color: green; font-weight: bold; }
+        .status-recuperacao { color: red; font-weight: bold; }
+    </style>
+</head>
+<body>
+<div class="header">
+    <h1>Boletim Escolar Oficial</h1>
+    <p>Ano Letivo: 2025</p>
+</div>
+
+<div class="student-info">
+    <p><strong>Aluno:</strong> <span th:text="${studentName}"></span></p>
+    <p><strong>Turma:</strong> <span th:text="${className}"></span></p>
+</div>
+
+<table>
+    <thead>
+    <tr>
+        <th>Disciplina</th>
+        <th>B1</th>
+        <th>B2</th>
+        <th>B3</th>
+        <th>B4</th>
+        <th>Média Final</th>
+        <th>Situação</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="grade : ${grades}">
+        <td th:text="${grade.subject}"></td>
+        <td th:text="${grade.b1}"></td>
+        <td th:text="${grade.b2}"></td>
+        <td th:text="${grade.b3}"></td>
+        <td th:text="${grade.b4}"></td>
+        <td th:text="${grade.average}"></td>
+        <td>
+                    <span th:class="${grade.average >= 6.0 ? 'status-aprovado' : 'status-recuperacao'}"
+                          th:text="${grade.average >= 6.0 ? 'APROVADO' : 'RECUPERAÇÃO'}">
+                    </span>
+        </td>
+    </tr>
+    </tbody>
+</table>
+</body>
+</html>

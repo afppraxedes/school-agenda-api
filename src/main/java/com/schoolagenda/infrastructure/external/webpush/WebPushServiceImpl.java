@@ -135,37 +135,80 @@ public class WebPushServiceImpl implements WebPushService {
                 subscription.keys.auth != null;
     }
 
+    // TODO: Implementação anterior que estava funcional.
+//    private void sendHttpPushNotification(PushSubscription subscription, String title, String message) {
+//        try {
+//            // Criar o payload da notificação
+//            String payload = createNotificationPayload(title, message);
+//
+//            // Preparar headers
+//            HttpHeaders headers = new HttpHeaders();
+//            headers.setContentType(MediaType.APPLICATION_JSON);
+//            headers.set("TTL", "60");
+//
+//            // Para endpoints FCM (Firebase Cloud Messaging)
+//            if (subscription.endpoint.contains("fcm.googleapis.com")) {
+//                headers.set("Authorization", "key=YOUR_SERVER_KEY"); // Você precisaria de uma chave de servidor FCM
+//            }
+//
+//            // Criar requisição
+//            HttpEntity<String> request = new HttpEntity<>(payload, headers);
+//
+//            // Enviar requisição
+//            ResponseEntity<String> response = restTemplate.postForEntity(subscription.endpoint, request, String.class);
+//
+//            if (response.getStatusCode().is2xxSuccessful()) {
+//                logger.info("✅ Push notification sent successfully to FCM - Title: '{}'", title);
+//            } else {
+//                logger.warn("⚠️ Push notification failed. Status: {}, Response: {}",
+//                        response.getStatusCode(), response.getBody());
+//                simulatePushNotification(title, message);
+//            }
+//
+//        } catch (Exception e) {
+//            logger.error("📮 Error sending HTTP push notification: {}", e.getMessage());
+//            simulatePushNotification(title, message);
+//        }
+//    }
+
+    // NOVA IMPLEMENTAÇÃO (GEMINI)
     private void sendHttpPushNotification(PushSubscription subscription, String title, String message) {
         try {
-            // Criar o payload da notificação
+            // Criar o payload da notificação (incluindo o corpo e ícone)
             String payload = createNotificationPayload(title, message);
 
-            // Preparar headers
+            // Preparar headers de acordo com o Web Push Protocol
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.set("TTL", "60");
 
-            // Para endpoints FCM (Firebase Cloud Messaging)
+            // --- MELHORIA: Cabeçalhos de Urgência e TTL ---
+            headers.set("TTL", "3600");        // 1 hora em segundos
+            headers.set("Urgency", "high");    // Garante entrega imediata (Real-Time)
+
+            // Se estiver usando FCM como bridge, o header Authorization é necessário
             if (subscription.endpoint.contains("fcm.googleapis.com")) {
-                headers.set("Authorization", "key=YOUR_SERVER_KEY"); // Você precisaria de uma chave de servidor FCM
+                // Nota: Certifique-se de que a chave do servidor está correta
+                headers.set("Authorization", "key=YOUR_FCM_SERVER_KEY");
             }
 
-            // Criar requisição
             HttpEntity<String> request = new HttpEntity<>(payload, headers);
 
-            // Enviar requisição
-            ResponseEntity<String> response = restTemplate.postForEntity(subscription.endpoint, request, String.class);
+            // Enviar requisição POST para o endpoint (Google, Mozilla, etc)
+            ResponseEntity<String> response = restTemplate.postForEntity(
+                    subscription.endpoint,
+                    request,
+                    String.class
+            );
 
             if (response.getStatusCode().is2xxSuccessful()) {
-                logger.info("✅ Push notification sent successfully to FCM - Title: '{}'", title);
+                logger.info("✅ Push notification enviada com sucesso - Urgência: HIGH");
             } else {
-                logger.warn("⚠️ Push notification failed. Status: {}, Response: {}",
+                logger.warn("⚠️ Falha no envio. Status: {}, Response: {}",
                         response.getStatusCode(), response.getBody());
-                simulatePushNotification(title, message);
             }
 
         } catch (Exception e) {
-            logger.error("📮 Error sending HTTP push notification: {}", e.getMessage());
+            logger.error("📮 Erro ao enviar HTTP push notification: {}", e.getMessage());
             simulatePushNotification(title, message);
         }
     }
@@ -175,20 +218,32 @@ public class WebPushServiceImpl implements WebPushService {
         // Em produção, você pode integrar com um serviço de notificação real aqui
     }
 
+    // TODO: Implementação anterior que estava funcional.
+//    private String createNotificationPayload(String title, String message) {
+//        try {
+//            PushNotificationPayload payload = new PushNotificationPayload(title, message);
+//            return objectMapper.writeValueAsString(payload);
+//        } catch (IOException e) {
+//            logger.error("Error creating notification payload", e);
+//            // Fallback para payload básico
+//            return String.format(
+//                    "{\"notification\":{\"title\":\"%s\",\"body\":\"%s\",\"icon\":\"/assets/icons/icon-192x192.png\"}}",
+//                    escapeJsonString(title),
+//                    escapeJsonString(message)
+//            );
+//        }
+//    }
+
+    // TODO: NOVA IMPLEMENTAÇÃO (GEMINI)
     private String createNotificationPayload(String title, String message) {
-        try {
-            PushNotificationPayload payload = new PushNotificationPayload(title, message);
-            return objectMapper.writeValueAsString(payload);
-        } catch (IOException e) {
-            logger.error("Error creating notification payload", e);
-            // Fallback para payload básico
-            return String.format(
-                    "{\"notification\":{\"title\":\"%s\",\"body\":\"%s\",\"icon\":\"/assets/icons/icon-192x192.png\"}}",
-                    escapeJsonString(title),
-                    escapeJsonString(message)
-            );
-        }
+        // O Angular SwPush espera o objeto "notification" na raiz para exibir automaticamente
+        return String.format(
+                "{\"notification\": {\"title\": \"%s\", \"body\": \"%s\", \"icon\": \"/assets/icons/icon-192x192.png\", \"data\": {\"url\": \"/notifications\"}}}",
+                escapeJsonString(title),
+                escapeJsonString(message)
+        );
     }
+
 
     private String escapeJsonString(String input) {
         if (input == null) return "";

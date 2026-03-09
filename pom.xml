@@ -160,6 +160,23 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- S3 SDK -->
+        <dependency>
+            <groupId>io.awspring.cloud</groupId>
+            <artifactId>spring-cloud-aws-starter-s3</artifactId>
+        </dependency>
+
+        <!-- Thymeleaf for rendering HTML -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-thymeleaf</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- iText 7 for PDF Generation -->
         <!-- iText PDF Library -->
         <dependency>
             <groupId>com.itextpdf</groupId>
@@ -167,11 +184,17 @@
             <version>7.2.5</version>
             <type>pom</type>
         </dependency>
-
-        <!-- S3 SDK -->
         <dependency>
-            <groupId>io.awspring.cloud</groupId>
-            <artifactId>spring-cloud-aws-starter-s3</artifactId>
+            <groupId>com.itextpdf</groupId>
+            <artifactId>html2pdf</artifactId>
+            <version>4.0.5</version> <!-- Matches itext7-core -->
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/org.xhtmlrenderer/flying-saucer-pdf-openpdf -->
+        <dependency>
+            <groupId>org.xhtmlrenderer</groupId>
+            <artifactId>flying-saucer-pdf-openpdf</artifactId>
+            <version>9.1.22</version> <!-- Use the latest stable version -->
         </dependency>
     </dependencies>
 

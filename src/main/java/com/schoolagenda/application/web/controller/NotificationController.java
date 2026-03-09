@@ -9,6 +9,7 @@ import com.schoolagenda.domain.enums.NotificationType;
 import com.schoolagenda.domain.model.User;
 import com.schoolagenda.domain.repository.NotificationRepository;
 import com.schoolagenda.domain.repository.UserRepository;
+import com.schoolagenda.domain.service.UserService;
 import com.schoolagenda.domain.service.impl.NotificationServiceImpl;
 import com.schoolagenda.domain.service.impl.UserServiceImpl;
 import com.schoolagenda.domain.service.WebPushService;
@@ -28,7 +29,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/notifications")
+@RequestMapping("/api/v1/notifications")
 @CrossOrigin(origins = "http://localhost:4200/**")
 public class NotificationController {
     private final NotificationServiceImpl notificationServiceImpl;
@@ -36,16 +37,18 @@ public class NotificationController {
     private final NotificationRepository notificationRepository;
     private final UserServiceImpl userServiceImpl;
     private final UserRepository userRepository;
+    private final UserService userService;
     private final WebPushService webPushService;
 
     public NotificationController(NotificationServiceImpl notificationServiceImpl, NotificationRepository notificationRepository,
                                   UserServiceImpl userServiceImpl,
-                                  UserRepository userRepository,
+                                  UserRepository userRepository, UserService userService,
                                   WebPushService webPushService) {
         this.notificationServiceImpl = notificationServiceImpl;
         this.notificationRepository = notificationRepository;
         this.userServiceImpl = userServiceImpl;
         this.userRepository = userRepository;
+        this.userService = userService;
         this.webPushService = webPushService;
     }
 
@@ -77,51 +80,28 @@ public class NotificationController {
 //    }
 
     // Notification
-    @GetMapping()
-    public ResponseEntity<List<NotificationResponse>> getUserNotifications() {
-//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-//        String username = authentication.getName();
-//
-//        try {
-//            UserResponse user = userServiceImpl.getUserByUsername(username);
-//            List<NotificationRequest> notifications = notificationServiceImpl.getUserNotifications(user.getId());
-//            return ResponseEntity.ok(notifications);
-//        } catch (UsernameNotFoundException e) {
-//            return ResponseEntity.notFound().build();
-//        } catch (Exception e) {
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-//        }
-
-//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-//        String username = authentication.getName();
-//
-//        try {
-//            UserResponse user = userServiceImpl.getUserByUsername(username);
-//            List<NotificationResponse> notifications = notificationServiceImpl.getUserNotifications(user.getId());
-//            return ResponseEntity.ok(notifications);
-//        } catch (UsernameNotFoundException e) {
-//            return ResponseEntity.notFound().build();
-//        } catch (Exception e) {
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-//        }
-
-        List<NotificationResponse> responses = notificationServiceImpl.getAllNotifications();
+    @GetMapping
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<List<NotificationResponse>> getUserNotifications(@AuthenticationPrincipal AgendaUserDetails currentUser) {
+        // Agora filtramos estritamente pelo ID do usuário logado
+        List<NotificationResponse> responses = notificationServiceImpl.getUserNotifications(currentUser.getId());
         return ResponseEntity.ok(responses);
     }
 
     @PostMapping("/subscribe")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> subscribeToPush(@RequestBody PushSubscriptionRequest subscription) {
         // TODO: este era o método que estava salvando as "PUSH_SUBSCRIPTIONS"!
 //        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 //        String username = authentication.getName();
 //
-//        return userService.findByUsername(username)
+//        return userService.getUserByUsername(username)
 //                .map(user -> {
 //                    userService.savePushSubscription(user.getId(), subscription.getSubscription());
 //                    return ResponseEntity.ok().<Void>build();
 //                })
 //                .orElse(ResponseEntity.notFound().build());
-
+//
         return null;
     }
 
@@ -134,11 +114,26 @@ public class NotificationController {
 
     // Notification
     @PostMapping("/broadcast")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> broadcastNotification(@RequestBody NotificationRequest notificationRequest) {
         notificationServiceImpl.broadcastNotification(
                 notificationRequest.getTitle(),
                 notificationRequest.getMessage(),
-                notificationRequest.getType()
+                notificationRequest.getType(),
+                notificationRequest.getUrl()
+        );
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/broadcast/class")
+    @PreAuthorize("hasAnyAuthority('DIRECTOR', 'ADMINISTRATOR')")
+    public ResponseEntity<Void> broadcastToClass(@RequestBody BroadcastClassRequest request) {
+        notificationServiceImpl.broadcastToClass(
+                request.getTitle(),
+                request.getMessage(),
+                request.getClassName(),
+                request.getType(),
+                request.getUrl()
         );
         return ResponseEntity.ok().build();
     }
@@ -171,7 +166,8 @@ public class NotificationController {
             notificationServiceImpl.broadcastNotification(
                     request.getTitle(),
                     request.getMessage(),
-                    request.getType()
+                    request.getType(),
+                    request.getUrl()
             );
             return ResponseEntity.ok().build();
         } catch (Exception e) {
@@ -211,11 +207,15 @@ public class NotificationController {
 
 //        UserResponse userResponse = userServiceImpl.getUserById(userLoad.getId());
         UserResponse userResponse = userServiceImpl.getUserById(currentUser.getId());
+        System.out.println("userResponse by id: " + userResponse +
+                "\ncurrentUser.getId(): " + currentUser.getId());
 
         try {
             UserResponse user = userServiceImpl.getUserByEmail(userResponse.getEmail());
+            System.out.println("user email: " + user);
 //            UserResponse user = userServiceImpl.getUserByUsername(username.getUsername());
             Long count = notificationServiceImpl.getUnreadCount(user.getId());
+            System.out.println("user count: " + count);
             return ResponseEntity.ok(count);
         } catch (UsernameNotFoundException e) {
             return ResponseEntity.ok(0L);
@@ -252,6 +252,7 @@ public class NotificationController {
         }
     }
 
+    // TODO: Colocar as classe internas para "requests" simplificadas no pacote "dto.request" e criar as classes "CreateNotificationRequest", "BroadcastNotificationRequest" e "BroadcastClassRequest" lá, para manter o código mais organizado e limpo!
     // Classes DTO internas para requests simplificadas
     public static class CreateNotificationRequest {
         private String username;
@@ -285,22 +286,106 @@ public class NotificationController {
         private String title;
         private String message;
         private NotificationType type = NotificationType.ANNOUNCEMENT;
+        private String url;
 
         public BroadcastNotificationRequest() {}
 
-        public BroadcastNotificationRequest(String title, String message, NotificationType type) {
+        public BroadcastNotificationRequest(String title, String message, NotificationType type, String url) {
             this.title = title;
             this.message = message;
             this.type = type;
+            this.url = url;
         }
 
-        public String getTitle() { return title; }
-        public void setTitle(String title) { this.title = title; }
+        public String getTitle() {
+            return title;
+        }
 
-        public String getMessage() { return message; }
-        public void setMessage(String message) { this.message = message; }
+        public void setTitle(String title) {
+            this.title = title;
+        }
 
-        public NotificationType getType() { return type; }
-        public void setType(NotificationType type) { this.type = type; }
+        public String getMessage() {
+            return message;
+        }
+
+        public void setMessage(String message) {
+            this.message = message;
+        }
+
+        public NotificationType getType() {
+            return type;
+        }
+
+        public void setType(NotificationType type) {
+            this.type = type;
+        }
+
+        public String getUrl() {
+            return url;
+        }
+
+        public void setUrl(String url) {
+            this.url = url;
+        }
+    }
+
+    // DTO para o Request
+    public static class BroadcastClassRequest {
+        private String title;
+        private String message;
+        private String className;
+        private NotificationType type;
+        private String url;
+
+        public BroadcastClassRequest() {}
+
+        public BroadcastClassRequest(String title, String message, String className, NotificationType type, String url) {
+            this.title = title;
+            this.message = message;
+            this.className = className;
+            this.type = type;
+            this.url = url;
+        }
+
+        public String getTitle() {
+            return title;
+        }
+
+        public void setTitle(String title) {
+            this.title = title;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+
+        public void setMessage(String message) {
+            this.message = message;
+        }
+
+        public String getClassName() {
+            return className;
+        }
+
+        public void setClassName(String className) {
+            this.className = className;
+        }
+
+        public NotificationType getType() {
+            return type;
+        }
+
+        public void setType(NotificationType type) {
+            this.type = type;
+        }
+
+        public String getUrl() {
+            return url;
+        }
+
+        public void setUrl(String url) {
+            this.url = url;
+        }
     }
 }

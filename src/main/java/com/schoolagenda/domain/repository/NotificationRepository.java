@@ -13,6 +13,15 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     List<Notification> findByUserIdOrderByCreatedAtDesc(Long userId);
     List<Notification> findByUserIdAndReadFalseOrderByCreatedAtDesc(Long userId);
 
-    @Query("SELECT COUNT(n) FROM Notification n WHERE n.user.id = :userId AND n.read = false")
-    Long countUnreadByUserId(@Param("userId") Long userId);
+//    @Query("SELECT COUNT(n) FROM Notification n WHERE n.user.id = :userId AND n.read = false")
+//    Long countUnreadByUserId(@Param("userId") Long userId);
+
+    /**
+     * Conta notificações não lidas que já foram enviadas (notifiedAt is not null)
+     */
+    @Query("SELECT COUNT(n) FROM Notification n " +
+            "WHERE n.user.id = :userId " +
+            "AND n.read = false " +
+            "AND n.notifiedAt IS NOT NULL")
+    long countUnreadByUserId(@Param("userId") Long userId);
 }

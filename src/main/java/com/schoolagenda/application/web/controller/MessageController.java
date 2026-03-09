@@ -3,6 +3,7 @@ package com.schoolagenda.application.web.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.schoolagenda.application.web.dto.request.MessageRequest;
+import com.schoolagenda.application.web.dto.response.CommunicationResponse;
 import com.schoolagenda.application.web.dto.response.MessageResponse;
 import com.schoolagenda.application.web.dto.response.RecipienteResponse;
 import com.schoolagenda.application.web.security.dto.AgendaUserDetails;
@@ -108,7 +109,8 @@ public class MessageController {
     }
 
     @GetMapping("/recipients")
-    @PreAuthorize("hasAuthority('TEACHER')")
+//    @PreAuthorize("hasAuthority('TEACHER')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<RecipienteResponse>> getPossibleRecipients() {
         List<RecipienteResponse> recipients = messageService.getPossibleRecipientsForTeacher();
         return ResponseEntity.ok(recipients);
@@ -216,6 +218,12 @@ public class MessageController {
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Erro ao converter JSON da mensagem", e);
         }
+    }
+
+    @GetMapping("/{id}/communications")
+    @PreAuthorize("hasAnyAuthority('STUDENT', 'RESPONSIBLE', 'TEACHER')")
+    public ResponseEntity<List<CommunicationResponse>> getStudentCommunications(@PathVariable Long id) {
+        return ResponseEntity.ok(messageService.getStudentMural(id));
     }
 
 //    @PreAuthorize("isAuthenticated()")

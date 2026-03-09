@@ -4,7 +4,7 @@
 INSERT INTO users (id, email, username, password, name) VALUES
 (1, 'admin1@school.com', 'admin1', '$2a$10$bYwKQhPkLtnSfBt7EVDdqehvCQHb3SBVtctXhuiUsxtN2yFUg4b2y', 'Admin Master'),
 (2, 'admin2@school.com', 'admin2', '$2a$10$bYwKQhPkLtnSfBt7EVDdqehvCQHb3SBVtctXhuiUsxtN2yFUg4b2y', 'Admin Suporte'),
-(3, 'marcelo.diretor@school.com', 'marcelo', '$2a$10$5GxIkMhjdW8o21iFOaVIQucO/zXxucFQQpJOXaRxGuFfcNWV8BPUu', 'Marcelo Diretor');
+(3, 'marcelo.diretor@school.com', 'marcelo', '$2a$10$bYwKQhPkLtnSfBt7EVDdqehvCQHb3SBVtctXhuiUsxtN2yFUg4b2y', 'Marcelo Diretor');
 
 -- Professores (IDs 4-12)
 INSERT INTO users (id, email, username, password, name) VALUES
@@ -26,9 +26,9 @@ FROM generate_series(13, 40) i;
 -- 2. USERS ROLES
 INSERT INTO user_roles (user_id, role) VALUES
 (1, 'ADMINISTRATOR'),
-(1, 'DIRECTOR'),
+-- (1, 'DIRECTOR'),
 (2, 'ADMINISTRATOR'),
-(3, 'ADMINISTRATOR'),
+-- (3, 'ADMINISTRATOR'),
 (3, 'DIRECTOR');
 INSERT INTO user_roles (user_id, role) SELECT id, 'TEACHER' FROM users WHERE id BETWEEN 4 AND 12;
 INSERT INTO user_roles (user_id, role) SELECT id, 'RESPONSIBLE' FROM users WHERE id BETWEEN 13 AND 22;
@@ -41,6 +41,10 @@ INSERT INTO school_classes (id, name, description, year, is_active, coordinator_
 (3, '9º Ano A - 2025', 'Turma A', 2025, true, 3, NOW(), NOW()),
 (4, '8º Ano C - 2025', 'Turma C', 2025, true, 3, NOW(), NOW()),
 (5, '6º Ano D - 2025', 'Turma D', 2025, true, 3, NOW(), NOW());
+
+-- 3.1 Mais uma turma para o Newton
+INSERT INTO school_classes (id, name, description, year, is_active, coordinator_id, created_at, updated_at)
+VALUES (6, '8º Ano A - 2025', 'Turma de Ensino Fundamental II', 2025, true, 3, NOW(), NOW());
 
 -- 4. SCHOOL CLASSES (5 Eventos Escolares)
 INSERT INTO school_events (title, description, start_date, end_date, all_day, type, school_class_id, location, created_by, last_modified_by, created_at, updated_at) VALUES
@@ -68,12 +72,25 @@ INSERT INTO school_events (title, description, start_date, end_date, all_day, ty
 --     NOW(),
 --     NOW()
 -- FROM generate_series(23, 40) i;
-INSERT INTO student (id, full_name, birth_date, class_name, registration_date, global_average, user_id, school_class_id, created_by, last_modified_by, created_at, updated_at)
-SELECT i-22, 'Student Name '||i, '2010-01-01', 'Class '||i, NOW(),
-       7.42,
-       -- CASE WHEN i = 23 THEN 8.17 ELSE 7.42 END,
-       i, (i % 5) + 1, NULL, NULL, NOW(), NOW()
-FROM generate_series(23, 40) i;
+INSERT INTO student (id, full_name, birth_date, class_name, registration_date, global_average, user_id, school_class_id, created_by, last_modified_by, created_at, updated_at) VALUES
+(1, 'Student Name 23', '2010-01-01', '8º Ano C - 2025', NOW(), 0.00, 23, 4, 'system', 'system', NOW(), NOW()),
+(2, 'Student Name 24', '2010-01-01', '6º Ano D - 2025', NOW(), 0.00, 24, 5, 'system', 'system', NOW(), NOW()),
+(3, 'Student Name 25', '2010-01-01', '7º Ano B - 2025', NOW(), 0.00, 25, 1, 'system', 'system', NOW(), NOW()),
+(4, 'Student Name 26', '2010-01-01', '5º Ano A - 2025', NOW(), 0.00, 26, 2, 'system', 'system', NOW(), NOW()),
+(5, 'Student Name 27', '2010-01-01', '9º Ano A - 2025', NOW(), 0.00, 27, 3, 'system', 'system', NOW(), NOW()),
+(6, 'Student Name 28', '2010-01-01', '8º Ano C - 2025', NOW(), 0.00, 28, 4, 'system', 'system', NOW(), NOW()),
+(7, 'Student Name 29', '2010-01-01', '6º Ano D - 2025', NOW(), 0.00, 29, 5, 'system', 'system', NOW(), NOW()),
+(8, 'Student Name 30', '2010-01-01', '7º Ano B - 2025', NOW(), 0.00, 30, 1, 'system', 'system', NOW(), NOW()),
+(9, 'Student Name 31', '2010-01-01', '5º Ano A - 2025', NOW(), 0.00, 31, 2, 'system', 'system', NOW(), NOW()),
+(10, 'Student Name 32', '2010-01-01', '9º Ano A - 2025', NOW(), 0.00, 32, 3, 'system', 'system', NOW(), NOW()),
+(11, 'Student Name 33', '2010-01-01', '8º Ano C - 2025', NOW(), 0.00, 33, 4, 'system', 'system', NOW(), NOW()),
+(12, 'Student Name 34', '2010-01-01', '6º Ano D - 2025', NOW(), 0.00, 34, 5, 'system', 'system', NOW(), NOW()),
+(13, 'Student Name 35', '2010-01-01', '7º Ano B - 2025', NOW(), 0.00, 35, 1, 'system', 'system', NOW(), NOW()),
+(14, 'Student Name 36', '2010-01-01', '5º Ano A - 2025', NOW(), 0.00, 36, 2, 'system', 'system', NOW(), NOW()),
+(15, 'Student Name 37', '2010-01-01', '9º Ano A - 2025', NOW(), 0.00, 37, 3, 'system', 'system', NOW(), NOW()),
+(16, 'Student Name 38', '2010-01-01', '8º Ano C - 2025', NOW(), 0.00, 38, 4, 'system', 'system', NOW(), NOW()),
+(17, 'Student Name 39', '2010-01-01', '6º Ano D - 2025', NOW(), 0.00, 39, 5, 'system', 'system', NOW(), NOW()),
+(18, 'Student Name 40', '2010-01-01', '7º Ano B - 2025', NOW(), 0.00, 40, 1, 'system', 'system', NOW(), NOW());
 
 -- 6. RESPONSIBLE STUDENT (Vínculos solicitados)
 INSERT INTO responsible_student (responsible_id, student_id, created_at, updated_at) VALUES
@@ -111,6 +128,10 @@ INSERT INTO subjects (id, name, school_year, teacher_user_id, is_active, created
 (10, 'Ed. Física', '2025', 8, true, NOW(), NOW()), -- Einstein +1
 (11, 'Biologia', '2025', 10, true, NOW(), NOW()), -- Tesla +1
 (12, 'Filosofia', '2025', 4, true, NOW(), NOW()); -- Sócrates +1
+
+-- 3.2 Mais uma disciplina (Física)
+INSERT INTO subjects (id, name, school_year, teacher_user_id, is_active, created_at, updated_at)
+VALUES (13, 'Física Quântica Básica', '8º Ano', 4, true, NOW(), NOW());
 
 -- 8. EVALUATIONS (6 Avaliações para o Estudante ID 1 ao longo dos últimos meses)
 -- Inserir Avaliações para o Estudante ID 1
@@ -155,10 +176,19 @@ INSERT INTO evaluations (grade, title, student_id, subject_id, created_at) VALUE
 
 -- 9. TEACHER CLASSES
 INSERT INTO teacher_classes (teacher_id, subject_id, school_class_id, created_by, last_modified_by, created_at, updated_at) VALUES
-(4, 1, 1, NULL, NULL, NOW(), NOW()),
-(5, 2, 1, NULL, NULL, NOW(), NOW()),
-(8, 5, 2, NULL, NULL, NOW(), NOW()),
-(10, 7, 3, NULL, NULL, NOW(), NOW());
+(4, 1, 1, 'system', 'system', NOW(), NOW()),
+(5, 2, 1, 'system', 'system', NOW(), NOW()),
+(8, 5, 2, 'system', 'system', NOW(), NOW()),
+(10, 7, 3, 'system', 'system', NOW(), NOW());
+
+-- Vínculo da nova disciplina com a nova turma
+INSERT INTO teacher_classes (teacher_id, subject_id, school_class_id, created_by, last_modified_by, created_at, updated_at)
+VALUES (4, (SELECT id FROM subjects WHERE name = 'Física Quântica Básica' LIMIT 1),
+       (SELECT id FROM school_classes WHERE name = '8º Ano A - 2025' LIMIT 1), 'system', 'system', NOW(), NOW());
+
+-- 1. Cria o vínculo (Teacher_Class) do Prof. Newton (ID 4) com a turma do Aluno 1 (ID 4)
+INSERT INTO teacher_classes (teacher_id, subject_id, school_class_id, created_by, last_modified_by, created_at, updated_at)
+VALUES (4, 1, 4, 'system', 'system', NOW(), NOW());
 
 -- Exemplo de inserção para os 20 registros com a ordem de auditoria solicitada
 -- Ordem final: created_by, last_modified_by, created_at, updated_at
@@ -201,9 +231,91 @@ INSERT INTO timetables (
 -- SELECT (s.id-1)*8 + 4 + i, 'Prova '||i||'º Bimestre', s.id, 4, 5, 10.0, 1.0, true, false, NULL, NULL, NOW(), NOW()
 -- FROM subjects s, generate_series(1,4) i
 -- WHERE s.teacher_user_id = 4;
-INSERT INTO assessments (id, title, subject_id, created_by_user_id, teacher_class_id, max_score, weight, is_published, is_recovery, created_by, last_modified_by, created_at, updated_at)
-SELECT (s.id-1)*4 + i, 'Prova '||i||'º Bimestre', s.id, s.teacher_user_id, 1, 10.0, 1.0, true, false, NULL, NULL, NOW(), NOW()
-FROM subjects s, generate_series(1,4) i;
+
+-- TODO: impementação que estava sendo utilizada!
+-- INSERT INTO assessments (id, title, subject_id, created_by_user_id, teacher_class_id, max_score, weight, is_published, is_recovery, created_by, last_modified_by, created_at, updated_at)
+-- SELECT (s.id-1)*4 + i, 'Prova '||i||'º Bimestre', s.id, s.teacher_user_id, 1, 10.0, 1.0, true, false, 'system', 'system', NOW(), NOW()
+-- FROM subjects s, generate_series(1,4) i;
+
+-- TODO: NOVA IMPLEMENTAÇÃO COM 4 AVALIAÇÕES POR DISCIPLINA, MAS VINCULADAS AO TEACHER CLASS CORRESPONDENTE
+-- Cria os 4 bimestres para qualquer TeacherClass que ainda não os tenha
+INSERT INTO assessments (title, weight, max_score, subject_id, teacher_class_id, due_date, is_published, created_at, is_recovery)
+SELECT
+    b.titulo,
+    1.0, -- Peso padrão
+    10.0, -- Nota Máxima
+    tc.subject_id,
+    tc.id,
+    CASE
+        WHEN b.ordem = 1 THEN '2025-04-15'::date
+        WHEN b.ordem = 2 THEN '2025-07-15'::date
+        WHEN b.ordem = 3 THEN '2025-10-15'::date
+        ELSE '2025-12-15'::date
+END,
+    true,
+    NOW(),
+    false
+FROM teacher_classes tc
+CROSS JOIN (
+    SELECT '1º Bimestre' as titulo, 1 as ordem UNION ALL
+    SELECT '2º Bimestre' as titulo, 2 as ordem UNION ALL
+    SELECT '3º Bimestre' as titulo, 3 as ordem UNION ALL
+    SELECT '4º Bimestre' as titulo, 4 as ordem
+) as b
+WHERE NOT EXISTS (
+    SELECT 1 FROM assessments a WHERE a.teacher_class_id = tc.id AND a.title = b.titulo
+);
+
+-- 2. Cria as 4 Avaliações para este novo vínculo (B1 a B4)
+INSERT INTO assessments (title, weight, max_score, subject_id, teacher_class_id, due_date, is_published, created_at, is_recovery)
+SELECT
+    b.titulo,
+    1.0,
+    10.0,
+    tc.subject_id,
+    tc.id,
+    CASE
+        WHEN b.ordem = 1 THEN '2025-04-15'::date
+        WHEN b.ordem = 2 THEN '2025-07-15'::date
+        WHEN b.ordem = 3 THEN '2025-10-15'::date
+        ELSE '2025-12-15'::date
+END,
+    true,
+    NOW(),
+    false
+FROM teacher_classes tc
+CROSS JOIN (
+    SELECT '1º Bimestre' as titulo, 1 as ordem UNION ALL
+    SELECT '2º Bimestre' as titulo, 2 as ordem UNION ALL
+    SELECT '3º Bimestre' as titulo, 3 as ordem UNION ALL
+    SELECT '4º Bimestre' as titulo, 4 as ordem
+) as b
+WHERE tc.teacher_id = 4 AND tc.school_class_id = 4 -- Foco na turma do Aluno 1
+AND NOT EXISTS (SELECT 1 FROM assessments a WHERE a.teacher_class_id = tc.id AND a.title = b.titulo);
+
+-- Garante que cada TeacherClass tenha 4 assessments cadastrados (Bimestres)
+-- INSERT INTO assessments (title, description, weight, max_score, subject_id, teacher_class_id, due_date, is_published, created_at)
+-- SELECT
+--     bimestre.titulo,
+--     'Avaliação referente ao ' || bimestre.titulo,
+--     1.0, -- Peso padrão 1.0
+--     10.00, -- Nota máxima 10.0
+--     tc.subject_id,
+--     tc.id,
+--     CURRENT_DATE + (bimestre.ordem * 60), -- Datas fictícias a cada 60 dias
+--     true,
+--     NOW()
+-- FROM teacher_classes tc
+--          CROSS JOIN (
+--     SELECT '1º Bimestre' as titulo, 1 as ordem UNION ALL
+--     SELECT '2º Bimestre' as titulo, 2 as ordem UNION ALL
+--     SELECT '3º Bimestre' as titulo, 3 as ordem UNION ALL
+--     SELECT '4º Bimestre' as titulo, 4 as ordem
+-- ) as bimestre
+-- WHERE NOT EXISTS (
+--     -- Evita duplicidade se já houver assessments para a turma
+--     SELECT 1 FROM assessments a WHERE a.teacher_class_id = tc.id
+-- );
 
 -- -- Grade
 -- INSERT INTO grades (assessment_id, student_user_id, score, max_score, feedback, graded_by_user_id, graded_at, is_absent, is_excused, created_by, last_modified_by, created_at, updated_at) VALUES
@@ -255,8 +367,8 @@ SELECT
     NOW() - (random() * INTERVAL '90 days'),
     false,
     false,
-    NULL,
-    NULL,
+    'system',
+    'system',
     NOW(),
     NOW()
 FROM users u
@@ -268,6 +380,27 @@ FROM users u
 ) a
 WHERE u.id BETWEEN 23 AND 40; -- 216 notas no total
 --   AND u.user_type = 'STUDENT';
+
+-- 3. Insere as Notas para o Aluno 1 (User ID 23)
+INSERT INTO grades (assessment_id, student_user_id, score, max_score, feedback, graded_by_user_id, graded_at, is_absent, is_excused, created_by, last_modified_by, created_at, updated_at)
+SELECT
+    a.id,
+    23, -- User ID do Aluno 1
+    (7.0 + random() * 3.0), -- Notas entre 7 e 10
+    10.0,
+    'Desempenho validado via script de carga.',
+    4,
+    NOW(),
+    false,
+    false,
+    'system',
+    'system',
+    NOW(),
+    NOW()
+FROM assessments a
+WHERE a.teacher_class_id IN (SELECT id FROM teacher_classes WHERE teacher_id = 4 AND school_class_id = 4)
+  AND NOT EXISTS (SELECT 1 FROM grades g WHERE g.student_user_id = 23 AND g.assessment_id = a.id);
+
 
 -- 10. ATTENDANCES (Presenças - Reprovação por falta para Aluno 40)
 -- Gera 30 dias de presença para o Aluno 1 (90% de presença)
@@ -298,8 +431,8 @@ WHERE st.id != 1;
 
 -- 13. ANNOUNCEMENTS (2 Anúncios)
 INSERT INTO announcements (title, description, image_path, type, order_position, created_by, last_modified_by, created_at, updated_at, is_active) VALUES
-('Welcome Back', 'Welcome to the new school year!', 'path/to/image1.jpg', 'BANNER', 1, NULL, NULL, NOW(), NOW(), true),
-('School Trip', 'Upcoming trip to the museum.', 'path/to/image2.jpg', 'CAROUSEL', 2, NULL, NULL, NOW(), NOW(), true);
+('Welcome Back', 'Welcome to the new school year!', 'path/to/image1.jpg', 'BANNER', 1, 'system', 'system', NOW(), NOW(), true),
+('School Trip', 'Upcoming trip to the museum.', 'path/to/image2.jpg', 'CAROUSEL', 2, 'system', 'system', NOW(), NOW(), true);
 
 -- Conversations
 -- 14. CONVERSATIONS (1 Conversa de Exemplo)
@@ -310,20 +443,38 @@ INSERT INTO conversations (sender_id, recipient_id, student_id, subject, content
 INSERT INTO events (title, description, start_date, end_date, color, created_at, updated_at) VALUES
 ('Parent Meeting', 'Meeting for all parents.', '2023-11-01 18:00:00', '2023-11-01 20:00:00', '#0A2558', NOW(), NOW());
 
--- 16. NOTIFICATIONS (1 Notificação de Exemplo)
-INSERT INTO notifications (title, message, user_id, read, created_at, type) VALUES
-('New Message', 'You have a new message from Responsible User.', 2, false, NOW(), 'MESSAGE');
+-- 16. NOTIFICATIONS (1 Notificação de Exemplo) - Teste para o User 22 (Responsável)
+INSERT INTO notifications (
+    title, message, action_url, icon_url, is_read, user_id, read, notified_at, type, created_by, last_modified_by, created_at, updated_at
+) VALUES
+      (
+          'Novo Comunicado',
+          'A coordenação enviou o cardápio da próxima semana.',
+          '/student/16',
+          'pi pi-megaphone',
+          FALSE, 22, FALSE, CURRENT_TIMESTAMP, 'ANNOUNCEMENT', 'system', 'system', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+      ),
+      (
+          'Nova Mensagem',
+          'O professor de matemática enviou uma mensagem sobre Alice.',
+          '/messages/view/10',
+          'pi pi-envelope',
+          FALSE, 22, FALSE, CURRENT_TIMESTAMP, 'MESSAGE', 'system', 'system', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+      );
 
 -- 17. MESSAGES (Mensagens entre Professor e Responsável sobre o Aluno)
-INSERT INTO messages (sender_id, recipient_id, student_id, subject, content, attachment_url, attachment_name, read_at, deleted_at, archived_by_sender, archived_by_recipient, created_by, last_modified_by, created_at, updated_at) VALUES
-(2, 23, 1, 'Boas-vindas', 'Olá Aluno, seja bem-vindo ao portal!', NULL, NULL, NULL, NULL, FALSE, FALSE, 'system', 'system', NOW(), NOW()),
-(5, 23, 1, 'Material de Apoio', 'Acabei de liberar o PDF da aula de amanhã.', NULL, NULL, NULL, NULL, FALSE, FALSE, 'system', 'system', NOW(), NOW()),
-(2, 23, 1, 'Aviso Importante', 'Lembre-se de trazer o jaleco para o laboratório.', NULL, NULL, NULL, NULL,  FALSE, FALSE,'system', 'system', NOW(), NOW()),
-(5, 2, 1, 'Re: Material Extra', 'Recebido! Iremos praticar em casa. Muito obrigado.', NULL, NULL, NULL, NULL, FALSE, FALSE, 'system', 'system', NOW(), NOW()),
-(2, 5, 1, 'Ausência na Aula', 'Julia, notei que o João não compareceu à aula hoje. Está tudo bem?', NULL, NULL, NULL, NULL, FALSE, FALSE,'system', 'system', NOW(), NOW()),
-(5, 2, 1, 'Re: Ausência na Aula', 'Ele teve uma consulta médica, mas amanhã levará o atestado.', NULL, NULL, NULL, NULL, FALSE, FALSE, 'system', 'system', NOW(), NOW()),
+INSERT INTO messages (sender_id, recipient_id, student_id, subject, content, attachment_url, attachment_name, type, read_at, deleted_at, archived_by_sender, archived_by_recipient, created_by, last_modified_by, created_at, updated_at) VALUES
+(2, 23, 1, 'Boas-vindas', 'Olá Aluno, seja bem-vindo ao portal!', NULL, NULL, 'MENSAGEM', NULL, NULL, FALSE, FALSE, 'system', 'system', NOW(), NOW()),
+(5, 23, 1, 'Material de Apoio', 'Acabei de liberar o PDF da aula de amanhã.', NULL, NULL, 'COMUNICADO', NULL, NULL, FALSE, FALSE, 'system', 'system', NOW(), NOW()),
+(2, 23, 1, 'Aviso Importante', 'Lembre-se de trazer o jaleco para o laboratório.', NULL, NULL, 'AVISO', NULL, NULL,  FALSE, FALSE,'system', 'system', NOW(), NOW()),
+(5, 2, 1, 'Re: Material Extra', 'Recebido! Iremos praticar em casa. Muito obrigado.', NULL, NULL, 'MENSAGEM', NULL, NULL, FALSE, FALSE, 'system', 'system', NOW(), NOW()),
+(2, 5, 1, 'Ausência na Aula', 'Julia, notei que o João não compareceu à aula hoje. Está tudo bem?', NULL, NULL, 'MENSAGEM', NULL, NULL, FALSE, FALSE,'system', 'system', NOW(), NOW()),
+(5, 2, 1, 'Re: Ausência na Aula', 'Ele teve uma consulta médica, mas amanhã levará o atestado.', NULL, NULL, 'MENSAGEM', NULL, NULL, FALSE, FALSE, 'system', 'system', NOW(), NOW()),
 -- MENSSGEM APENAS PARA TESTAR NA INICIALIZAÇÃO DO DASHBOARD DO ALUNO NO FRONT-END
-(1, 2, 5, 'Bem-vindo ao Portal', 'Olá aluno, este é o seu novo dashboard!', NULL, NULL, NULL, NULL, FALSE, FALSE, 'system', 'system', NOW(), NOW());
+(1, 2, 5, 'Bem-vindo ao Portal', 'Olá aluno, este é o seu novo dashboard!', NULL, NULL, 'COMUNICADO', NULL, NULL, FALSE, FALSE, 'system', 'system', NOW(), NOW());
+/* TESTE PARA O ALUNO 16, SENDO UM DOS FILHOS (ESTUDANTE) DO RESPONSÁVEIS 22 */
+INSERT INTO messages (subject, content, student_id, sender_id, recipient_id, type, created_at)
+VALUES ('Boas vindas', 'Conteúdo do mural para o aluno 16', 16, 4, 22, 'COMUNICADO', NOW());
 
 -- Attendances
 -- Limpa para evitar erros de duplicidade em re-execuções, se necessário

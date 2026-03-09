@@ -1,15 +1,15 @@
-package com.schoolagenda.application.web.dto;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
+package com.schoolagenda.application.web.dto.request;
 
-public record GradeStudentDTO(
+import java.math.BigDecimal;
+
+// Entrada do professor
+public record SingleStudentGradesRequest(
         Long studentId,
-        String name,
+        Long teacherClassId,
         BigDecimal grade1,
         BigDecimal grade2,
         BigDecimal grade3,
         BigDecimal grade4,
-        BigDecimal average,
         String feedback
 //        Boolean isAbsent,
 //        Boolean isExcused

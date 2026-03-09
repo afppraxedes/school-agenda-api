@@ -1,10 +1,7 @@
 package com.schoolagenda.domain.service.impl;
 
 import com.schoolagenda.application.web.dto.request.MessageRequest;
-import com.schoolagenda.application.web.dto.response.AssessmentResponse;
-import com.schoolagenda.application.web.dto.response.MessageResponse;
-import com.schoolagenda.application.web.dto.response.RecipienteResponse;
-import com.schoolagenda.application.web.dto.response.UserResponse;
+import com.schoolagenda.application.web.dto.response.*;
 import com.schoolagenda.application.web.mapper.MessageMapper;
 import com.schoolagenda.domain.enums.UserRole;
 import com.schoolagenda.domain.exception.BusinessException;
@@ -20,6 +17,9 @@ import com.schoolagenda.domain.service.MessageService;
 import com.schoolagenda.domain.service.S3Service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.jpa.boot.internal.PersistenceXmlParser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -42,6 +42,7 @@ public class MessageServiceImpl implements MessageService {
     private final StudentRepository studentRepository;
     private final MessageMapper messageMapper;
     private final S3Service s3Service;
+    private final Logger logger = LoggerFactory.getLogger(MessageServiceImpl.class);
 
     @Override
 //    @Transactional
@@ -261,6 +262,34 @@ public class MessageServiceImpl implements MessageService {
                         user.getRoles().iterator().next().toString() // Pega a role principal para exibir no label
                 ))
                 .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<CommunicationResponse> getStudentMural(Long studentId) {
+        return messageRepository.findByStudentId(studentId).stream()
+                .map(msg -> CommunicationResponse.builder()
+                        .id(msg.getId())
+                        .title(msg.getSubject())
+                        .content(msg.getContent())
+                        .type(msg.getType() != null ? msg.getType().toLowerCase() : "mensagem")
+                        .notifiedAt(msg.getCreatedAt())
+                        .attachmentUrl(msg.getAttachmentUrl())
+                        .attachmentName(msg.getAttachmentName())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long countMessagesInLast24Hours() {
+        try {
+            // Define o ponto de corte: agora menos 24 horas
+            LocalDateTime pointOfReference = LocalDateTime.now().minusHours(24);
+            return messageRepository.countMessagesSince(pointOfReference);
+        } catch (Exception e) {
+            logger.error("❌ Erro ao contar mensagens das últimas 24h: {}", e.getMessage());
+            return 0;
+        }
     }
 
 //    private MessageResponse convertToResponse(Message msg) {

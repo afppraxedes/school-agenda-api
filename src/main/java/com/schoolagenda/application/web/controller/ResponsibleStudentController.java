@@ -1,12 +1,17 @@
 // src/main/java/com/schoolagenda/application/web/controller/ResponsibleStudentController.java
 package com.schoolagenda.application.web.controller;
 
+import com.schoolagenda.application.web.dto.GradeStudentDTO;
 import com.schoolagenda.application.web.dto.request.ResponsibleStudentRequest;
 import com.schoolagenda.application.web.dto.response.ResponsibleStudentResponse;
+import com.schoolagenda.application.web.security.dto.AgendaUserDetails;
 import com.schoolagenda.domain.service.ResponsibleStudentService;
+import com.schoolagenda.domain.service.impl.DependentServiceImpl;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,9 +21,11 @@ import java.util.List;
 public class ResponsibleStudentController {
 
     private final ResponsibleStudentService responsibleStudentService;
+    private final DependentServiceImpl dependentService;
 
-    public ResponsibleStudentController(ResponsibleStudentService responsibleStudentService) {
+    public ResponsibleStudentController(ResponsibleStudentService responsibleStudentService, DependentServiceImpl dependentService) {
         this.responsibleStudentService = responsibleStudentService;
+        this.dependentService = dependentService;
     }
 
     @PostMapping
@@ -79,5 +86,12 @@ public class ResponsibleStudentController {
     public ResponseEntity<Long> getStudentCountByResponsible(@PathVariable Long responsibleId) {
         long count = responsibleStudentService.getStudentCountByResponsible(responsibleId);
         return ResponseEntity.ok(count);
+    }
+
+    @GetMapping("/dependents")
+    @PreAuthorize("hasAuthority('RESPONSIBLE')")
+    public ResponseEntity<List<GradeStudentDTO>> getMyDependents() {
+        AgendaUserDetails user = (AgendaUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return ResponseEntity.ok(dependentService.getDependentsPerformance(user.getId()));
     }
 }

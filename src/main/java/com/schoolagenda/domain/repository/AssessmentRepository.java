@@ -81,4 +81,10 @@ public interface AssessmentRepository extends JpaRepository<Assessment, Long>,
 
     @Query("SELECT COUNT(a) FROM Assessment a WHERE a.subject.id = :subjectId")
     long countBySubjectId(@Param("subjectId") Long subjectId);
+
+    /**
+     * Busca avaliações de uma turma específica ordenadas pela data de entrega.
+     * Utilizado para vincular as notas 1 e 2 no lançamento simplificado.
+     */
+    List<Assessment> findByTeacherClassIdOrderByDueDateAsc(Long teacherClassId);
 }

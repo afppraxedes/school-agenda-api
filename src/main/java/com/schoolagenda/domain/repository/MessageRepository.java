@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -44,4 +45,12 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
     // Método utilizado no ResponsibleDashboardService
     @Query("SELECT COUNT(m) FROM Message m WHERE m.recipient.id = :recipientId AND m.readAt IS NULL")
     long countUnreadMessagesByRecipientId(@Param("recipientId") Long recipientId);
+
+    // Mensgens vinculadas ao aluno, para que o responsável possa visualizar as mensagens relacionadas aos filhos
+    @Query("SELECT m FROM Message m WHERE m.student.id = :studentId ORDER BY m.createdAt DESC")
+    List<Message> findByStudentId(@Param("studentId") Long studentId);
+
+    // Conta mensagens enviadas após um determinado período
+    @Query("SELECT COUNT(m) FROM Message m WHERE m.createdAt >= :since")
+    long countMessagesSince(@Param("since") LocalDateTime since);
 }

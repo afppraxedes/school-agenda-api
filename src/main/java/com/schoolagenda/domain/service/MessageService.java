@@ -1,6 +1,7 @@
 package com.schoolagenda.domain.service;
 
 import com.schoolagenda.application.web.dto.request.MessageRequest;
+import com.schoolagenda.application.web.dto.response.CommunicationResponse;
 import com.schoolagenda.application.web.dto.response.MessageResponse;
 import com.schoolagenda.application.web.dto.response.RecipienteResponse;
 import com.schoolagenda.domain.enums.UserRole;
@@ -24,5 +25,7 @@ public interface MessageService {
     MessageResponse findById(Long id);
     MessageResponse saveWithAttachment(MessageRequest request, String fileUrl, String originalFilename);
     List<RecipienteResponse> getPossibleRecipientsForTeacher();
+    List<CommunicationResponse> getStudentMural(Long studentId);
+    public long countMessagesInLast24Hours();
 
 }

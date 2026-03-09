@@ -1,6 +1,7 @@
 package com.schoolagenda.application.web.controller;
 
 import com.schoolagenda.application.web.dto.request.PushSubscriptionRequest;
+import com.schoolagenda.application.web.security.dto.AgendaUserDetails;
 import com.schoolagenda.domain.model.User;
 import com.schoolagenda.domain.repository.PushSubscriptionRepository;
 import com.schoolagenda.domain.repository.UserRepository;
@@ -8,7 +9,9 @@ import com.schoolagenda.domain.service.impl.NotificationServiceImpl;
 import com.schoolagenda.domain.service.impl.PushSubscriptionServiceImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
@@ -33,64 +36,87 @@ public class PushSubscriptionController {
         this.pushSubscriptionRepository = pushSubscriptionRepository;
     }
 
+    // TODO: Implementação anterior que estava funcional;
+//    @PostMapping("/subscribe")
+//    public ResponseEntity<?> subscribe(@RequestBody PushSubscriptionRequest subscriptionDTO,
+//                                       Authentication authentication) {
+//        try {
+//            logger.info("Received push subscription request for endpoint: {}", subscriptionDTO.getEndpoint());
+//
+//            // Validar autenticação
+//            if (authentication == null || !authentication.isAuthenticated()) {
+//                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+//                        .body("User must be authenticated to subscribe to push notifications");
+//            }
+//
+//            // Obter o username/email do usuário autenticado
+////            String username = authentication.getName();
+//            Object principal = authentication.getPrincipal();
+//            String username;
+//
+//            if (principal instanceof UserDetails) {
+//                username = ((UserDetails) principal).getUsername();
+//            } else {
+//                username = principal.toString();
+//            }
+//            logger.info("User {} is subscribing to push notifications", username);
+//
+//            // Buscar o usuário real no banco de dados
+////            User user = userRepository.findByEmail(username)
+////            User user = userRepository.findByUsername(username)
+//            User user = userRepository.findByEmail(username)
+//                    .orElseThrow(() -> new RuntimeException("User not found with email: " + username));
+//
+//            // Validar DTO
+//            if (subscriptionDTO == null) {
+//                return ResponseEntity.badRequest().body("Push subscription data is required");
+//            }
+//
+//            if (subscriptionDTO.getEndpoint() == null || subscriptionDTO.getEndpoint().trim().isEmpty()) {
+//                return ResponseEntity.badRequest().body("Endpoint is required");
+//            }
+//
+//            // Processar subscription
+//            pushNotificationServiceImpl.subscribe(user, subscriptionDTO);
+//
+//            return ResponseEntity.ok().body(Map.of(
+//                    "message", "Successfully subscribed to push notifications",
+////                    "user", user.getEmail()
+//                       "user", user.getUsername()
+//            ));
+//
+//        } catch (Exception e) {
+//            logger.error("Error in push subscription: {}", e.getMessage(), e);
+//            return ResponseEntity.badRequest().body(Map.of(
+//                    "error", "Error subscribing to push notifications",
+//                    "details", e.getMessage()
+//            ));
+//        }
+//    }
+
+    // NOVA IMPLEMENTAÇÃO (GEMINI)
     @PostMapping("/subscribe")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> subscribe(@RequestBody PushSubscriptionRequest subscriptionDTO,
                                        Authentication authentication) {
-        try {
-            logger.info("Received push subscription request for endpoint: {}", subscriptionDTO.getEndpoint());
-
-            // Validar autenticação
-            if (authentication == null || !authentication.isAuthenticated()) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body("User must be authenticated to subscribe to push notifications");
-            }
-
-            // Obter o username/email do usuário autenticado
-//            String username = authentication.getName();
-            Object principal = authentication.getPrincipal();
-            String username;
-
-            if (principal instanceof UserDetails) {
-                username = ((UserDetails) principal).getUsername();
-            } else {
-                username = principal.toString();
-            }
-            logger.info("User {} is subscribing to push notifications", username);
-
-            // Buscar o usuário real no banco de dados
-//            User user = userRepository.findByEmail(username)
-//            User user = userRepository.findByUsername(username)
-            User user = userRepository.findByEmail(username)
-                    .orElseThrow(() -> new RuntimeException("User not found with email: " + username));
-
-            // Validar DTO
-            if (subscriptionDTO == null) {
-                return ResponseEntity.badRequest().body("Push subscription data is required");
-            }
-
-            if (subscriptionDTO.getEndpoint() == null || subscriptionDTO.getEndpoint().trim().isEmpty()) {
-                return ResponseEntity.badRequest().body("Endpoint is required");
-            }
-
-            // Processar subscription
-            pushNotificationServiceImpl.subscribe(user, subscriptionDTO);
-
-            return ResponseEntity.ok().body(Map.of(
-                    "message", "Successfully subscribed to push notifications",
-//                    "user", user.getEmail()
-                       "user", user.getUsername()
-            ));
-
-        } catch (Exception e) {
-            logger.error("Error in push subscription: {}", e.getMessage(), e);
-            return ResponseEntity.badRequest().body(Map.of(
-                    "error", "Error subscribing to push notifications",
-                    "details", e.getMessage()
-            ));
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
+
+        // O Principal do Spring Security geralmente é o Email no seu sistema
+        String userEmail = authentication.getName();
+
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("User not found: " + userEmail));
+
+        // Processar a inscrição na tabela push_subscriptions
+        pushNotificationServiceImpl.subscribe(user, subscriptionDTO);
+
+        return ResponseEntity.ok(Map.of("message", "Subscribed successfully"));
     }
 
     @PostMapping("/unsubscribe")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> unsubscribe(@RequestParam String endpoint,
                                          Authentication authentication) {
         try {
@@ -136,6 +162,7 @@ public class PushSubscriptionController {
      * Endpoint para remover todas as subscriptions de um usuário
      */
     @PostMapping("/unsubscribe-all")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> unsubscribeAll(Authentication authentication) {
         try {
             logger.info("Received push unsubscribe-all request");
@@ -171,14 +198,22 @@ public class PushSubscriptionController {
     }
 
     @GetMapping("/status")
-    public ResponseEntity<Map<String, Boolean>> getSubscriptionStatus(Authentication authentication) {
-        // 1. Obtém o username/email do principal autenticado
-        String email = authentication.getName();
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Map<String, Boolean>> getSubscriptionStatus(@AuthenticationPrincipal AgendaUserDetails currentUser) {
+        // Usamos o ID que já está no Token (via AgendaUserDetails)
+        boolean isSubscribed = pushNotificationServiceImpl.isUserSubscribedById(currentUser.getId());
 
-        // 2. Verifica a existência na camada de serviço
-        boolean isSubscribed = pushNotificationServiceImpl.isUserSubscribed(email);
-
-        // 3. Retorna o JSON: {"subscribed": true/false}
         return ResponseEntity.ok(Map.of("subscribed", isSubscribed));
     }
+//    @GetMapping("/status")
+//    public ResponseEntity<Map<String, Boolean>> getSubscriptionStatus(Authentication authentication) {
+//        // 1. Obtém o username/email do principal autenticado
+//        String email = authentication.getName();
+//
+//        // 2. Verifica a existência na camada de serviço
+//        boolean isSubscribed = pushNotificationServiceImpl.isUserSubscribed(email);
+//
+//        // 3. Retorna o JSON: {"subscribed": true/false}
+//        return ResponseEntity.ok(Map.of("subscribed", isSubscribed));
+//    }
 }
