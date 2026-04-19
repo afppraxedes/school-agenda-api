@@ -9,6 +9,7 @@ import com.schoolagenda.application.web.dto.response.ActiveClassResponse;
 import com.schoolagenda.application.web.dto.response.PerformanceHistoryResponse;
 import com.schoolagenda.application.web.dto.response.TeacherClassResponse;
 import com.schoolagenda.application.web.mapper.TeacherClassMapper;
+import com.schoolagenda.domain.exception.BusinessException;
 import com.schoolagenda.domain.exception.ResourceNotFoundException;
 import com.schoolagenda.domain.model.*;
 import com.schoolagenda.domain.repository.*;
@@ -17,8 +18,6 @@ import com.schoolagenda.domain.service.TeacherClassService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -234,18 +233,26 @@ public class TeacherClassServiceImpl implements TeacherClassService {
                 .orElseThrow(() -> new ResourceNotFoundException("Vínculo não encontrado"));
 
         // 1. Buscamos TODOS os alunos da turma (independente de terem nota)
-        List<Student> students = studentRepository.findBySchoolClassId(tc.getSchoolClass().getId());
+        List<Student> students = studentRepository.findBySchoolClassIdOrderByFullNameAsc(tc.getSchoolClass().getId());
 
         return students.stream().map(s -> {
-            // 2. Buscamos as notas que já existem para este aluno nesta disciplina
-            List<Grade> grades = gradeRepository.findTop4ByStudentIdAndSubjectId(s.getUser().getId(), tc.getSubject().getId());
+//            // 2. Buscamos as notas que já existem para este aluno nesta disciplina
+//            List<Grade> grades = gradeRepository.findTop4ByStudentIdAndSubjectId(s.getUser().getId(), tc.getSubject().getId());
+//
+//            // 3. Mapeamento SEGURO: Se a lista for menor que 4, usamos 0.0
+//            // Isso evita o erro de IndexOutOfBounds e permite o primeiro lançamento
+//            BigDecimal g1 = getScoreFromList(grades, 0);
+//            BigDecimal g2 = getScoreFromList(grades, 1);
+//            BigDecimal g3 = getScoreFromList(grades, 2);
+//            BigDecimal g4 = getScoreFromList(grades, 3);
 
-            // 3. Mapeamento SEGURO: Se a lista for menor que 4, usamos 0.0
-            // Isso evita o erro de IndexOutOfBounds e permite o primeiro lançamento
-            BigDecimal g1 = getScoreFromList(grades, 0);
-            BigDecimal g2 = getScoreFromList(grades, 1);
-            BigDecimal g3 = getScoreFromList(grades, 2);
-            BigDecimal g4 = getScoreFromList(grades, 3);
+            List<Grade> studentGrades = gradeRepository.findGradesForTeacherClass(s.getUser().getId(), teacherClassId);
+
+            // Mapeamento posicional garantido pela ordenação do SQL
+            BigDecimal g1 = studentGrades.size() > 0 ? studentGrades.get(0).getScore() : BigDecimal.ZERO;
+            BigDecimal g2 = studentGrades.size() > 1 ? studentGrades.get(1).getScore() : BigDecimal.ZERO;
+            BigDecimal g3 = studentGrades.size() > 2 ? studentGrades.get(2).getScore() : BigDecimal.ZERO;
+            BigDecimal g4 = studentGrades.size() > 3 ? studentGrades.get(3).getScore() : BigDecimal.ZERO;
 
             // 4. Média Ponderada ou Aritmética
             BigDecimal avg = (g1.add(g2).add(g3).add(g4)).divide(new BigDecimal("4"), 2, RoundingMode.HALF_UP);
@@ -255,262 +262,175 @@ public class TeacherClassServiceImpl implements TeacherClassService {
                     s.getFullName(),
                     g1, g2, g3, g4,
                     avg,
-                    grades.isEmpty() ? "" : grades.get(0).getFeedback()
+                    s.getFeedback()
+//                    studentGrades.isEmpty() ? "" : studentGrades.get(0).getFeedback()
+                    // TODO: implementar os campos "isAbsent" e "isExcused" mais pra frente quando for refatorar!
+                    // studentGrades.isEmpty() ? false : studentGrades.get(0).getExcused()
+//                    grades.isEmpty() ? "" : grades.get(0).getFeedback()
 //                    grades.isEmpty() ? false : grades.get(0).getAbsent(),
 //                    grades.isEmpty() ? false : grades.get(0).getExcused()
             );
         }).toList();
     }
-//    @Override
-//    @Transactional(readOnly = true)
-//    public List<GradeStudentDTO> getStudentsGrades(Long teacherClassId) {
-//        TeacherClass tc = teacherClassRepository.findById(teacherClassId)
-//                .orElseThrow(() -> new ResourceNotFoundException("Vínculo não encontrado"));
-//
-//        List<Student> students = studentRepository.findBySchoolClassId(tc.getSchoolClass().getId());
-//
-//        return students.stream().map(s -> {
-//            // Buscamos as notas dos 4 bimestres vinculadas ao User do aluno e ao Subject da turma
-//            List<Grade> grades = gradeRepository.findTop4ByStudentIdAndSubjectId(s.getUser().getId(), tc.getSubject().getId());
-//
-//            // Mapeamento seguro para evitar IndexOutOfBounds
-//            BigDecimal g1 = grades.size() > 0 ? grades.get(0).getScore() : BigDecimal.ZERO;
-//            BigDecimal g2 = grades.size() > 1 ? grades.get(1).getScore() : BigDecimal.ZERO;
-//            BigDecimal g3 = grades.size() > 2 ? grades.get(2).getScore() : BigDecimal.ZERO;
-//            BigDecimal g4 = grades.size() > 3 ? grades.get(3).getScore() : BigDecimal.ZERO;
-//
-//            // Pegamos o feedback e status da nota mais recente lançada, se existir
-//            String feedback = grades.isEmpty() ? "" : grades.get(0).getFeedback();
-//            Boolean absent = grades.isEmpty() ? false : grades.get(0).getAbsent();
-//            Boolean excused = grades.isEmpty() ? false : grades.get(0).getExcused();
-//
-//            // Média Aritmética Simples para os 4 bimestres
-//            BigDecimal avg = (g1.add(g2).add(g3).add(g4))
-//                    .divide(new BigDecimal("4"), 2, RoundingMode.HALF_UP);
-//
-//            // Retorna o DTO alinhado ao novo Record de 10 campos
-//            return new GradeStudentDTO(
-//                    s.getId(),
-//                    s.getFullName(),
-//                    g1, g2, g3, g4,
-//                    avg,
-//                    feedback,
-//                    absent,
-//                    excused
-//            );
-//        }).toList();
-//    }
-//    @Override
-//    @Transactional(readOnly = true)
-//    public List<GradeStudentDTO> getStudentsGrades(Long teacherClassId) {
-//        // 1. Busca a TeacherClass para saber qual a SchoolClass e Subject
-//        TeacherClass tc = teacherClassRepository.findById(teacherClassId)
-//                .orElseThrow(() -> new ResourceNotFoundException("Vínculo não encontrado"));
-//
-//        // 2. Busca todos os estudantes daquela turma
-//            List<Student> students = studentRepository.findBySchoolClassId(tc.getSchoolClass().getId());
-//
-//        // 3. Mapeia para o DTO (Buscando notas existentes no banco)
-//        return students.stream().map(s -> {
-//            // Aqui buscamos as notas das duas primeiras avaliações daquela disciplina/turma
-//            List<Grade> grades = gradeRepository.findTop2ByStudentIdAndSubjectId(s.getUser().getId(), tc.getSubject().getId());
-//
-//            BigDecimal g1 = grades.size() > 0 ? grades.get(0).getScore() : BigDecimal.ZERO;
-//            BigDecimal g2 = grades.size() > 1 ? grades.get(1).getScore() : BigDecimal.ZERO;
-//            BigDecimal avg = (g1.add(g2)).divide(new BigDecimal("2"), 2, RoundingMode.HALF_UP);
-//
-//            return new GradeStudentDTO(s.getId(), s.getUser().getId(), s.getFullName(), g1, g2, avg);
-//        }).toList();
-//    }
-
-//    @Override
-//    @Transactional
-//    public void saveAllGrades(List<SaveGradeRequest> grades) {
-//        for (SaveGradeRequest req : grades) {
-//            // Converte o item da lista para o formato de processamento individual
-//            SingleStudentGradesRequest singleReq = new SingleStudentGradesRequest(
-//                    req.studentId(), req.grade1(), req.grade2(), req.teacherClassId()
-//            );
-//            this.updateStudentGrades(singleReq);
-//        }
-//    }
 
     @Override
     @Transactional
-    public void saveAllGrades(List<SaveGradeRequest> grades) {
-        for (SaveGradeRequest req : grades) {
-            // Mapeia a lista recebida para o processamento individual que contém a regra de negócio
-            SingleStudentGradesRequest singleReq = new SingleStudentGradesRequest(
-                    req.studentId(),
-                    req.teacherClassId(),
-                    req.grade1(), req.grade2(), req.grade3(), req.grade4(),
-                    req.feedback()
-//                    req.isAbsent(),
-//                    req.isExcused()
-            );
-            this.updateStudentGrades(singleReq);
+    public void saveAllGrades(List<SaveGradeRequest> requests) {
+        for (SaveGradeRequest req : requests) {
+            // 1. Busca as 4 avaliações da disciplina ordenadas por data (DETERMINÍSTICO)
+            List<Assessment> assessments = assessmentRepository.findByTeacherClassIdOrderByDueDateAsc(req.teacherClassId());
+
+            // 2. Mapeia cada nota do DTO para a avaliação correspondente
+            updateOrCreateGrade(req.studentId(), assessments.get(0).getId(), req.grade1());
+            updateOrCreateGrade(req.studentId(), assessments.get(1).getId(), req.grade2());
+            updateOrCreateGrade(req.studentId(), assessments.get(2).getId(), req.grade3());
+            updateOrCreateGrade(req.studentId(), assessments.get(3).getId(), req.grade4());
+
+            // 3. Atualiza o feedback (geralmente vinculado ao registro do estudante ou à última nota)
+//            studentRepository.updateFeedback(req.studentId(), req.feedback());
+            Student student = studentRepository.findByUserId(req.studentId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Estudante não encontrado"));
+            student.setFeedback(req.feedback());
+            // Não precisa de save() explícito se estiver em @Transactional, mas pode usar por clareza.
+
+            studentRepository.save(student);
         }
     }
-
-//    @Override
-//    public void updateGrades(List<SaveGradeRequest> grades) {
-//        for (SaveGradeRequest request : grades) {
-//            studentRepository.findById(request.studentId()).ifPresent(student -> {
-//                // 1. Atualizamos as notas individuais (Se você tiver esses campos na entidade)
-//                // Caso use uma tabela separada de 'Grades', injete o repositório dela aqui.
-//
-//                // 2. Cálculo da Média (Exemplo simples: Aritmética)
-//                double g1 = request.grade1() != null ? request.grade1() : 0.0;
-//                double g2 = request.grade2() != null ? request.grade2() : 0.0;
-//                double average = (g1 + g2) / 2;
-//
-//                // 3. Atualizamos a média global do estudante
-//                student.setGlobalAverage(average);
-//
-//                // Registro de auditoria simples
-//                logger.info("📈 Nota atualizada: Aluno ID {}, Nova Média: {}", student.getId(), average);
-//
-//                studentRepository.save(student);
-//            });
-//        }
-//    }
 
     @Override
     @Transactional
     public void saveAllStudentGrades(List<SingleStudentGradesRequest> requests) {
-        if (requests == null || requests.isEmpty()) {
-            logger.warn("⚠️ Lista de notas recebida está vazia.");
-            return;
-        }
+        if (requests == null || requests.isEmpty()) return;
 
-        // O loop garante que a regra de negócio individual seja aplicada a cada aluno
         for (SingleStudentGradesRequest req : requests) {
             try {
-                // Reaproveita a lógica: Busca assessments, salva Grades, calcula média e dispara Push
+                // Centralizamos toda a lógica aqui
                 this.updateStudentGrades(req);
             } catch (Exception e) {
-                logger.error("❌ Erro ao processar notas do aluno ID {}: {}", req.studentId(), e.getMessage());
-                // Lançamos a exceção para dar rollback em toda a operação de lote se um falhar
-                throw e;
+                logger.error("Falha fatal no lote: Aluno {}", req.studentId());
+                throw new BusinessException("Erro ao processar lote de notas: " + e.getMessage());
             }
         }
-        logger.info("✅ Processamento de lote finalizado para {} registros.", requests.size());
     }
 
     @Override
     @Transactional
     public void updateStudentGrades(SingleStudentGradesRequest request) {
+        // 1. Buscamos o Estudante pela PK (ID 1)
         Student student = studentRepository.findById(request.studentId())
-                .orElseThrow(() -> new ResourceNotFoundException("Estudante não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Estudante não encontrado com ID: " + request.studentId()));
 
-        // 1. Localiza as 4 avaliações da turma (B1, B2, B3, B4)
+        // 2. Agora temos o User ID correto (23) para as notas
+        Long userId = student.getUser().getId();
+
+        // 3. Busca os Assessments (B1-B4)
         List<Assessment> assessments = assessmentRepository.findByTeacherClassIdOrderByDueDateAsc(request.teacherClassId());
 
-        // Verificação de segurança: O Seed SQL deve ter criado 4 registros
-        if (assessments.size() < 4) {
-            throw new IllegalStateException("Configuração incompleta: A turma deve ter 4 bimestres cadastrados.");
+        BigDecimal[] scores = { request.grade1(), request.grade2(), request.grade3(), request.grade4() };
+
+        for (int i = 0; i < scores.length; i++) {
+            final int index = i;
+            // Usamos o userId (23) que extraímos do objeto student
+            Grade grade = gradeRepository.findByStudentIdAndAssessmentId(userId, assessments.get(index).getId())
+                    .orElseGet(() -> {
+                        Grade newGrade = new Grade();
+                        newGrade.setStudent(student.getUser()); // Associa o User correto
+                        newGrade.setAssessment(assessments.get(index));
+                        newGrade.setCreatedBy("system");
+                        return newGrade;
+                    });
+
+            grade.setScore(scores[index] != null ? scores[index] : BigDecimal.ZERO);
+            grade.setLastModifiedBy("system");
+            gradeRepository.save(grade);
         }
 
-        // CORREÇÃO: Pegar o ID do professor logado através do Details
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        Long currentTeacherId;
+        // 4. Atualiza o feedback e a média global usando o objeto que já temos em mãos
+        student.setFeedback(request.feedback());
+        BigDecimal newAvg = gradeRepository.calculateAverageByUserId(userId);
+        student.setGlobalAverage(newAvg != null ? newAvg : BigDecimal.ZERO);
 
-        if (principal instanceof com.schoolagenda.application.web.security.dto.AgendaUserDetails userDetails) {
-            currentTeacherId = userDetails.getId();
-        } else {
-            throw new IllegalStateException("Usuário logado não possui um perfil AgendaUserDetails válido.");
-        }
-
-        // Buscamos a referência da entidade User (professor) para auditoria
-        User teacherEntity = userRepository.getReferenceById(currentTeacherId);
-
-        // 2. Persistência das Notas (Passando a entidade correta)
-        saveOrUpdateGrade(student.getUser(), assessments.get(0), request.grade1(), request, teacherEntity);
-        saveOrUpdateGrade(student.getUser(), assessments.get(1), request.grade2(), request, teacherEntity);
-        saveOrUpdateGrade(student.getUser(), assessments.get(2), request.grade3(), request, teacherEntity);
-        saveOrUpdateGrade(student.getUser(), assessments.get(3), request.grade4(), request, teacherEntity);
-
-//        // 3. Recálculo da Média Global via Repository (JPQL Ponderada)
-//        BigDecimal newAvg = gradeRepository.calculateWeightedAverage(student.getUser().getId());
-//        student.setGlobalAverage(newAvg != null ? newAvg : BigDecimal.ZERO);
-//        studentRepository.save(student);
-
-        // 4. WebPush: Notifica o Aluno do novo status
-//        pushService.sendPushToUser(student.getUser().getId(), "Notas Atualizadas", "Sua média global é: " + student.getGlobalAverage());
-
-        // USO DA REFERÊNCIA: Verificamos a recuperação após o cálculo da média
-        BigDecimal newAvg = gradeRepository.calculateWeightedAverage(student.getUser().getId());
-        BigDecimal finalAvg = newAvg != null ? newAvg : BigDecimal.ZERO;
-
-        // Se a média for < 6.0, podemos setar um status ou enviar um alerta específico no Push
-        boolean recoveryNeeded = isStudentInRecovery(
-                request.grade1(), request.grade2(), request.grade3(), request.grade4()
-        );
-
-        student.setGlobalAverage(finalAvg);
-        // student.setStatus(recoveryNeeded ? "RECUPERACAO" : "APROVADO"); // Se houver o campo
         studentRepository.save(student);
-
-        String msg = recoveryNeeded
-                ? "Sua média é " + finalAvg + ". Você está em recuperação."
-                : "Parabéns! Sua média é " + finalAvg;
-
-        pushService.sendPushToUser(student.getUser().getId(), "Boletim Atualizado", msg);
     }
 
-//    @Override
-//    @Transactional(readOnly = true)
-//    public PerformanceHistoryResponse getStudentHistory(Long studentId) {
-//        // Busca as notas dos 4 bimestres ordenadas por data
-//        List<Grade> grades = gradeRepository.findTop4ByStudentIdOrderByDate(studentId);
-//
-//        List<String> labels = List.of("B1", "B2", "B3", "B4");
-//        List<BigDecimal> values = grades.stream()
-//                .map(g -> g.getScore() != null ? g.getScore() : BigDecimal.ZERO)
-//                .collect(Collectors.toList());
-//
-//        // Garante que a lista tenha 4 valores para o gráfico não quebrar
-//        while (values.size() < 4) values.add(BigDecimal.ZERO);
-//
-//        return new PerformanceHistoryResponse(labels, values);
-//    }
+    private void updateStudentMetadata(Long userId, String feedback) {
+        Student student = studentRepository.findByUserId(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Estudante não encontrado"));
 
-//    @Override
-//    @Transactional(readOnly = true)
-//    public PerformanceHistoryResponse getStudentHistory(Long studentId) {
-//        List<Grade> grades = gradeRepository.findAllByStudentIdOrderByDate(studentId);
-//
-//        List<String> labels = List.of("B1", "B2", "B3", "B4");
-//        // Mapeia os valores das notas para o gráfico (B1, B2, B3, B4)
-//        List<BigDecimal> values = grades.stream()
-//                .map(g -> g.getScore() != null ? g.getScore() : BigDecimal.ZERO)
-//                .limit(4) // Garante apenas os 4 bimestres
-//                .collect(Collectors.toList());
-//
-//        while (values.size() < 4) values.add(BigDecimal.ZERO);
-//
-//        return new PerformanceHistoryResponse(labels, values);
-//    }
+        student.setFeedback(feedback);
+
+        // Calcula a nova média global
+        BigDecimal newAvg = gradeRepository.calculateAverageByUserId(userId);
+        student.setGlobalAverage(newAvg != null ? newAvg : BigDecimal.ZERO);
+
+        studentRepository.save(student);
+    }
+
+    /**
+     * Método auxiliar (Guts) para persistência individual
+     */
+    private void updateOrCreateGrade(Long studentId, Long assessmentId, BigDecimal score) {
+        Grade grade = gradeRepository.findByStudentIdAndAssessmentId(studentId, assessmentId)
+                .orElse(new Grade());
+
+        if (grade.getId() == null) {
+            // Configuração de novo registro (Seed/First Save)
+            grade.setStudent(userRepository.getReferenceById(studentId));
+            grade.setAssessment(assessmentRepository.getReferenceById(assessmentId));
+            grade.setCreatedBy("system_teacher");
+            grade.setCreatedAt(OffsetDateTime.now(ZoneOffset.UTC));
+        }
+
+        grade.setScore(score != null ? score : BigDecimal.ZERO);
+        grade.setLastModifiedBy("system_teacher");
+        grade.setUpdatedAt(OffsetDateTime.now(ZoneOffset.UTC));
+
+        gradeRepository.save(grade);
+    }
+
+    private void updateStudentSummary(Long studentId, String feedback) {
+        Student student = studentRepository.findByUserId(studentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Estudante não encontrado"));
+
+        student.setFeedback(feedback);
+
+        // Recalcula a média global baseada em todas as notas do aluno
+        BigDecimal newAverage = gradeRepository.calculateWeightedAverage(studentId);
+        student.setGlobalAverage(newAverage != null ? newAverage : BigDecimal.ZERO);
+
+        studentRepository.save(student);
+    }
 
     @Override
     @Transactional(readOnly = true)
-    public PerformanceHistoryResponse getStudentHistory(Long studentId) {
+    public PerformanceHistoryResponse getStudentHistory(Long studentId, Long teacherClassId) {
+        // 1. Busca o estudante e extrai o userId (vínculo real na tabela de grades)
         Student student = studentRepository.findById(studentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Estudante não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Estudante não encontrado com ID: " + studentId));
 
-        List<Grade> grades = gradeRepository.findAllByStudentIdOrderByDate(studentId);
+        // Como as notas estão vinculadas ao User (ID 23, por exemplo), extraímos aqui
+        Long userId = student.getUser().getId();
 
+        // 2. Busca as notas específicas para este vínculo (Turma + Disciplina)
+        // O método findGradesForTeacherClass já garante a ordenação por dueDate ASC
+        List<Grade> grades = gradeRepository.findGradesForTeacherClass(userId, teacherClassId);
+
+        // 3. Mapeia as notas para uma lista de exatamente 4 valores (B1 a B4)
         List<BigDecimal> values = grades.stream()
                 .map(g -> g.getScore() != null ? g.getScore() : BigDecimal.ZERO)
                 .limit(4)
                 .collect(Collectors.toList());
 
-        while (values.size() < 4) values.add(BigDecimal.ZERO);
+        // Garante que a lista tenha 4 elementos para o gráfico não quebrar no Frontend
+        while (values.size() < 4) {
+            values.add(BigDecimal.ZERO);
+        }
 
-        // Lógica: Recuperação se a média for inferior a 6.0
+        // 4. Lógica de Recuperação: Média < 6.0
         BigDecimal sum = values.stream().reduce(BigDecimal.ZERO, BigDecimal::add);
-        boolean recovery = sum.divide(new BigDecimal("4"), 2, RoundingMode.HALF_UP)
-                .compareTo(new BigDecimal("6.0")) < 0;
+        // Usamos HALF_UP para arredondar 5.995 para 6.00 de forma justa
+        BigDecimal average = sum.divide(new BigDecimal("4"), 2, RoundingMode.HALF_UP);
+        boolean recovery = average.compareTo(new BigDecimal("6.0")) < 0;
 
         return new PerformanceHistoryResponse(
                 student.getFullName(),
@@ -519,39 +439,6 @@ public class TeacherClassServiceImpl implements TeacherClassService {
                 recovery
         );
     }
-
-//    @Override
-//    public byte[] generateReportCardPDF(Long studentId) {
-//        Student student = studentRepository.findById(studentId).orElseThrow();
-//        // Lógica para desenhar o PDF com as notas e status de recuperação...
-//        // Retorna o fluxo de bytes do PDF consolidado.
-//        return new byte[0]; // Placeholder para sua biblioteca de PDF (iText/Jasper)
-//    }
-
-//    @Override
-//    @Transactional(readOnly = true)
-//    public List<ReportCardGradeDTO> listGradesByStudent(Long studentId) {
-//        Student student = studentRepository.findById(studentId).orElseThrow();
-//
-//        // Busca todas as disciplinas da turma do aluno
-//        List<TeacherClass> teacherClasses = teacherClassRepository.findBySchoolClassId(student.getSchoolClass().getId());
-//
-//        return teacherClasses.stream().map(tc -> {
-//            List<Grade> grades = gradeRepository.findTop4ByStudentIdAndSubjectId(student.getUser().getId(), tc.getSubject().getId());
-//
-//            BigDecimal b1 = getScoreFromList(grades, 0);
-//            BigDecimal b2 = getScoreFromList(grades, 1);
-//            BigDecimal b3 = getScoreFromList(grades, 2);
-//            BigDecimal b4 = getScoreFromList(grades, 3);
-//
-//            BigDecimal avg = (b1.add(b2).add(b3).add(b4)).divide(new BigDecimal("4"), 2, RoundingMode.HALF_UP);
-//
-//            return new ReportCardGradeDTO(
-//                    tc.getSubject().getName(),
-//                    b1, b2, b3, b4, avg
-//            );
-//        }).toList();
-//    }
 
     @Override
     @Transactional(readOnly = true)
@@ -600,15 +487,16 @@ public class TeacherClassServiceImpl implements TeacherClassService {
 
     private void saveOrUpdateGrade(User studentUser, Assessment assessment, BigDecimal score,
                                    SingleStudentGradesRequest req, User teacher) {
-        Grade grade = gradeRepository.findByAssessmentIdAndStudentId(assessment.getId(), studentUser.getId())
+        Grade grade = gradeRepository.findByStudentIdAndAssessmentId(assessment.getId(), studentUser.getId())
                 .orElse(new Grade());
 
         grade.setStudent(studentUser);
         grade.setAssessment(assessment);
         grade.setScore(score);
         grade.setFeedback(req.feedback());
-//        grade.setAbsent(req.isAbsent() != null && req.isAbsent());
-//        grade.setExcused(req.isExcused() != null && req.isExcused());
+        // TODO: implementar os campos "isAbsent" e "isExcused" mais pra frente quando for refatorar!
+        // grade.setAbsent(req.isAbsent() != null && req.isAbsent());
+        // grade.setExcused(req.isExcused() != null && req.isExcused());
 
         // Agora o casting não falhará pois estamos passando o User já resolvido
         grade.setGradedBy(teacher);
@@ -630,7 +518,7 @@ public class TeacherClassServiceImpl implements TeacherClassService {
 
     private void saveOrUpdateGrade(User studentUser, Assessment assessment, BigDecimal score,
                                    String feedback, Boolean absent, Boolean excused, User teacher) {
-        Grade grade = gradeRepository.findByAssessmentIdAndStudentId(assessment.getId(), studentUser.getId())
+        Grade grade = gradeRepository.findByStudentIdAndAssessmentId(assessment.getId(), studentUser.getId())
                 .orElse(new Grade());
 
         grade.setStudent(studentUser);
@@ -645,38 +533,6 @@ public class TeacherClassServiceImpl implements TeacherClassService {
         gradeRepository.save(grade);
     }
 
-//    @Override
-//    @Transactional
-//    public void updateStudentGrades(SingleStudentGradesRequest request) {
-//        Student student = studentRepository.findById(request.studentId())
-//                .orElseThrow(() -> new ResourceNotFoundException("Estudante não encontrado"));
-//
-//        // 1. Localiza as 2 avaliações padrão da disciplina/turma
-//        List<Assessment> assessments = assessmentRepository.findByTeacherClassIdOrderByDueDateAsc(request.teacherClassId());
-//
-//        if (assessments.size() < 2) {
-//            throw new IllegalStateException("A disciplina exige pelo menos 2 avaliações cadastradas.");
-//        }
-//
-//        // 2. Persistência das Notas Individuais
-//        saveOrUpdateGrade(student.getUser(), assessments.get(0), request.grade1());
-//        saveOrUpdateGrade(student.getUser(), assessments.get(1), request.grade2());
-//
-//        // 3. Recálculo da Média Ponderada (Query JPQL que usa o 'weight' do Assessment)
-//        BigDecimal newGlobalAverage = gradeRepository.calculateWeightedAverage(student.getUser().getId());
-//
-//        // 4. Atualização do "Cache" de média na entidade Student
-//        student.setGlobalAverage(newGlobalAverage != null ? newGlobalAverage : BigDecimal.ZERO);
-//        studentRepository.save(student);
-//
-//        // 5. Disparo do WebPush (O SW do Aluno interceptará isso para atualizar a UI sem F5)
-//        pushService.sendPushToUser(
-//                student.getUser().getId(),
-//                "Nota Lançada!",
-//                "Sua média global foi atualizada para " + student.getGlobalAverage()
-//        );
-//    }
-
     /**
      * Implementação solicitada: Calcula a média global de todas as notas do aluno.
      */
@@ -689,18 +545,6 @@ public class TeacherClassServiceImpl implements TeacherClassService {
         BigDecimal average = gradeRepository.calculateWeightedAverage(student.getUser().getId());
         return average != null ? average.doubleValue() : 0.0;
     }
-
-//    private void saveOrUpdateGrade(User studentUser, Assessment assessment, BigDecimal score) {
-//        // Busca nota existente ou cria nova
-//        Grade grade = gradeRepository.findByAssessmentIdAndStudentId(assessment.getId(), studentUser.getId())
-//                .orElse(new Grade());
-//
-//        grade.setStudent(studentUser);
-//        grade.setAssessment(assessment);
-//        grade.setScore(score);
-//        grade.setMaxScore(assessment.getMaxScore()); // Garante o teto da nota
-//        gradeRepository.save(grade);
-//    }
 
     /**
      * Método auxiliar para calcular a média parcial com precisão BigDecimal.

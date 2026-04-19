@@ -122,7 +122,7 @@ public class GradeServiceImpl implements GradeService {
     public GradeResponse findByAssessmentAndStudent(Long assessmentId, Long studentId) {
         log.debug("Searching for grade for assessment {} and student {}", assessmentId, studentId);
 
-        Grade grade = gradeRepository.findByAssessmentIdAndStudentId(assessmentId, studentId)
+        Grade grade = gradeRepository.findByStudentIdAndAssessmentId(assessmentId, studentId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Note not found for this combination."));
 
@@ -270,7 +270,7 @@ public class GradeServiceImpl implements GradeService {
 
             // 2. Busca nota existente (UPSERT)
             // Certifique-se que seu repository usa (Long assessmentId, Long studentUserId)
-            Grade grade = gradeRepository.findByAssessmentIdAndStudentId(
+            Grade grade = gradeRepository.findByStudentIdAndAssessmentId(
                             request.getAssessmentId(), request.getStudentUserId())
                     .orElseGet(() -> {
                         log.debug("Criando nova nota para estudante {}", request.getStudentUserId());
@@ -308,7 +308,7 @@ public class GradeServiceImpl implements GradeService {
 
         // Dispara atualização da média para cada um
         affectedStudentUserIds.forEach(userId -> {
-            BigDecimal newAverage = gradeRepository.findAverageByStudentUserId(userId);
+            BigDecimal newAverage = gradeRepository.calculateAverageByUserId(userId);
             studentService.updateGlobalAverage(userId, newAverage);
         });
 
@@ -318,7 +318,7 @@ public class GradeServiceImpl implements GradeService {
 
     @Override
     @Transactional(readOnly = true)
-    public Double calculateStudentAverage(Long studentId, Long subjectId) {
+    public BigDecimal calculateStudentAverage(Long studentId, Long subjectId) {
         log.debug("Calculating student average {} in the subject {}", studentId, subjectId);
 
         // TODO: fazer a validação para "studentId" e "subjectId" não encontrado.
@@ -653,10 +653,10 @@ public class GradeServiceImpl implements GradeService {
     // ========== MÉTODOS PRIVADOS AUXILIARES ==========
 
     private void updateStudentGlobalAverage(Long userId) {
-        Double average = gradeRepository.calculateAverageByStudentUserId(userId);
+        BigDecimal average = gradeRepository.calculateAverageByUserId(userId);
 
         // Supondo que você tenha um campo globalAverage na tabela/entidade Student ou em um DashboardDTO
-        studentRepository.updateGlobalAverage(userId, BigDecimal.valueOf(average != null ? average : 0.0));
+        studentRepository.updateGlobalAverage(userId, average != null ? average : BigDecimal.ZERO);
     }
     /**
      * Realiza o cálculo matemático da média ponderada final.

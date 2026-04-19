@@ -29,7 +29,7 @@ public interface GradeService {
     List<GradeResponse> findByStudentAndSubject(Long studentId, Long subjectId);
     List<GradeResponse> findUngradedByAssessment(Long assessmentId);
 
-    Double calculateStudentAverage(Long studentId, Long subjectId);
+    BigDecimal calculateStudentAverage(Long studentId, Long subjectId);
 //    ReportCardResponse getStudentReportCard(Long studentUserId);
 
     ReportCardResponse getStudentReportCard(Long studentUserId, AgendaUserDetails currentUser);

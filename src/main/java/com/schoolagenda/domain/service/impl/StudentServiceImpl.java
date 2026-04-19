@@ -54,8 +54,8 @@ public class StudentServiceImpl implements StudentService {
     @Transactional
     public StudentResponse create(StudentRequest studentRequest) {
 
-        schoolClassRepository.findById(studentRequest.getSchoolClass().getId())
-                .orElseThrow(() -> new ResourceNotFoundException("Não existe uma classe com o ID: " + studentRequest.getSchoolClass().getId()));
+        schoolClassRepository.findById(studentRequest.schoolClassId())
+                .orElseThrow(() -> new ResourceNotFoundException("Não existe uma classe com o ID: " + studentRequest.schoolClassId()));
 
         Student student = studentMapper.toEntity(studentRequest);
         Student savedStudent = studentRepository.save(student);
@@ -68,12 +68,12 @@ public class StudentServiceImpl implements StudentService {
     public StudentResponse update(Long id, StudentRequest studentRequest) {
         return studentRepository.findById(id)
                 .map(existingStudent -> {
-                    existingStudent.setFullName(studentRequest.getFullName());
-                    existingStudent.setBirthDate(studentRequest.getBirthDate());
-                    existingStudent.setClassName(studentRequest.getClassName());
+                    existingStudent.setFullName(studentRequest.fullName());
+                    existingStudent.setBirthDate(studentRequest.birthDate());
+                    existingStudent.setClassName(studentRequest.className());
 
-                    if (studentRequest.getProfilePhoto() != null) {
-                        existingStudent.setProfilePhoto(studentRequest.getProfilePhoto());
+                    if (studentRequest.profilePhoto() != null) {
+                        existingStudent.setProfilePhoto(studentRequest.profilePhoto());
                     }
 
                     studentMapper.updateEntity(studentRequest, existingStudent);

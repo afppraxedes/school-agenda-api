@@ -85,6 +85,7 @@ CREATE TABLE student (
     global_average DECIMAL(5, 2) DEFAULT 0.00,
     user_id BIGINT UNIQUE,
     school_class_id BIGINT NOT NULL,
+    feedback VARCHAR(500),
     created_by VARCHAR(150) DEFAULT 'system',
     last_modified_by VARCHAR(150) DEFAULT 'system',
     created_at TIMESTAMP DEFAULT NOW(),

@@ -68,7 +68,8 @@ public interface TeacherClassService {
     void saveAllStudentGrades(List<SingleStudentGradesRequest> requests);
     Double calculateStudentGlobalAverage(Long studentId);
 
-    PerformanceHistoryResponse getStudentHistory(Long studentId);
+//    PerformanceHistoryResponse getStudentHistory(Long studentId);
 //    byte[] generateReportCardPDF(Long studentId);
+    PerformanceHistoryResponse getStudentHistory(Long studentId, Long teacherClassId);
     List<ReportCardGradeDTO> listGradesByStudent(Long studentId);
 }

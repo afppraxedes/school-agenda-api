@@ -48,6 +48,9 @@ public class Student extends BaseAuditableEntity {
     @JoinColumn(name = "school_class_id")
     private SchoolClass schoolClass;
 
+    @Column(name = "feedback", length = 500)
+    private String feedback;
+
     // Utility method to calculate age
     public int getAge() {
         return LocalDate.now().getYear() - birthDate.getYear();

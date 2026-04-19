@@ -72,25 +72,25 @@ INSERT INTO school_events (title, description, start_date, end_date, all_day, ty
 --     NOW(),
 --     NOW()
 -- FROM generate_series(23, 40) i;
-INSERT INTO student (id, full_name, birth_date, class_name, registration_date, global_average, user_id, school_class_id, created_by, last_modified_by, created_at, updated_at) VALUES
-(1, 'Student Name 23', '2010-01-01', '8º Ano C - 2025', NOW(), 0.00, 23, 4, 'system', 'system', NOW(), NOW()),
-(2, 'Student Name 24', '2010-01-01', '6º Ano D - 2025', NOW(), 0.00, 24, 5, 'system', 'system', NOW(), NOW()),
-(3, 'Student Name 25', '2010-01-01', '7º Ano B - 2025', NOW(), 0.00, 25, 1, 'system', 'system', NOW(), NOW()),
-(4, 'Student Name 26', '2010-01-01', '5º Ano A - 2025', NOW(), 0.00, 26, 2, 'system', 'system', NOW(), NOW()),
-(5, 'Student Name 27', '2010-01-01', '9º Ano A - 2025', NOW(), 0.00, 27, 3, 'system', 'system', NOW(), NOW()),
-(6, 'Student Name 28', '2010-01-01', '8º Ano C - 2025', NOW(), 0.00, 28, 4, 'system', 'system', NOW(), NOW()),
-(7, 'Student Name 29', '2010-01-01', '6º Ano D - 2025', NOW(), 0.00, 29, 5, 'system', 'system', NOW(), NOW()),
-(8, 'Student Name 30', '2010-01-01', '7º Ano B - 2025', NOW(), 0.00, 30, 1, 'system', 'system', NOW(), NOW()),
-(9, 'Student Name 31', '2010-01-01', '5º Ano A - 2025', NOW(), 0.00, 31, 2, 'system', 'system', NOW(), NOW()),
-(10, 'Student Name 32', '2010-01-01', '9º Ano A - 2025', NOW(), 0.00, 32, 3, 'system', 'system', NOW(), NOW()),
-(11, 'Student Name 33', '2010-01-01', '8º Ano C - 2025', NOW(), 0.00, 33, 4, 'system', 'system', NOW(), NOW()),
-(12, 'Student Name 34', '2010-01-01', '6º Ano D - 2025', NOW(), 0.00, 34, 5, 'system', 'system', NOW(), NOW()),
-(13, 'Student Name 35', '2010-01-01', '7º Ano B - 2025', NOW(), 0.00, 35, 1, 'system', 'system', NOW(), NOW()),
-(14, 'Student Name 36', '2010-01-01', '5º Ano A - 2025', NOW(), 0.00, 36, 2, 'system', 'system', NOW(), NOW()),
-(15, 'Student Name 37', '2010-01-01', '9º Ano A - 2025', NOW(), 0.00, 37, 3, 'system', 'system', NOW(), NOW()),
-(16, 'Student Name 38', '2010-01-01', '8º Ano C - 2025', NOW(), 0.00, 38, 4, 'system', 'system', NOW(), NOW()),
-(17, 'Student Name 39', '2010-01-01', '6º Ano D - 2025', NOW(), 0.00, 39, 5, 'system', 'system', NOW(), NOW()),
-(18, 'Student Name 40', '2010-01-01', '7º Ano B - 2025', NOW(), 0.00, 40, 1, 'system', 'system', NOW(), NOW());
+INSERT INTO student (id, full_name, birth_date, class_name, registration_date, global_average, user_id, school_class_id, feedback, created_by, last_modified_by, created_at, updated_at) VALUES
+(1, 'Student Name 23', '2010-01-01', '8º Ano C - 2025', NOW(), 0.00, 23, 4, 'feedback teste', 'system', 'system', NOW(), NOW()),
+(2, 'Student Name 24', '2010-01-01', '6º Ano D - 2025', NOW(), 0.00, 24, 5, 'feedback teste', 'system', 'system', NOW(), NOW()),
+(3, 'Student Name 25', '2010-01-01', '7º Ano B - 2025', NOW(), 0.00, 25, 1, 'feedback teste', 'system', 'system', NOW(), NOW()),
+(4, 'Student Name 26', '2010-01-01', '5º Ano A - 2025', NOW(), 0.00, 26, 2, 'feedback teste', 'system', 'system', NOW(), NOW()),
+(5, 'Student Name 27', '2010-01-01', '9º Ano A - 2025', NOW(), 0.00, 27, 3, 'feedback teste', 'system', 'system', NOW(), NOW()),
+(6, 'Student Name 28', '2010-01-01', '8º Ano C - 2025', NOW(), 0.00, 28, 4, 'feedback teste', 'system', 'system', NOW(), NOW()),
+(7, 'Student Name 29', '2010-01-01', '6º Ano D - 2025', NOW(), 0.00, 29, 5, 'feedback teste', 'system', 'system', NOW(), NOW()),
+(8, 'Student Name 30', '2010-01-01', '7º Ano B - 2025', NOW(), 0.00, 30, 1, 'feedback teste', 'system', 'system', NOW(), NOW()),
+(9, 'Student Name 31', '2010-01-01', '5º Ano A - 2025', NOW(), 0.00, 31, 2, 'feedback teste', 'system', 'system', NOW(), NOW()),
+(10, 'Student Name 32', '2010-01-01', '9º Ano A - 2025', NOW(), 0.00, 32, 3, 'feedback teste', 'system', 'system', NOW(), NOW()),
+(11, 'Student Name 33', '2010-01-01', '8º Ano C - 2025', NOW(), 0.00, 33, 4, 'feedback teste', 'system', 'system', NOW(), NOW()),
+(12, 'Student Name 34', '2010-01-01', '6º Ano D - 2025', NOW(), 0.00, 34, 5, 'feedback teste', 'system', 'system', NOW(), NOW()),
+(13, 'Student Name 35', '2010-01-01', '7º Ano B - 2025', NOW(), 0.00, 35, 1, 'feedback teste', 'system', 'system', NOW(), NOW()),
+(14, 'Student Name 36', '2010-01-01', '5º Ano A - 2025', NOW(), 0.00, 36, 2, 'feedback teste', 'system', 'system', NOW(), NOW()),
+(15, 'Student Name 37', '2010-01-01', '9º Ano A - 2025', NOW(), 0.00, 37, 3, 'feedback teste', 'system', 'system', NOW(), NOW()),
+(16, 'Student Name 38', '2010-01-01', '8º Ano C - 2025', NOW(), 0.00, 38, 4, 'feedback teste', 'system', 'system', NOW(), NOW()),
+(17, 'Student Name 39', '2010-01-01', '6º Ano D - 2025', NOW(), 0.00, 39, 5, 'feedback teste', 'system', 'system', NOW(), NOW()),
+(18, 'Student Name 40', '2010-01-01', '7º Ano B - 2025', NOW(), 0.00, 40, 1, 'feedback teste', 'system', 'system', NOW(), NOW());
 
 -- 6. RESPONSIBLE STUDENT (Vínculos solicitados)
 INSERT INTO responsible_student (responsible_id, student_id, created_at, updated_at) VALUES

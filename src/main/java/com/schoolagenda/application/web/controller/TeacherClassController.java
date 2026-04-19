@@ -9,6 +9,7 @@ import com.schoolagenda.application.web.dto.response.PerformanceHistoryResponse;
 import com.schoolagenda.application.web.dto.response.TeacherClassResponse;
 import com.schoolagenda.application.web.dto.response.UserResponse;
 import com.schoolagenda.domain.enums.UserRole;
+import com.schoolagenda.domain.service.GradeService;
 import com.schoolagenda.domain.service.ReportCardService;
 import com.schoolagenda.domain.service.TeacherClassService;
 import com.schoolagenda.domain.service.UserService;
@@ -203,10 +204,19 @@ public class TeacherClassController {
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/student/{studentId}/history")
-    @PreAuthorize("hasAnyAuthority('RESPONSIBLE', 'STUDENT')")
-    public ResponseEntity<PerformanceHistoryResponse> getPerformanceHistory(@PathVariable Long studentId) {
-        return ResponseEntity.ok(teacherClassService.getStudentHistory(studentId));
+//    @GetMapping("/student/{studentId}/history")
+//    @PreAuthorize("hasAnyAuthority('RESPONSIBLE', 'STUDENT')")
+//    public ResponseEntity<PerformanceHistoryResponse> getPerformanceHistory(@PathVariable Long studentId) {
+//        return ResponseEntity.ok(teacherClassService.getStudentHistory(studentId));
+//    }
+
+    @GetMapping("/{studentId}/performance-history")
+    public ResponseEntity<PerformanceHistoryResponse> getStudentHistory(
+            @PathVariable Long studentId,
+            @RequestParam Long teacherClassId) { // Parâmetro adicionado para o filtro por disciplina
+
+        PerformanceHistoryResponse history = teacherClassService.getStudentHistory(studentId, teacherClassId);
+        return ResponseEntity.ok(history);
     }
 
 //    @GetMapping("/student/{studentId}/report-card")

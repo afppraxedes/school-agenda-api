@@ -244,11 +244,11 @@ public class GradeController {
 
     @GetMapping("/student/{studentId}/subject/{subjectId}/average")
     @Operation(summary = "Calcular média do estudante em uma disciplina")
-    public ResponseEntity<Double> calculateStudentAverage(
+    public ResponseEntity<BigDecimal> calculateStudentAverage(
             @PathVariable Long studentId,
             @PathVariable Long subjectId) {
 
-        Double average = gradeService.calculateStudentAverage(studentId, subjectId);
+        BigDecimal average = gradeService.calculateStudentAverage(studentId, subjectId);
         return ResponseEntity.ok(average);
     }
 
